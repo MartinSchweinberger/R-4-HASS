@@ -1,87 +1,21 @@
 ---
-title: "Publishing Free Online Books and Websites with Bookdown and Quarto"
-description: "This how-to tutorial covers the creation and publication of free online books using the bookdown package in R, including chapter organisation, cross-referencing, and deployment to GitHub Pages. It is aimed at researchers and educators in linguistics and the humanities who want to publish course books, long-form documentation, or research monographs as open-access online resources."
-author: "Martin Schweinberger"
-date: "2026-03-28"
-params:
-  title:       "Publishing Free Online Books and Websites with Bookdown and Quarto"
-  author:      "Martin Schweinberger"
-  year:        "2026"
-  version:       "3.1.1"
-  date_published:       "2026-03-28"
-  url:         "https://ladal.edu.au/tutorials/publish/publish.html"
-  institution: "The Language Technology and Data Analysis Laboratory (LADAL), The University of Queensland, Australia"
-  description: "This how-to tutorial covers the creation and publication of free online books using the bookdown package in R, including chapter organisation, cross-referencing, and deployment to GitHub Pages. It is aimed at researchers and educators in linguistics and the humanities who want to publish course books, long-form documentation, or research monographs as open-access online resources."
-  keywords:       "bookdown, online books, GitHub Pages, open access publishing, course books, R Markdown, academic publishing"
-  doi:         "10.5281/zenodo.19332934"
+title: "Publishing Books and Websites with Bookdown and Quarto"
 ---
 
-
-```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+```{r setup-publish, echo=FALSE, message=FALSE, warning=FALSE}
+library(flextable)
+library(here)
 options(stringsAsFactors = FALSE)
 options("scipen" = 100, "digits" = 4)
 ```
 
-```{r schema-org, echo=FALSE, results='asis'}
-# Schema.org structured data - read by Google for rich search results
-schema_keywords <- paste0(
-  '"', trimws(strsplit(params$keywords, ",")[[1]]), '"',
-  collapse = ", "
-)
-doi_url <- if (nchar(trimws(params$doi)) > 0) {
-  paste0('    "sameAs": "https://doi.org/', params$doi, '",\n')
-} else { "" }
-cat(paste0(
-'<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "LearningResource",
-  "name": "', params$title, '",
-  "description": "', gsub('"', '\\\\"', params$description), '",
-  "url": "', params$url, '",
-', doi_url,
-'  "datePublished": "', params$date_published, '",
-  "version": "', params$version, '",
-  "inLanguage": "en",
-  "educationalLevel": "Graduate",
-  "learningResourceType": "Tutorial",
-  "keywords": [', schema_keywords, '],
-  "license": "https://creativecommons.org/licenses/by/4.0/",
-  "author": {
-    "@type": "Person",
-    "name": "', params$author, '",
-    "sameAs": "https://orcid.org/0000-0003-1923-9153"
-  },
-  "publisher": {
-    "@type": "EducationalOrganization",
-    "name": "Language Technology and Data Analysis Laboratory (LADAL)",
-    "url": "https://ladal.edu.au",
-    "parentOrganization": {
-      "@type": "CollegeOrUniversity",
-      "name": "The University of Queensland"
-    }
-  },
-  "isPartOf": {
-    "@type": "WebSite",
-    "name": "LADAL",
-    "url": "https://ladal.edu.au"
-  }
-}
-</script>'))
-```
+# Introduction {#sec-publish-intro}
 
+This chapter explains how to publish a free, professional-looking online book or website directly from RStudio using either **bookdown** or **Quarto**, hosted for free on **GitHub Pages**. Both workflows follow the same principle: write your content in R Markdown or Quarto, render it to HTML, push the output to GitHub, and let GitHub Pages serve it to the world — all at no cost.
 
-![Great Court, The University of Queensland](/images/uq1.webp){width="100%" height="200px" loading="eager" fetchpriority="high"}
+The chapter is divided into two self-contained parts. **Part I** covers the bookdown workflow for creating a multi-chapter HTML book in the GitBook style. **Part II** covers the Quarto website workflow for creating a multi-page navigable website. A comparison section helps you decide which approach suits your project.
 
-# Introduction {#intro}
-
-![](/images/g_chili.jpg){ width=15% style="float:right; padding:10px" }
-
-This tutorial explains how to publish a free, professional-looking online book or website directly from RStudio using either **bookdown** or **Quarto**, hosted for free on **GitHub Pages**. Both workflows follow the same principle: write your content in R Markdown or Quarto, render it to HTML, push the output to GitHub, and let GitHub Pages serve it to the world — all at no cost.
-
-The tutorial is divided into two self-contained parts. **Part I** covers the bookdown workflow for creating a multi-chapter HTML book in the GitBook style. **Part II** covers the Quarto website workflow for creating a multi-page navigable website. A comparison section at the end helps you decide which approach suits your project.
-
-By the end of this tutorial you will be able to:
+By the end of this chapter you will be able to:
 
 - Set up a GitHub repository from a template and configure GitHub Pages
 - Clone the repository to RStudio and configure the key project files
@@ -93,43 +27,21 @@ By the end of this tutorial you will be able to:
 ::: {.callout-note}
 ## Prerequisite Knowledge
 
-Before working through this tutorial, you should be familiar with:
+Before working through this chapter, you should be familiar with:
 
-- Basic R and RStudio ([Getting Started with R](/tutorials/r_intro/r_intro.html))
-- R Markdown or Quarto document basics ([R Markdown and Quarto](/tutorials/notebooks/notebooks.html))
+- Basic R and RStudio (see Chapter 1)
+- R Markdown or Quarto document basics — you have been reading this book, which is itself a Quarto book, so you have seen the format in action
 - Basic Git concepts: repository, commit, push, pull
 :::
 
-::: {.callout-note}
-## Citation
+---
 
-```{r citation-callout-top, echo=FALSE, results='asis'}
-doi_link <- if (nchar(trimws(params$doi)) > 0) {
-  paste0(
-    " doi: <a href=\"https://doi.org/", params$doi,
-    "\" target=\"_blank\">", params$doi, "</a>."
-  )
-} else { "" }
-cat(
-  params$author, ". ",
-  params$year,   ". *",
-  params$title,  "*. ",
-  params$institution, ". ",
-  "url: ", params$url, " ",
-  "(Version ", params$version, ").",
-  doi_link,
-  sep = ""
-)
-```
-:::
-
-
-# Prerequisites and Setup {#prereqs}
+# Prerequisites and Setup {#sec-publish-prereqs}
 
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** What software and accounts you need before starting; how to install the required R packages; and how to configure Git and GitHub authentication so RStudio can push to GitHub
+**What you will learn:** what software and accounts you need before starting; how to install the required R packages; and how to configure Git and GitHub authentication so RStudio can push to GitHub.
 :::
 
 ## Required Software and Accounts {-}
@@ -145,7 +57,7 @@ Check your RStudio version and update if needed: **Help → Check for Updates**.
 
 ## Installing Required Packages {-}
 
-```{r install_pkgs, eval=FALSE}
+```{r install-pkgs-publish, eval=FALSE}
 install.packages("bookdown")   # for Part I
 install.packages("usethis")    # for GitHub PAT setup
 install.packages("gitcreds")   # for storing PAT credentials
@@ -153,7 +65,7 @@ install.packages("gitcreds")   # for storing PAT credentials
 
 Quarto is bundled with RStudio 2022.07+. Verify it is available:
 
-```{r check_quarto, eval=FALSE}
+```{r check-quarto-publish, eval=FALSE}
 # Should return the Quarto version string
 system("quarto --version")
 ```
@@ -162,7 +74,7 @@ system("quarto --version")
 
 If this is your first time using Git on this machine, tell Git your name and email. These appear in your commit history:
 
-```{r git_config, eval=FALSE}
+```{r git-config-publish, eval=FALSE}
 # Run once — uses the usethis package
 usethis::use_git_config(
   user.name  = "Your Name",
@@ -175,7 +87,7 @@ usethis::use_git_config(
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** What a GitHub PAT is; why you need one; and how to create and store it so RStudio can push to GitHub without a password prompt
+**What you will learn:** what a GitHub PAT is; why you need one; and how to create and store it so RStudio can push to GitHub without a password prompt.
 :::
 
 GitHub no longer accepts your account password for Git operations. Instead, you authenticate with a **Personal Access Token (PAT)** — a long random string that acts like a password but can be scoped and revoked independently.
@@ -184,11 +96,11 @@ GitHub no longer accepts your account password for Git operations. Instead, you 
 
 The easiest way is to let `usethis` open the GitHub token creation page for you:
 
-```{r pat_create, eval=FALSE}
+```{r pat-create-publish, eval=FALSE}
 usethis::create_github_token()
 ```
 
-This opens the GitHub **New personal access token** page in your browser with sensible scopes pre-selected (`repo`, `workflow`, `gist`, `user`). Give the token a descriptive name (e.g. `rstudio-laptop-2026`), set an expiry (90 days is a reasonable default), and click **Generate token**. 
+This opens the GitHub **New personal access token** page in your browser with sensible scopes pre-selected (`repo`, `workflow`, `gist`, `user`). Give the token a descriptive name (e.g. `rstudio-laptop-2026`), set an expiry (90 days is a reasonable default), and click **Generate token**.
 
 ::: {.callout-warning}
 ## Copy Your Token Immediately
@@ -200,7 +112,7 @@ GitHub shows the token only once. Copy it to your clipboard now — you cannot r
 
 Paste the token into R using `gitcreds`:
 
-```{r pat_store, eval=FALSE}
+```{r pat-store-publish, eval=FALSE}
 gitcreds::gitcreds_set()
 # Paste your token at the prompt and press Enter
 ```
@@ -209,7 +121,7 @@ gitcreds::gitcreds_set()
 
 ### Step 3 — Verify the Token Works {-}
 
-```{r pat_verify, eval=FALSE}
+```{r pat-verify-publish, eval=FALSE}
 usethis::gh_token_help()
 # Should report: "GitHub personal access token for 'https://github.com': <discovered>"
 ```
@@ -222,22 +134,21 @@ PATs expire. When a push fails with a 401 error, run `gitcreds::gitcreds_set()` 
 
 ---
 
-# Part I: Bookdown Books {#bookdown}
+# Part I: Bookdown Books {#sec-publish-bookdown}
 
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** What bookdown is and what kind of output it produces; how to set up a bookdown project from a template; how to configure the key files; how to render locally and publish to GitHub Pages; and how to add chapters and customise the appearance
+**What you will learn:** what bookdown is and what kind of output it produces; how to set up a bookdown project from a template; how to configure the key files; how to render locally and publish to GitHub Pages; and how to add chapters and customise the appearance.
 :::
 
 ## What Is Bookdown? {-}
 
-**bookdown** [@xie2016bookdown] is an R package that extends R Markdown to produce long-form documents — books, theses, course notes, and technical reports — with features that single-document R Markdown lacks: numbered cross-referenceable figures and tables, multi-chapter structure, PDF and EPUB output alongside HTML, and a polished GitBook-style HTML interface with a sidebar navigation, search, and font size controls.
+**bookdown** is an R package that extends R Markdown to produce long-form documents — books, theses, course notes, and technical reports — with features that single-document R Markdown lacks: numbered cross-referenceable figures and tables, multi-chapter structure, PDF and EPUB output alongside HTML, and a polished GitBook-style HTML interface with a sidebar navigation, search, and font size controls.
 
 A bookdown project is a folder of `.Rmd` files, each representing a chapter, plus a small set of configuration files that control rendering. The rendered output is a set of HTML files that can be hosted anywhere — including GitHub Pages for free.
 
-```{r bookdown_vs_quarto, echo=FALSE, message=FALSE, warning=FALSE}
-library(flextable)
+```{r bookdown-vs-quarto-publish, echo=FALSE, message=FALSE, warning=FALSE}
 data.frame(
   Feature = c(
     "Source files", "Output format", "Navigation", "Cross-references",
@@ -392,7 +303,7 @@ Replace `YOUR BOOK SHORT TITLE` with a short version of your title. Leave the `a
 
 Each chapter is a separate `.Rmd` file. Bookdown assembles them in alphabetical/numerical order by filename. The template includes `02-tears.Rmd` and `03-race.Rmd` as examples — replace or delete these and add your own.
 
-**Naming convention:** Use a two-digit prefix to control order:
+**Naming convention:** use a two-digit prefix to control order:
 
 ```
 index.Rmd          ← always first (Chapter 0 / Preface)
@@ -403,7 +314,7 @@ index.Rmd          ← always first (Chapter 0 / Preface)
 05-discussion.Rmd
 ```
 
-**Chapter structure:** Each `.Rmd` file should start with a `#` heading (Chapter title) — this becomes the chapter heading in the sidebar. Sections within a chapter use `##` and `###`.
+**Chapter structure:** each `.Rmd` file should start with a `#` heading (chapter title) — this becomes the chapter heading in the sidebar. Sections within a chapter use `##` and `###`.
 
 ```markdown
 # Introduction
@@ -435,13 +346,13 @@ This gives you full control and makes it easy to temporarily exclude a chapter.
 
 Install bookdown if you have not already:
 
-```{r install_bookdown, eval=FALSE}
+```{r install-bookdown-publish, eval=FALSE}
 install.packages("bookdown")
 ```
 
 Render the book:
 
-```{r render_bookdown, eval=FALSE}
+```{r render-bookdown-publish, eval=FALSE}
 bookdown::render_book("index.Rmd")
 ```
 
@@ -449,7 +360,7 @@ Or click **Build Book** in the **Build** tab (same pane as Environment and Histo
 
 Preview the result in your browser:
 
-```{r browse_bookdown, eval=FALSE}
+```{r browse-bookdown-publish, eval=FALSE}
 browseURL("docs/index.html")
 ```
 
@@ -524,7 +435,7 @@ bookdown::gitbook:
 
 To add PDF download, ensure TinyTeX is installed:
 
-```{r tinytex_install, eval=FALSE}
+```{r tinytex-install-publish, eval=FALSE}
 install.packages("tinytex")
 tinytex::install_tinytex()
 ```
@@ -544,7 +455,7 @@ And list `pdf` in the `download:` config under `bookdown::gitbook`.
 
 ## Bookdown File Structure Reference {-}
 
-```{r bookdown_files, echo=FALSE, message=FALSE, warning=FALSE}
+```{r bookdown-files-publish, echo=FALSE, message=FALSE, warning=FALSE}
 data.frame(
   File = c(
     "`index.Rmd`",
@@ -577,12 +488,12 @@ data.frame(
 
 ---
 
-# Part II: Quarto Websites {#quarto-website}
+# Part II: Quarto Websites {#sec-publish-quarto}
 
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** What a Quarto website is and how it differs from a bookdown book; how to set up a Quarto website from a template; how to configure `_quarto.yml`; how to render and publish to GitHub Pages; and how to add pages, themes, and a navbar
+**What you will learn:** what a Quarto website is and how it differs from a bookdown book; how to set up a Quarto website from a template; how to configure `_quarto.yml`; how to render and publish to GitHub Pages; and how to add pages, themes, and a navbar.
 :::
 
 ## What Is a Quarto Website? {-}
@@ -690,7 +601,7 @@ website:
       - icon: github
         href: https://github.com/YOUR-USERNAME/YOUR-REPO
   page-footer:
-    left: "© 2026 Martin Schweinberger"
+    left: "© 2026 Your Name"
     right:
       - icon: github
         href: https://github.com/YOUR-USERNAME
@@ -709,7 +620,7 @@ execute:
   message: false
 ```
 
-```{r quarto_yml_fields, echo=FALSE, message=FALSE, warning=FALSE}
+```{r quarto-yml-fields-publish, echo=FALSE, message=FALSE, warning=FALSE}
 data.frame(
   Field = c(
     "`project: type: website`",
@@ -857,7 +768,7 @@ format:
     theme: cosmo      # or: flatly, journal, lumen, sandstone, simplex, sketchy, united, yeti
 ```
 
-```{r themes_table, echo=FALSE, message=FALSE, warning=FALSE}
+```{r themes-table-publish, echo=FALSE, message=FALSE, warning=FALSE}
 data.frame(
   Theme = c("cosmo", "flatly", "journal", "lumen", "sandstone",
             "simplex", "sketchy", "united", "yeti", "cerulean"),
@@ -892,7 +803,7 @@ quarto render
 
 Preview the result:
 
-```{r browse_quarto, eval=FALSE}
+```{r browse-quarto-publish, eval=FALSE}
 browseURL("docs/index.html")
 ```
 
@@ -920,7 +831,7 @@ The `docs/` folder contains your rendered HTML. It must be committed and pushed 
 
 ## Quarto Website File Structure Reference {-}
 
-```{r quarto_files, echo=FALSE, message=FALSE, warning=FALSE}
+```{r quarto-files-publish, echo=FALSE, message=FALSE, warning=FALSE}
 data.frame(
   File = c(
     "`_quarto.yml`",
@@ -953,17 +864,17 @@ data.frame(
 
 ---
 
-# Choosing Between Bookdown and Quarto {#choosing}
+# Choosing Between Bookdown and Quarto {#sec-publish-choosing}
 
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** How to decide which tool is right for your project based on content type, audience, and requirements
+**What you will learn:** how to decide which tool is right for your project based on content type, audience, and requirements.
 :::
 
 ## Decision Guide {-}
 
-```{r decision_table, echo=FALSE, message=FALSE, warning=FALSE}
+```{r decision-table-publish, echo=FALSE, message=FALSE, warning=FALSE}
 data.frame(
   `Your situation` = c(
     "Writing a multi-chapter book, textbook, or thesis",
@@ -1014,19 +925,21 @@ data.frame(
 ## The Short Answer
 
 Use **bookdown** if your content is a book (sequential chapters with a narrative arc, numbered sections, cross-referenced figures). Use a **Quarto website** if your content is a collection of independent pages, a course site, a portfolio, or a documentation hub. When in doubt and starting fresh, Quarto is the better long-term investment.
+
+Note: this book itself is a **Quarto book** — a third option that combines the sequential, chapter-based structure of bookdown with Quarto's modern tooling. Quarto books use `project: type: book` in `_quarto.yml` and are a good choice for new book projects where you want chapter structure without the legacy of `.Rmd`.
 :::
 
 ---
 
-# Troubleshooting {#troubleshoot}
+# Troubleshooting {#sec-publish-troubleshoot}
 
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** How to diagnose and fix the most common problems encountered when setting up bookdown or Quarto websites on GitHub Pages
+**What you will learn:** how to diagnose and fix the most common problems encountered when setting up bookdown or Quarto websites on GitHub Pages.
 :::
 
-```{r troubleshoot_table, echo=FALSE, message=FALSE, warning=FALSE}
+```{r troubleshoot-table-publish, echo=FALSE, message=FALSE, warning=FALSE}
 data.frame(
   Problem = c(
     "GitHub Pages shows a 404 error",
@@ -1093,12 +1006,12 @@ Then stage, commit, and push.
 
 ---
 
-# Keeping Your Site Updated {#updating}
+# Keeping Your Site Updated {#sec-publish-updating}
 
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** Best practices for a sustainable long-term update workflow; how to use `freeze` to speed up Quarto rebuilds; and how to collaborate with others on a shared repository
+**What you will learn:** best practices for a sustainable long-term update workflow; how to use `freeze` to speed up Quarto rebuilds; and how to collaborate with others on a shared repository.
 :::
 
 ## The Update Cycle {-}
@@ -1138,70 +1051,16 @@ If multiple people contribute to the same site:
 - The maintainer renders and pushes `docs/` after merging
 - Use `renv` to ensure all contributors use the same package versions:
 
-```{r renv_collab, eval=FALSE}
+```{r renv-collab-publish, eval=FALSE}
 renv::init()       # initialise — run once
 renv::snapshot()   # update lock file after installing packages
 renv::restore()    # collaborator runs this to match your environment
 ```
 
-
-# Citation and Session Info {-}
-
+---
 
 ::: {.callout-note}
-## Citation
+## Attribution
 
-```{r citation-callout, echo=FALSE, results='asis'}
-doi_link <- if (nchar(trimws(params$doi)) > 0) {
-  paste0(
-    " doi: <a href=\"https://doi.org/", params$doi,
-    "\" target=\"_blank\">", params$doi, "</a>."
-  )
-} else { "" }
-cat(
-  params$author, ". ",
-  params$year,   ". *",
-  params$title,  "*. ",
-  params$institution, ". ",
-  "url: ", params$url, " ",
-  "(Version ", params$version, ").",
-  doi_link,
-  sep = ""
-)
-```
-
-```{r citation-bibtex, echo=FALSE, results='asis'}
-key <- paste0(
-  tolower(gsub(" ", "", gsub(",.*", "", params$author))),
-  params$year,
-  tolower(gsub("[^a-zA-Z]", "", strsplit(params$title, " ")[[1]][1]))
-)
-cat("```\n")
-cat("@manual{", key, ",\n",           sep = "")
-cat("  author       = {", params$author,      "},\n", sep = "")
-cat("  title        = {", params$title,       "},\n", sep = "")
-cat("  year         = {", params$year,        "},\n", sep = "")
-cat("  note         = {", params$url,         "},\n", sep = "")
-cat("  organization = {", params$institution, "},\n", sep = "")
-cat("  edition      = {", params$version,     "}\n",  sep = "")
-cat("  doi      = {", params$doi,     "}\n",  sep = "")
-cat("}\n```\n")
-```
+This chapter is adapted from the LADAL tutorial [Publishing Free Online Books and Websites with Bookdown and Quarto](https://ladal.edu.au/tutorials/publish/publish.html) by Martin Schweinberger. Original source material is released under the GNU General Public License, Version 3.
 :::
-
-```{r session_info}
-sessionInfo()
-```
-
-::: {.callout-note}
-## AI Transparency Statement
-
-This tutorial was re-developed with the assistance of **Claude** (claude.ai), a large language model created by Anthropic. Claude was used to help revise the tutorial text, structure the instructional content, generate the R code examples, and write the `checkdown` quiz questions and feedback strings. All content was reviewed, edited, and approved by the author (Martin Schweinberger), who takes full responsibility for the accuracy and pedagogical appropriateness of the material. The use of AI assistance is disclosed here in the interest of transparency and in accordance with emerging best practices for AI-assisted academic content creation.
-:::
-
-[Back to top](#intro)
-
-[Back to LADAL home](/)
-
-
-# References {-}

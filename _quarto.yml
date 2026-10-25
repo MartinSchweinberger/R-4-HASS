@@ -5,42 +5,48 @@ project:
 book:
   title: "Quantitative and Reproducible Research with R in the Humanities"
   subtitle: "Block Seminar Materials"
-  author: "Your Name"
+  author: "Martin Schweinberger"
   date: today
+  repo-url: https://github.com/MartinSchweinberger/R-4-HASS
+  repo-actions: [edit, source, issue]
   chapters:
     - index.qmd
-    # --- Unit 1: Introduction to R and RStudio ----------------------
-    # - chapters/01-intro-r-rstudio.qmd        # NOT YET WRITTEN — awaiting source
-    # --- Unit 2: Working with Data in R ------------------------------
-    # - chapters/02-working-with-data.qmd      # NOT YET WRITTEN — awaiting source
-    # --- Unit 3: String Processing -----------------------------------
+    # --- Unit 1: Introduction to R and RStudio
+    - chapters/01-r_intro.qmd
+    # --- Unit 2: Working with Data in R
+    - chapters/02-data_loading.qmd
+    # --- Unit 3: String Processing
     - chapters/03-string-processing.qmd
-    # --- Unit 4: Regular Expressions ----------------------------------
+    # --- Unit 4: Regular Expressions
     - chapters/04-regular-expressions.qmd
-    # --- Unit 5: Data Cleaning, Processing, and Annotation ------------
-    # - chapters/05-data-cleaning.qmd          # NOT YET WRITTEN — awaiting source
-    # --- Unit 6: Data Visualisation with ggplot2 ----------------------
-    # - chapters/06-ggplot2.qmd                # NOT YET WRITTEN — awaiting source
-    # --- Unit 7: Statistical and Multivariate Analysis ----------------
-    # - chapters/07-statistics-multivariate.qmd # NOT YET WRITTEN — awaiting source
-    # --- Unit 8: Mixed-Effects Models ---------------------------------
+    # --- Unit 5: Data Cleaning and Tables
+    - chapters/05-tables.qmd
+    # --- Unit 6: Data Visualisation with ggplot2
+    - chapters/06-data_viz_intro.qmd
+    # --- Unit 7: Statistics — Inferential Tests and Regression
+    - chapters/07-statistics.qmd
+    # --- Unit 8: Mixed-Effects Models
     - chapters/08-mixed-effects-models.qmd
-    # --- Unit 9: Text Analysis (Corpus Methods) ------------------------
+    # --- Unit 9: Text Analysis (Corpus Methods)
     - chapters/09-text-analysis.qmd
-    # --- Unit 10: Reproducible Research with Quarto --------------------
-    # - chapters/10-quarto-reports.qmd         # NOT YET WRITTEN — awaiting source
-    # --- Unit 11: Publishing and Sharing Research via GitHub -----------
-    # - chapters/11-github.qmd                 # NOT YET WRITTEN — awaiting source
+    # --- Unit 10: Reproducible Research and Publishing (incorporates planned Unit 11)
+    - chapters/10-publish.qmd
   appendices:
     - chapters/99-references.qmd
 
 bibliography: references.bib
+
+execute:
+  freeze: auto
+  warning: false
+  message: false
 
 format:
   html:
     theme: cosmo
     code-fold: false
     code-tools: true
+    code-link: true
     toc: true
     toc-depth: 3
     number-sections: true

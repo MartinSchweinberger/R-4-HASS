@@ -1,0 +1,1240 @@
+---
+title: "Statistics in R: Inferential Tests and Regression"
+---
+
+```{r setup-stats, echo=FALSE, message=FALSE, warning=FALSE}
+library(checkdown)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(flextable)
+library(here)
+options(stringsAsFactors = FALSE)
+options(scipen = 100)
+options(max.print = 100)
+set.seed(42)
+```
+
+# Introduction {#sec-stats-intro}
+
+This chapter introduces the two most widely used families of statistical methods in quantitative humanities research: **classical inferential tests** (t-tests, chi-square tests, correlation) and **regression models** (linear and logistic). It builds directly on the data-handling skills from Chapter 5 and the visualisation skills from Chapter 6, and lays the foundation for the mixed-effects models covered in Chapter 8.
+
+::: {.callout-tip}
+## What This Chapter Covers
+
+**Part A — Statistical Reasoning**
+
+1. The logic of inferential statistics: from sample to population
+2. p-values: what they are and what they are not
+3. Checking parametric assumptions (brief)
+4. t-tests: paired and independent
+5. Chi-square tests for categorical data
+6. Correlation (bridge to regression)
+
+**Part B — Regression Concepts**
+
+7. What regression is and the OLS equation
+8. The geometry of regression — finding the best line
+9. Interpreting coefficients, standard errors, p-values
+10. R² and model fit
+11. Regression assumptions
+12. Categorical predictors (dummy coding)
+
+**Part C — Regression in R**
+
+13. Simple linear regression with `lm()`
+14. Multiple linear regression and interactions
+15. Model diagnostics with `performance`
+16. Binary logistic regression with `glm()`
+17. Reporting regression results
+
+**Scope note:** This chapter stays focused on classical inference and fixed-effects regression. Mixed-effects models — where observations are nested or repeated — are covered in Chapter 8. Non-parametric tests, multinomial/ordinal/Poisson regression, and robust regression are mentioned but not treated in depth.
+:::
+
+---
+
+## Preparation and Session Set-up {-}
+
+Install the packages used in this chapter (only needed once):
+
+```{r install-stats, eval=FALSE, message=FALSE, warning=FALSE}
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("tidyr")
+install.packages("flextable")
+install.packages("here")
+install.packages("checkdown")
+install.packages("e1071")        # skewness and kurtosis
+install.packages("effectsize")   # Cohen's d, f-squared, eta-squared
+install.packages("report")       # automated result summaries
+install.packages("performance")  # model diagnostics
+install.packages("car")          # VIF for multicollinearity
+install.packages("broom")        # tidy model output
+```
+
+Load them at the start of each session:
+
+```{r load-stats, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(flextable)
+library(here)
+library(checkdown)
+library(e1071)
+library(effectsize)
+library(report)
+library(performance)
+library(car)
+library(broom)
+```
+
+Load the datasets used throughout this chapter (copied from LADAL into the `data/` folder):
+
+```{r load-data-stats, message=FALSE, warning=FALSE}
+# For t-tests and assumption checking
+mdata   <- base::readRDS(here::here("data", "mdata.rda"))
+tdata_d03 <- base::readRDS(here::here("data", "d03.rda"))
+
+# For chi-square examples (loaded inline where used)
+
+# For regression
+slrdata <- base::readRDS(here::here("data", "sld.rda"))     # simple linear
+mlrdata <- base::readRDS(here::here("data", "mld.rda"))     # multiple linear
+logdata <- base::readRDS(here::here("data", "bld.rda"))     # binary logistic
+```
+
+---
+
+# Part A — Statistical Reasoning {.unnumbered}
+
+# From Samples to Populations {#sec-stats-logic}
+
+::: {.callout-note}
+## Section Overview
+
+**What you will learn:** The conceptual foundation of inferential statistics — what a p-value actually means, how NHST works, and why effect sizes are essential alongside significance tests.
+:::
+
+When we collect data in the humanities — a corpus, an experiment, a survey — we almost never observe the entire population of interest. Instead, we work with a **sample**: a subset of the population we hope is representative. Inferential statistics provide the tools to reason from the sample to the population under conditions of uncertainty.
+
+The dominant framework for this reasoning is **null hypothesis significance testing (NHST)**:
+
+1. We formulate a **null hypothesis (H₀)** — typically that there is no effect, no difference, or no association in the population.
+2. We formulate an **alternative hypothesis (H₁)** — the substantive claim we want to test.
+3. We calculate a **test statistic** that summarises how far our data deviate from what H₀ would predict.
+4. We compute a **p-value**: the probability of observing a test statistic as extreme as ours (or more extreme) *if H₀ were true*.
+5. If p falls below a pre-specified **significance threshold** (typically α = .05), we **reject H₀** in favour of H₁.
+
+::: {.callout-important}
+## Common Misconceptions About p-values
+
+The p-value is one of the most frequently misinterpreted statistics in all of science. It is **not**:
+
+- The probability that H₀ is true
+- The probability that the result is due to chance
+- A measure of the size or importance of an effect
+- A guarantee of reproducibility
+
+A p-value below .05 tells us only that *our data are unlikely under H₀*. It says nothing about the magnitude of the effect (which requires an **effect size**) or whether the result will replicate (which requires **power** and **replication**).
+
+**Always report effect sizes alongside p-values.**
+:::
+
+::: {.callout-note}
+## Parametric vs. Non-Parametric Tests
+
+Tests can be broadly divided into two families:
+
+| Type | When to use | Examples |
+|---|---|---|
+| **Parametric** | Data (or residuals) are approximately normally distributed; numeric dependent variable | t-test, ANOVA, linear regression |
+| **Non-parametric** | Data are ordinal, or residuals are non-normal; robust to assumption violations | Mann-Whitney U, Wilcoxon, Kruskal-Wallis, χ² |
+
+This chapter focuses on parametric tests and chi-square. If your data violate normality assumptions and sample sizes are small, consult a non-parametric alternative; see the Further Resources section at the end.
+:::
+
+---
+
+# Checking Assumptions {#sec-stats-assumptions}
+
+::: {.callout-note}
+## Section Overview
+
+**What you will learn:** How to check whether your data meet the assumptions required for parametric tests.
+
+**Key methods:** Histograms, Q-Q plots, Shapiro-Wilk test, skewness, kurtosis
+:::
+
+The most important assumptions for parametric tests are:
+
+1. **Normality** — the errors (residuals) within each group are approximately normally distributed
+2. **Homogeneity of variances** — the variances of the groups are approximately equal
+
+We illustrate assumption checking with word count data from a sample corpus, extracting 100 utterances from men and 100 from women:
+
+```{r assdat01-stats, message=FALSE, warning=FALSE}
+ndata <- mdata |>
+  dplyr::rename(Gender = sex, Words = word.count) |>
+  dplyr::select(Gender, Words) |>
+  dplyr::filter(!is.na(Words), !is.na(Gender)) |>
+  dplyr::group_by(Gender) |>
+  dplyr::sample_n(100)
+```
+
+## Visual Inspection {-}
+
+A **histogram with density curve** gives an immediate impression of distributional shape. A normal distribution should produce a symmetric, bell-shaped histogram.
+
+```{r hist-check-stats, message=FALSE, warning=FALSE, fig.width=8, fig.height=4}
+ggplot(ndata, aes(x = Words, fill = Gender)) +
+  geom_histogram(bins = 20, color = "white", alpha = 0.7) +
+  facet_wrap(~ Gender) +
+  scale_fill_manual(values = c("steelblue", "tomato")) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "Distribution of word counts by gender",
+       x = "Words per utterance", y = "Count")
+```
+
+A **Q-Q plot** (quantile-quantile) is often more informative than a histogram. If the data are normal, the points fall on the diagonal.
+
+```{r qq-check-stats, message=FALSE, warning=FALSE, fig.width=8, fig.height=4}
+ggplot(ndata, aes(sample = Words, color = Gender)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~ Gender) +
+  scale_color_manual(values = c("steelblue", "tomato")) +
+  theme_bw() +
+  theme(legend.position = "none") +
+  labs(title = "Q-Q plots by gender",
+       x = "Theoretical quantiles", y = "Sample quantiles")
+```
+
+## Skewness and Kurtosis {-}
+
+**Skewness** measures asymmetry: zero is perfectly symmetric; positive values indicate a long right tail; negative values indicate a long left tail.
+
+**Kurtosis** measures the heaviness of tails relative to a normal distribution: zero is normal; positive is heavy-tailed (more outliers than normal); negative is light-tailed.
+
+```{r skew-kurt-stats, message=FALSE, warning=FALSE}
+ndata |>
+  dplyr::group_by(Gender) |>
+  dplyr::summarise(
+    n          = dplyr::n(),
+    mean_words = round(mean(Words), 1),
+    sd_words   = round(sd(Words), 1),
+    skewness   = round(e1071::skewness(Words), 2),
+    kurtosis   = round(e1071::kurtosis(Words), 2),
+    .groups    = "drop"
+  )
+```
+
+::: {.callout-tip}
+## Interpreting Skewness Values
+
+| |skewness|  | Shape |
+|---|---|
+| ≤ 0.5 | approximately symmetric |
+| 0.5–1.0 | moderately skewed |
+| > 1.0 | highly skewed |
+
+Highly skewed data often benefit from a transformation (log, square root) before parametric testing — or from a non-parametric test.
+:::
+
+## Formal Test: Shapiro-Wilk {-}
+
+The **Shapiro-Wilk test** tests the null hypothesis that the data come from a normal distribution. A **small** p-value means we reject normality.
+
+```{r shapiro-stats, message=FALSE, warning=FALSE}
+ndata |>
+  dplyr::group_by(Gender) |>
+  dplyr::summarise(
+    W_statistic = round(shapiro.test(Words)$statistic, 3),
+    p_value     = round(shapiro.test(Words)$p.value, 4),
+    .groups     = "drop"
+  )
+```
+
+::: {.callout-warning}
+## Shapiro-Wilk: Limitations
+
+For **large samples** (n > 300), Shapiro-Wilk becomes oversensitive: it will flag tiny, inconsequential deviations from normality as "significant." For large samples, trust the visual inspection (Q-Q plot) more than the test. For **small samples** (n < 20), the test has low power and may miss genuine non-normality — again, trust visual inspection.
+:::
+
+---
+
+# Parametric Tests: t-tests {#sec-stats-ttests}
+
+::: {.callout-note}
+## Section Overview
+
+**What you will learn:** When and how to apply t-tests in R, and how to extract and report effect sizes.
+
+**Key tests:** Paired t-test, independent t-test (Student's and Welch's)
+:::
+
+The **t-test** compares the means of two groups or conditions. There are two main variants:
+
+| Type | Use when |
+|---|---|
+| **Paired (dependent) t-test** | The same participants are measured in two conditions |
+| **Independent t-test** | Two separate groups of participants |
+
+## Paired t-test {-}
+
+A **paired t-test** accounts for the fact that scores in two conditions come from the *same* individuals. By working with the *difference* within each pair, it removes between-subject variability and is more powerful than the independent t-test for matched data.
+
+$$t = \frac{\bar{D}}{s_D / \sqrt{N}}$$
+
+where $\bar{D}$ is the mean difference between paired observations, $s_D$ is its standard deviation, and $N$ is the number of pairs.
+
+**Example:** Does an 8-week teaching intervention reduce spelling errors? Six students wrote essays before and after the intervention.
+
+```{r paired-data-stats, message=FALSE, warning=FALSE}
+Pretest  <- c(78, 65, 71, 68, 76, 59)
+Posttest <- c(71, 62, 70, 60, 66, 48)
+ptd <- data.frame(Student = 1:6, Pretest, Posttest)
+ptd
+```
+
+Visualise within-student differences:
+
+```{r paired-viz-stats, message=FALSE, warning=FALSE, fig.width=6, fig.height=4}
+ptd_long <- ptd |>
+  tidyr::pivot_longer(cols = c(Pretest, Posttest),
+                      names_to = "Time", values_to = "Errors") |>
+  dplyr::mutate(Time = factor(Time, levels = c("Pretest", "Posttest")))
+
+ggplot(ptd_long, aes(x = Time, y = Errors, group = Student)) +
+  geom_line(color = "gray60", linewidth = 0.7) +
+  geom_point(aes(color = Time), size = 3) +
+  scale_color_manual(values = c("steelblue", "tomato")) +
+  theme_bw() +
+  theme(legend.position = "none", panel.grid.minor = element_blank()) +
+  labs(title = "Spelling errors before and after teaching intervention",
+       x = "", y = "Number of spelling errors")
+```
+
+Each line is one student. The general downward trend suggests improvement. Test it formally:
+
+```{r paired-ttest-stats, message=FALSE, warning=FALSE}
+t.test(ptd$Pretest, ptd$Posttest, paired = TRUE, conf.level = 0.95)
+```
+
+The test is significant (t₅ = 4.15, p = .009). Extract **Cohen's d** as the effect size:
+
+```{r paired-effect-stats, message=FALSE, warning=FALSE}
+effectsize::cohens_d(x = ptd$Pretest, y = ptd$Posttest, paired = TRUE)
+```
+
+::: {.callout-tip}
+## Cohen's d Benchmarks
+
+| |d|  | Magnitude |
+|---|---|
+| 0.01 | Very small |
+| 0.20 | Small |
+| 0.50 | Medium |
+| 0.80 | Large |
+| 1.20 | Very large |
+| 2.00 | Huge |
+
+Source: Cohen (1988); Sawilowsky (2009).
+:::
+
+Automated reporting with the `report` package:
+
+```{r paired-report-stats, message=FALSE, warning=FALSE}
+report::report(t.test(ptd$Pretest, ptd$Posttest, paired = TRUE))
+```
+
+::: {.callout-note}
+## Reporting: Paired t-test
+
+A paired t-test confirmed that the 8-week teaching intervention produced a significant reduction in spelling errors (*t*₅ = 4.15, *p* = .009). The effect was very large (Cohen's *d* = 1.70, 95% CI [0.41, 3.25]), indicating a practically meaningful impact.
+:::
+
+## Independent t-test {-}
+
+An **independent t-test** compares the means of two separate, unrelated groups:
+
+$$t = \frac{\bar{X}_1 - \bar{X}_2}{\sqrt{\frac{s^2_p}{N_1} + \frac{s^2_p}{N_2}}}$$
+
+::: {.callout-tip}
+## Student's vs. Welch's t-test
+
+By default, R's `t.test()` uses **Welch's t-test**, which adjusts the degrees of freedom to account for unequal variances. This is generally the safer choice. To use the classical Student's formula (after verifying equal variances), set `var.equal = TRUE`.
+:::
+
+**Example:** Do native speakers and learners of English differ in their proficiency test scores?
+
+```{r indep-data-stats, message=FALSE, warning=FALSE}
+tdata <- tdata_d03 |>
+  dplyr::rename(NativeSpeakers = 1, Learners = 2) |>
+  tidyr::pivot_longer(cols = everything(),
+                      names_to = "Group", values_to = "Score") |>
+  dplyr::mutate(Group = factor(Group))
+```
+
+```{r indep-viz-stats, message=FALSE, warning=FALSE, fig.width=6, fig.height=4}
+ggplot(tdata, aes(x = Group, y = Score, fill = Group)) +
+  geom_boxplot(alpha = 0.7, outlier.color = "red") +
+  scale_fill_manual(values = c("steelblue", "tomato")) +
+  theme_bw() +
+  theme(legend.position = "none", panel.grid.minor = element_blank()) +
+  labs(title = "Proficiency scores: Native speakers vs. Learners",
+       x = "", y = "Test score")
+```
+
+```{r indep-ttest-stats, message=FALSE, warning=FALSE}
+t.test(Score ~ Group, var.equal = TRUE, data = tdata)
+```
+
+```{r indep-effect-stats, message=FALSE, warning=FALSE}
+effectsize::cohens_d(tdata$Score ~ tdata$Group, paired = FALSE)
+```
+
+::: {.callout-note}
+## Reporting: Independent t-test
+
+An independent t-test found no significant difference in proficiency scores between native speakers and learners (*t*₁₈ = −0.05, *p* = .957). The effect size was negligible (Cohen's *d* = −0.03, 95% CI [−0.95, 0.90]), suggesting the two groups were very similar in test performance.
+:::
+
+::: {.callout-tip}
+## Exercises: t-tests
+:::
+
+**Q1. You measure the same participants under two conditions. Which test is appropriate?**
+
+```{r}
+#| echo: false
+#| label: "TT_Q1"
+check_question("Paired (dependent) t-test — because the two measurements are not independent",
+               options = c(
+                 "Paired (dependent) t-test — because the two measurements are not independent",
+                 "Independent t-test — because there are two conditions",
+                 "One-sample t-test — because there is one group of participants",
+                 "Chi-square test — because the design is within-subjects"
+               ),
+               type = "radio",
+               q_id = "TT_Q1",
+               random_answer_order = TRUE,
+               button_label = "Check answer",
+               right = "Correct! When the same participants provide data in both conditions, the two measurements are correlated — using an independent t-test would overestimate the standard error and lose power. The paired t-test works with within-participant differences and is substantially more powerful.",
+               wrong = "The key question is independence: are the measurements in the two conditions independent, or do they come from the same participants?")
+```
+
+**Q2. What does Cohen's d measure?**
+
+```{r}
+#| echo: false
+#| label: "TT_Q2"
+check_question("The standardised difference between two means — the effect size, independent of sample size",
+               options = c(
+                 "The standardised difference between two means — the effect size, independent of sample size",
+                 "The p-value of the t-test",
+                 "The confidence interval of the mean difference",
+                 "The probability that the null hypothesis is true"
+               ),
+               type = "radio",
+               q_id = "TT_Q2",
+               random_answer_order = TRUE,
+               button_label = "Check answer",
+               right = "Correct! Cohen's d expresses the mean difference in units of pooled standard deviation. Unlike p-values, Cohen's d does not depend on sample size — a d of 0.5 means the same thing in a study of 20 or 2000. This is why effect sizes should always be reported alongside p-values.",
+               wrong = "p-values and confidence intervals depend heavily on sample size. What makes effect sizes different?")
+```
+
+---
+
+# Chi-Square Tests {#sec-stats-chisquare}
+
+::: {.callout-note}
+## Section Overview
+
+**What you will learn:** How to test associations between categorical variables.
+
+**Key tests:** Pearson's χ², Fisher's Exact Test (brief), with effect sizes (phi, Cramér's V)
+:::
+
+The **chi-square test** (χ²) tests whether there is an association between two categorical variables.
+
+## Pearson's Chi-Square Test {-}
+
+Pearson's χ² compares observed cell frequencies to expected frequencies under independence:
+
+$$\chi^2 = \sum_{i} \frac{(O_i - E_i)^2}{E_i}$$
+
+Expected: $E_i = \frac{\text{Row total} \times \text{Column total}}{\text{Grand total}}$
+
+Degrees of freedom: $df = (\text{rows} - 1) \times (\text{columns} - 1)$
+
+**Example:** Do speakers of AmE and BrE differ in their use of *sort of* vs. *kind of*?
+
+```{r chi-data-stats, message=FALSE, warning=FALSE}
+chidata <- matrix(c(181, 655, 177, 67), nrow = 2, byrow = TRUE,
+                  dimnames = list(c("kindof", "sortof"), c("BrE", "AmE")))
+chidata
+```
+
+Visualise with a mosaic plot (shaded by Pearson residuals):
+
+```{r chi-mosaic-stats, message=FALSE, warning=FALSE, fig.width=6, fig.height=5}
+mosaicplot(chidata, shade = TRUE, type = "pearson",
+           main = "kind of / sort of × BrE / AmE")
+```
+
+Run the test:
+
+```{r chi-test-stats, message=FALSE, warning=FALSE}
+chisq.test(chidata, correct = FALSE)
+```
+
+### Effect Size: phi (φ) and Cramér's V {-}
+
+For 2×2 tables: $\phi = \sqrt{\chi^2 / N}$
+
+For larger tables: $V = \sqrt{\chi^2 / [N \cdot (k - 1)]}$ where $k = \min(\text{rows}, \text{columns})$
+
+```{r chi-effect-stats, message=FALSE, warning=FALSE}
+effectsize::phi(chidata, adjust = FALSE)
+```
+
+::: {.callout-tip}
+## phi / Cramér's V Benchmarks
+
+| Value | Magnitude | Comparable to Cohen's d |
+|---|---|---|
+| < .10 | Negligible | — |
+| .10 | Small | 0.2 |
+| .30 | Medium | 0.5 |
+| .50 | Large | 0.8 |
+
+Source: Cohen (1988).
+:::
+
+::: {.callout-note}
+## Reporting: Chi-Square Test
+
+A Pearson's χ² test confirmed a highly significant association of moderate size between variety of English and hedge choice (χ²(1) = 220.73, *p* < .001, φ = .45). BrE speakers strongly favoured *sort of*, while AmE speakers showed a preference for *kind of*.
+:::
+
+### Assumptions of the Chi-Square Test {-}
+
+::: {.callout-warning}
+## Chi-Square Assumptions
+
+- At least **80% of expected cell frequencies** must be ≥ 5
+- **No expected cell frequency** may be < 1
+- Observations must be **independent** (each participant contributes to only one cell)
+
+When these conditions are not met, use **Fisher's Exact Test** instead: `fisher.test(chidata)`.
+:::
+
+---
+
+# Correlation {#sec-stats-correlation}
+
+::: {.callout-note}
+## Section Overview
+
+**What you will learn:** How to assess the strength of association between two numeric variables.
+
+**Key tests:** Pearson's r (linear), Spearman's rho (monotonic / ordinal)
+:::
+
+**Correlation** quantifies the strength and direction of a linear or monotonic relationship between two numeric variables. It ranges from -1 (perfect negative) through 0 (no correlation) to +1 (perfect positive).
+
+| Correlation | Strength |
+|---|---|
+| |r| < 0.1 | negligible |
+| 0.1–0.3 | small |
+| 0.3–0.5 | medium |
+| > 0.5 | large |
+
+## Pearson's Correlation (Linear) {-}
+
+Pearson's *r* measures the strength of a **linear** relationship between two numeric variables. It assumes both variables are approximately normally distributed.
+
+```{r pearson-stats, message=FALSE, warning=FALSE}
+# Example: relationship between predictors in the regression data
+cor.test(slrdata$Date, slrdata$Prepositions, method = "pearson")
+```
+
+## Spearman's Rank Correlation (Monotonic) {-}
+
+Spearman's **ρ** (rho) measures the strength of a **monotonic** relationship. It works on ranks rather than raw values, so it is appropriate for ordinal data or when normality is violated.
+
+```{r spearman-stats, message=FALSE, warning=FALSE}
+cor.test(slrdata$Date, slrdata$Prepositions, method = "spearman")
+```
+
+::: {.callout-warning}
+## Correlation Is Not Causation
+
+A strong correlation tells you two variables move together — it does **not** tell you one causes the other. The pattern may reflect a third (unmeasured) variable, reverse causation, or coincidence. Interpreting correlation causally without a controlled design is one of the most common errors in applied statistics.
+:::
+
+Correlation is a natural bridge to regression: both measure the association between variables, but regression goes further by modelling *how* the outcome depends on predictors, and by allowing multiple predictors simultaneously.
+
+---
+
+# Part B — Regression Concepts {.unnumbered}
+
+# What Is Regression? {#sec-stats-whatisregression}
+
+At its core, **regression** models the relationship between:
+
+- One or more **predictor variables** (independent variables, IVs, explanatory variables)
+- A single **outcome variable** (dependent variable, DV, response variable)
+
+The fundamental linear regression equation is:
+
+$$y = \alpha + \beta x + \epsilon$$
+
+where:
+
+- $y$ is the outcome we want to predict
+- $\alpha$ (alpha) is the **intercept** — the predicted value of $y$ when the predictor equals zero
+- $\beta$ (beta) is the **coefficient** (slope) — how much $y$ changes for a one-unit increase in $x$
+- $x$ is the predictor variable
+- $\epsilon$ (epsilon) is the **residual** (error) — the difference between observed and predicted $y$
+
+## A Concrete Example {-}
+
+Suppose we want to predict **weight (kg)** from **height (cm)**. A regression fit might give:
+
+$$\text{Weight} = -93.77 + 0.98 \times \text{Height}$$
+
+**Interpretation:**
+
+- A person 0 cm tall is predicted to weigh −93.77 kg (clearly nonsensical — the intercept is just where the line crosses y, not a meaningful prediction when 0 is outside the data range).
+- For every additional 1 cm of height, predicted weight increases by 0.98 kg.
+- A person 170 cm tall is predicted to weigh $-93.77 + 0.98 \times 170 \approx 72.83$ kg.
+
+## Why Regression? {-}
+
+Regression models are the dominant tool in quantitative humanities research because they:
+
+1. **Handle multiple predictors simultaneously** — test the effect of one predictor while controlling for others.
+2. **Are extremely flexible** — can handle numeric, categorical, binary, and ordinal outcomes.
+3. **Produce interpretable output** — coefficients, p-values, confidence intervals, effect sizes.
+4. **Are widely reported** — facilitates comparison across studies and meta-analysis.
+5. **Form the basis of mixed-effects models** (Chapter 8) and most machine-learning methods.
+
+---
+
+# The Geometry of OLS {#sec-stats-ols}
+
+**Ordinary Least Squares (OLS)** finds the line that minimises the sum of squared vertical distances from each data point to the line. These vertical distances are the **residuals**.
+
+$$\text{OLS criterion:} \quad \min_{\alpha, \beta} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+
+where $\hat{y}_i = \alpha + \beta x_i$ is the predicted value for observation $i$.
+
+Why squared? Because squaring (a) makes all distances positive and (b) penalises large residuals more than small ones.
+
+Illustration — a scatter plot of ten points with the OLS line and residuals:
+
+```{r ols-geometry-stats, message=FALSE, warning=FALSE, fig.width=6, fig.height=4}
+set.seed(42)
+toy <- data.frame(x = runif(10, 0, 10)) |>
+  dplyr::mutate(y = 2 + 1.5 * x + rnorm(10, 0, 2))
+
+m_toy <- lm(y ~ x, data = toy)
+toy$pred  <- predict(m_toy)
+
+ggplot(toy, aes(x, y)) +
+  geom_segment(aes(xend = x, yend = pred), color = "red", linewidth = 0.7) +
+  geom_abline(intercept = coef(m_toy)[1], slope = coef(m_toy)[2],
+              color = "steelblue", linewidth = 1) +
+  geom_point(size = 2) +
+  theme_bw() +
+  labs(title = "OLS: the line that minimises squared residuals",
+       subtitle = "Red segments are the residuals (observed − predicted)",
+       x = "x", y = "y")
+```
+
+The regression line (blue) is positioned to minimise the total of the squared red segments.
+
+---
+
+# Interpreting Regression Output {#sec-stats-interpretation}
+
+A regression model produces several key statistics. Here's what they mean.
+
+## Coefficients (β) {-}
+
+The interpretation depends on the type of regression:
+
+| Regression type | Coefficient interpretation |
+|---|---|
+| Linear | A 1-unit increase in $x$ is associated with a $\beta$-unit change in $y$ |
+| Logistic | A 1-unit increase in $x$ multiplies the **odds** of the outcome by $e^\beta$ |
+| Poisson | A 1-unit increase in $x$ multiplies the **expected count** by $e^\beta$ |
+
+## Standard Error (SE) {-}
+
+The SE tells us how much the coefficient would vary if we repeated the study many times with different samples from the same population. **Smaller SE = more precise estimate.**
+
+## t-value (linear) or z-value (logistic) {-}
+
+$$t = \frac{\text{Coefficient}}{\text{SE}}$$
+
+The t- or z-value measures how many standard errors the coefficient is away from zero. Larger absolute values → stronger evidence against H₀: β = 0.
+
+## p-value {-}
+
+The probability of observing a coefficient this large (or larger) *if the true effect were zero*. **p < .05** is the conventional threshold for "statistical significance."
+
+::: {.callout-warning}
+## p-values ≠ Effect Size
+
+A tiny, practically meaningless effect can be "significant" with a large enough sample. A large, important effect can be "non-significant" with a small sample. **Always report effect sizes alongside p-values.**
+:::
+
+## R² (for linear regression) {-}
+
+**R²** = proportion of variance in the outcome explained by the model.
+
+| R² | Interpretation |
+|---|---|
+| 0 | Model explains no variance (useless) |
+| 0.10 | 10% explained (weak but possibly meaningful in social sciences) |
+| 0.50 | 50% explained (strong) |
+| 1.00 | Perfect fit (only possible with no measurement error) |
+
+**Adjusted R²** penalises models for including many predictors. It is always ≤ R² and prevents overfitting:
+
+$$R^2_{\text{adjusted}} = 1 - \frac{(1 - R^2)(n - 1)}{n - k - 1}$$
+
+where *k* is the number of predictors.
+
+## AIC and BIC {-}
+
+**AIC** (Akaike Information Criterion) and **BIC** (Bayesian Information Criterion) balance model fit against complexity. **Lower is better.**
+
+Rules of thumb for comparing models:
+
+- ΔAIC < 2: models are essentially equivalent
+- ΔAIC = 2–7: moderate evidence for the model with lower AIC
+- ΔAIC > 10: strong evidence for the model with lower AIC
+
+::: {.callout-tip}
+## Exercises: Regression Basics
+:::
+
+**Q1. What does the intercept (α) in a regression represent?**
+
+```{r}
+#| echo: false
+#| label: "RG_Q1"
+check_question("The predicted value of the outcome when all predictors equal zero",
+               options = c(
+                 "The predicted value of the outcome when all predictors equal zero",
+                 "The slope of the regression line",
+                 "The strength of the correlation between predictors and outcome",
+                 "The p-value of the model"
+               ),
+               type = "radio",
+               q_id = "RG_Q1",
+               random_answer_order = TRUE,
+               button_label = "Check answer",
+               right = "Correct! The intercept is the value of y when x = 0. This is why centering predictors (subtracting the mean) is often helpful: the intercept then represents the predicted outcome at the *mean* value of predictors, which is more interpretable than at x = 0.",
+               wrong = "Think about where the regression line crosses the y-axis. What is the value of x at that point?")
+```
+
+**Q2. A logistic regression reports a coefficient β = 0.693 for a predictor. What is the odds ratio?**
+
+```{r}
+#| echo: false
+#| label: "RG_Q2"
+check_question("exp(0.693) ≈ 2.0 — a 1-unit increase in x doubles the odds of the outcome",
+               options = c(
+                 "exp(0.693) ≈ 2.0 — a 1-unit increase in x doubles the odds of the outcome",
+                 "0.693 — the coefficient is itself the odds ratio",
+                 "0.693 / (1 - 0.693) ≈ 2.26 — the logit of the coefficient",
+                 "There is no odds ratio in logistic regression — only probabilities"
+               ),
+               type = "radio",
+               q_id = "RG_Q2",
+               random_answer_order = TRUE,
+               button_label = "Check answer",
+               right = "Correct! Logistic regression coefficients are log-odds. To convert to odds ratios, exponentiate: exp(0.693) = 2.0. This means a 1-unit increase in the predictor doubles the odds of the outcome. Odds ratios > 1 indicate positive effects; OR < 1 indicate negative effects; OR = 1 indicates no effect.",
+               wrong = "Logistic regression coefficients are on the log-odds scale. What mathematical operation converts log-odds to odds?")
+```
+
+---
+
+# Regression Assumptions {#sec-stats-regassumptions}
+
+## Linear Regression Assumptions {-}
+
+1. **Linearity** — the relationship between predictors and outcome is linear
+2. **Independence** — observations are independent (no autocorrelation, no nesting)
+3. **Normality of residuals** — residuals are approximately normally distributed
+4. **Homoscedasticity** — residual variance is constant across the range of predicted values
+5. **No perfect multicollinearity** — predictors are not perfectly correlated with each other
+
+::: {.callout-note}
+## When Assumptions Are Violated
+
+- **Non-linearity:** add polynomial terms, use a non-linear model, or transform variables
+- **Non-independence** (nested data, repeated measures): use **mixed-effects models** (Chapter 8)
+- **Non-normal residuals:** often tolerated for large samples; transform the outcome if severe
+- **Heteroscedasticity:** use robust standard errors, or weighted regression
+- **Multicollinearity:** remove or combine correlated predictors; check VIF (see the diagnostics section)
+:::
+
+## Logistic Regression Assumptions {-}
+
+For logistic regression (binary outcomes), the assumptions differ:
+
+1. **Independence** of observations (same as linear)
+2. **Linearity in the logit** — the predictors are linearly related to the log-odds of the outcome
+3. **No perfect separation** — no predictor perfectly predicts the outcome
+4. **Adequate sample size** — rule of thumb: at least 10 events per predictor
+
+Residual normality and homoscedasticity are **not** required for logistic regression — the outcome is binary, so these assumptions don't apply.
+
+---
+
+# Categorical Predictors {#sec-stats-categorical}
+
+Regression can include categorical predictors (e.g., gender, genre, condition) alongside numeric ones. R handles the mechanics automatically through **dummy coding**.
+
+## How Dummy Coding Works {-}
+
+For a categorical predictor with $k$ levels, R creates $k - 1$ dummy variables. One level is designated the **reference** (baseline); the other levels are compared to it.
+
+**Example:** A predictor `Register` with three levels (Academic, News, Fiction) becomes two dummy variables:
+
+| Observation | Register | RegisterNews | RegisterFiction |
+|---|---|---|---|
+| 1 | Academic | 0 | 0 |
+| 2 | News | 1 | 0 |
+| 3 | Fiction | 0 | 1 |
+
+The coefficient for `RegisterNews` tells you the difference between News and Academic (the reference). The coefficient for `RegisterFiction` tells you the difference between Fiction and Academic. There is no coefficient for Academic — it is absorbed into the intercept.
+
+## Changing the Reference Level {-}
+
+By default R uses alphabetical order for factor levels. To make a specific level the reference, convert the variable to a factor with the desired order:
+
+```{r reflevel-stats, eval=FALSE}
+my_data$Register <- factor(my_data$Register,
+                           levels = c("Academic", "News", "Fiction"))
+```
+
+The first level (`Academic` here) becomes the reference.
+
+---
+
+# Part C — Regression in R {.unnumbered}
+
+# Simple Linear Regression {#sec-stats-slr}
+
+::: {.callout-note}
+## Section Overview
+
+**What you will learn:** How to fit, diagnose, and interpret a simple linear regression in R.
+
+**Key functions:** `lm()`, `summary()`, `performance::check_model()`, `effectsize::cohens_f_squared()`
+:::
+
+## Example: Preposition Use Across Time {-}
+
+**Research question:** does preposition frequency in English change over historical time?
+
+**Data:** 537 historical English texts (1125–1900) with preposition counts per 1,000 words.
+
+```{r slr-inspect-stats, message=FALSE, warning=FALSE}
+head(slrdata, 10)
+```
+
+## Centre the Predictor {-}
+
+Centring `Date` (subtracting the mean) makes the intercept interpretable — it represents the frequency at the *mean* year rather than at year 0.
+
+```{r slr-center-stats, message=FALSE, warning=FALSE}
+slrdata <- slrdata |>
+  dplyr::mutate(Date = Date - mean(Date))
+```
+
+## Visualise the Relationship {-}
+
+```{r slr-plot-stats, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+ggplot(slrdata, aes(Date, Prepositions)) +
+  geom_point(alpha = 0.4, color = "steelblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "red", fill = "pink", alpha = 0.3) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank()) +
+  labs(title = "Preposition frequency over time",
+       x = "Year (centred)", y = "Prepositions per 1,000 words")
+```
+
+## Fit the Model {-}
+
+```{r slr-model-stats, message=FALSE, warning=FALSE}
+m1_slr <- lm(Prepositions ~ Date, data = slrdata)
+summary(m1_slr)
+```
+
+**Key results (from the summary):**
+
+- **Intercept** ≈ 131.94: predicted frequency at the mean year
+- **Date coefficient** ≈ 0.0173: for each additional year, frequency increases by about 0.017 prepositions per 1,000 words
+- **p-value** ≈ 0.0175: statistically significant at α = .05
+- **R²** ≈ 0.0105: only 1% of variance explained — a very weak effect
+
+The result shows the classic warning sign: **statistically significant does not mean practically important**. With 537 observations, even tiny effects reach significance.
+
+## Model Diagnostics {-}
+
+Use `performance::check_model()` for a comprehensive diagnostic plot:
+
+```{r slr-check-stats, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+performance::check_model(m1_slr)
+```
+
+**How to read each panel:**
+
+1. **Posterior Predictive Check**: observed and model-simulated distributions should overlap
+2. **Linearity**: residuals vs fitted should scatter randomly around horizontal line
+3. **Homogeneity of Variance**: should show a flat band, no funnel
+4. **Influential Observations**: no points should exceed Cook's distance threshold
+5. **Normality of Residuals**: Q-Q plot points should follow the diagonal
+6. **Collinearity**: not applicable (only one predictor)
+
+## Effect Size {-}
+
+**Cohen's f²** quantifies the effect size for regression. Benchmarks: 0.02 small, 0.15 medium, 0.35 large.
+
+```{r slr-effectsize-stats, message=FALSE, warning=FALSE}
+effectsize::cohens_f_squared(m1_slr)
+```
+
+A very small f² confirms the negligible effect size we already inferred from R².
+
+---
+
+# Multiple Linear Regression {#sec-stats-mlr}
+
+Multiple linear regression extends simple regression to **multiple predictors**:
+
+$$y = \alpha + \beta_1 x_1 + \beta_2 x_2 + \dots + \beta_k x_k + \epsilon$$
+
+## Example: Gift Spending and Attractiveness {-}
+
+**Research question:** do men spend more on presents for women they find attractive and/or when they are single?
+
+**Data:** 100 men rated women's attractiveness, reported relationship status, and amount spent on a gift.
+
+```{r mlr-inspect-stats, message=FALSE, warning=FALSE}
+head(mlrdata, 10)
+```
+
+## Visualise the Data {-}
+
+```{r mlr-plot-stats, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+ggplot(mlrdata, aes(x = status, y = money, fill = attraction)) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("gray60", "steelblue")) +
+  theme_bw() +
+  theme(legend.position = "top", panel.grid.minor = element_blank()) +
+  labs(title = "Money spent on gifts by relationship status and attraction",
+       x = "Relationship Status", y = "Money Spent ($)", fill = "Attraction")
+```
+
+The plot suggests three effects:
+
+- Single men spend more than those in relationships
+- Men spend more when attracted to the woman
+- The effect of being single may be *stronger* when the man is attracted (an **interaction**)
+
+## Fit a Model with Interaction {-}
+
+We start with a model including both main effects and their interaction. The `*` operator means "both main effects plus interaction":
+
+```{r mlr-saturated-stats, message=FALSE, warning=FALSE}
+m_full <- lm(money ~ status * attraction, data = mlrdata)
+summary(m_full)
+```
+
+**Interpretation:**
+
+- **Intercept** ≈ 50: money spent when in a relationship AND not interested (both reference levels)
+- **statusSingle** ≈ 30: being single adds about $30 to spending (when not interested)
+- **attractionInterested** ≈ 25: being interested adds about $25 (when in a relationship)
+- **Interaction** ≈ 20: the effect of being single is $20 *larger* when the man is also interested
+
+A significant interaction indicates a **non-additive effect**: the combined effect of two predictors is more (or less) than the sum of their individual effects.
+
+## Model Diagnostics {-}
+
+```{r mlr-check-stats, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+performance::check_model(m_full)
+```
+
+## Checking Multicollinearity: VIF {-}
+
+**Variance Inflation Factor (VIF)** quantifies how much the standard error of a coefficient is inflated by correlations with other predictors.
+
+Rules of thumb:
+
+| VIF | Concern |
+|---|---|
+| < 5 | No concern |
+| 5–10 | Moderate concern |
+| > 10 | Serious multicollinearity |
+
+```{r mlr-vif-stats, message=FALSE, warning=FALSE}
+# For a model with interaction, use GVIF (generalised VIF)
+# Here we fit the additive model to check VIFs cleanly
+m_additive <- lm(money ~ status + attraction, data = mlrdata)
+car::vif(m_additive)
+```
+
+Low VIFs indicate predictors are not meaningfully correlated — the model's coefficients can be trusted.
+
+## Compare Models {-}
+
+Does adding the interaction improve the model over just the main effects?
+
+```{r mlr-compare-stats, message=FALSE, warning=FALSE}
+anova(m_additive, m_full)
+```
+
+Also compare on AIC:
+
+```{r mlr-aic-stats, message=FALSE, warning=FALSE}
+AIC(m_additive, m_full)
+```
+
+Lower AIC and significant F test both support the model with interaction.
+
+::: {.callout-tip}
+## Exercises: Multiple Linear Regression
+:::
+
+**Q1. In the gift-spending model, what does a significant interaction between status and attraction mean?**
+
+```{r}
+#| echo: false
+#| label: "MLR_Q1"
+check_question("The effect of status (single vs. in relationship) on money depends on the level of attraction — the two predictors combine non-additively",
+               options = c(
+                 "The effect of status (single vs. in relationship) on money depends on the level of attraction — the two predictors combine non-additively",
+                 "Both predictors are independently significant",
+                 "The two predictors are highly correlated with each other",
+                 "The model has a high R²"
+               ),
+               type = "radio",
+               q_id = "MLR_Q1",
+               random_answer_order = TRUE,
+               button_label = "Check answer",
+               right = "Correct! An interaction means the effect of one predictor varies with the level of another. Without interaction, the model assumes effects simply add up. With interaction, the model allows (for example) the effect of being single to be bigger when the man is also attracted — exactly what the data showed.",
+               wrong = "Think about what 'non-additive' means. If you know the main effect of X and the main effect of Y, can you predict the combined effect of both?")
+```
+
+---
+
+# Binary Logistic Regression {#sec-stats-logistic}
+
+::: {.callout-note}
+## Section Overview
+
+**What you will learn:** How to fit and interpret a logistic regression for a binary outcome.
+
+**Key functions:** `glm(family = binomial)`, `exp(coef())`, `performance::check_model()`
+:::
+
+**Logistic regression** models a binary outcome (two categories: 0/1, yes/no) using the logistic function:
+
+$$\log\left(\frac{p}{1-p}\right) = \alpha + \beta_1 x_1 + \beta_2 x_2 + \dots$$
+
+where $p$ is the probability of the outcome = 1. The left side is the **log-odds** (also called the logit).
+
+## Example: Discourse Particle *eh* in New Zealand English {-}
+
+**Research question:** do age, gender, and ethnicity predict whether New Zealand English speakers use the discourse particle *eh*?
+
+**Data:** 25,821 speech units from the ICE New Zealand corpus, coded for speaker demographics and presence/absence of *eh*.
+
+```{r log-inspect-stats, message=FALSE, warning=FALSE}
+head(logdata, 10)
+```
+
+## Check Event Frequency {-}
+
+For logistic regression, check that the outcome is not vanishingly rare:
+
+```{r log-freq-stats, message=FALSE, warning=FALSE}
+table(logdata$EH)
+prop.table(table(logdata$EH))
+```
+
+*eh* occurs in about 5% of speech units — rare but sufficient for analysis.
+
+## Visualise the Outcome {-}
+
+```{r log-plot-stats, message=FALSE, warning=FALSE, fig.width=7, fig.height=4}
+plot_data <- logdata |>
+  dplyr::group_by(Age, Gender) |>
+  dplyr::summarise(
+    prop_EH = mean(as.numeric(as.character(EH))),
+    se      = sqrt(prop_EH * (1 - prop_EH) / dplyr::n()),
+    .groups = "drop"
+  )
+
+ggplot(plot_data, aes(x = Age, y = prop_EH, fill = Gender)) +
+  geom_col(position = position_dodge(width = 0.9), alpha = 0.8) +
+  geom_errorbar(aes(ymin = prop_EH - se, ymax = prop_EH + se),
+                position = position_dodge(width = 0.9), width = 0.2) +
+  scale_fill_manual(values = c("steelblue", "tomato")) +
+  theme_bw() +
+  theme(legend.position = "top", panel.grid.minor = element_blank()) +
+  labs(title = "Proportion of utterances containing 'eh' by age and gender",
+       x = "", y = "Proportion with 'eh'", fill = "")
+```
+
+## Fit the Model {-}
+
+Fit a logistic regression with all three predictors:
+
+```{r log-model-stats, message=FALSE, warning=FALSE}
+m_log <- glm(EH ~ Age + Gender + Ethnicity, family = binomial, data = logdata)
+summary(m_log)
+```
+
+## Interpret Coefficients: Odds Ratios {-}
+
+Logistic regression coefficients are on the **log-odds scale** — hard to interpret directly. Exponentiate them to get **odds ratios** (OR):
+
+```{r log-or-stats, message=FALSE, warning=FALSE}
+# Odds ratios with 95% confidence intervals
+exp(cbind(OR = coef(m_log), confint.default(m_log)))
+```
+
+**Interpretation:**
+
+- **OR > 1** → the predictor increases the odds of *eh*
+- **OR < 1** → the predictor decreases the odds
+- **OR = 1** → no effect
+
+For a predictor with OR = 1.5, each one-unit increase (or shift from reference to this level) **multiplies the odds** of the outcome by 1.5 — equivalently, a 50% increase in odds.
+
+## Compare to Baseline {-}
+
+Likelihood ratio test comparing the fitted model to an intercept-only baseline:
+
+```{r log-anova-stats, message=FALSE, warning=FALSE}
+m0_log <- glm(EH ~ 1, family = binomial, data = logdata)
+anova(m0_log, m_log, test = "Chisq")
+```
+
+## Diagnostics {-}
+
+```{r log-check-stats, message=FALSE, warning=FALSE, fig.width=10, fig.height=8}
+performance::check_model(m_log)
+```
+
+For logistic regression, pay particular attention to:
+
+- **Binned residuals** — should scatter randomly around zero
+- **Influential observations** — Cook's distance
+- **Collinearity** — VIF for predictors
+
+Normality and homoscedasticity do not apply.
+
+::: {.callout-tip}
+## Exercises: Logistic Regression
+:::
+
+**Q1. A logistic regression returns a coefficient β = -1.0 for a predictor. What is the odds ratio and what does it mean?**
+
+```{r}
+#| echo: false
+#| label: "LOG_Q1"
+check_question("OR = exp(-1.0) ≈ 0.37 — a 1-unit increase in x reduces the odds of the outcome by about 63%",
+               options = c(
+                 "OR = exp(-1.0) ≈ 0.37 — a 1-unit increase in x reduces the odds of the outcome by about 63%",
+                 "OR = -1.0 — a 1-unit increase in x reduces the probability by 1.0",
+                 "OR = 1 - exp(-1.0) ≈ 0.63 — a 63% reduction in probability",
+                 "The coefficient is negative so the model is misspecified"
+               ),
+               type = "radio",
+               q_id = "LOG_Q1",
+               random_answer_order = TRUE,
+               button_label = "Check answer",
+               right = "Correct! Exponentiating the log-odds coefficient gives the odds ratio: exp(-1.0) ≈ 0.37. An OR of 0.37 means a 1-unit increase in x multiplies the odds by 0.37, or equivalently reduces the odds by (1 - 0.37) = 63%. Negative coefficients mean OR < 1, which means the predictor decreases the probability of the outcome.",
+               wrong = "Logistic regression coefficients are log-odds, not odds or probabilities. What operation converts them to odds ratios?")
+```
+
+---
+
+# Reporting Regression Results {#sec-stats-reporting}
+
+Good regression reports include, at minimum:
+
+1. **The research question** and the operational outcome and predictor variables
+2. **Descriptive statistics** of all variables (mean/SD for numeric, counts/proportions for categorical)
+3. **The model specification** (formula, type: linear, logistic, etc.)
+4. **Coefficient table** with estimates, SEs, test statistics, p-values, and 95% confidence intervals
+5. **Model fit statistics** (R² or pseudo-R² for logistic; AIC)
+6. **Diagnostic plots** confirming assumptions are met (at least mentioned in text, included as supplement)
+7. **Effect sizes** (Cohen's f² for linear; odds ratios for logistic)
+8. **Interpretation in substantive terms** — translate statistics back into the research question
+
+::: {.callout-note}
+## Example: Reporting a Linear Regression
+
+> A simple linear regression examined the relationship between year and preposition frequency across 537 historical English texts. Year was a significant predictor of preposition frequency (β = 0.017, SE = 0.007, *t*₅₃₅ = 2.38, *p* = .018), with frequency increasing modestly over time. However, the model explained only 1% of variance (R² = 0.01, adjusted R² = 0.01), and Cohen's f² (0.011) was below the "small" threshold, indicating that while the trend is statistically detectable in a large sample, its practical magnitude is negligible.
+:::
+
+::: {.callout-note}
+## Example: Reporting a Logistic Regression
+
+> A binary logistic regression examined whether age, gender, and ethnicity predict the use of discourse particle *eh* in 25,821 utterances from the ICE New Zealand corpus. Young speakers were significantly more likely to use *eh* than older speakers (OR = X.XX, 95% CI [X.XX, X.XX], *p* < .001). Males were also more likely than females (OR = X.XX, 95% CI [X.XX, X.XX], *p* < .001). Ethnicity did not significantly predict *eh* use (*p* = .XX). The overall model significantly improved fit over an intercept-only baseline (χ²(3) = XX.X, *p* < .001).
+:::
+
+Automated reporting with the `report` package provides a solid first draft:
+
+```{r auto-report-stats, eval=FALSE, message=FALSE, warning=FALSE}
+report::report(m_log)
+```
+
+Always revise the automated draft to match your journal's style and your audience.
+
+---
+
+# Further Resources {#sec-stats-resources}
+
+This chapter covered the core workflow for inferential tests and fixed-effects regression. Topics not covered here but worth pursuing:
+
+- **Non-parametric alternatives** — when parametric assumptions fail, use Mann-Whitney U (independent two-group), Wilcoxon signed-rank (paired two-group), Kruskal-Wallis (multiple independent groups), or Friedman (multiple paired groups). All have simple R implementations: `wilcox.test()`, `kruskal.test()`, `friedman.test()`.
+- **ANOVA** — for comparing means across more than two groups, use `aov()` or `anova(lm(...))`.
+- **Mixed-effects models** — essential when observations are nested (students within schools) or repeated (multiple trials per participant). Covered in Chapter 8.
+- **Multinomial and ordinal regression** — for categorical outcomes with more than two levels. Packages: `nnet::multinom()`, `MASS::polr()`.
+- **Poisson and negative binomial regression** — for count outcomes. `glm(family = poisson)` and `MASS::glm.nb()`.
+- **Power analysis** — for planning adequately-powered studies. The `pwr` package covers t-tests, correlations, and simple regressions.
+
+**Recommended references:**
+
+- Winter (2019), *Statistics for Linguists* — thorough, accessible, R-based
+- Gries (2021), *Statistics for Linguistics with R* — more technical, excellent for corpus linguistics
+- Field, Miles, and Field (2012), *Discovering Statistics Using R* — comprehensive general-purpose reference
+
+---
+
+::: {.callout-note}
+## Attribution
+
+This chapter is adapted and merged from three LADAL tutorials by Martin Schweinberger:
+
+- [Basic Inferential Statistics using R](https://ladal.edu.au/tutorials/inferential_stats/inferential_stats.html)
+- [Regression Analysis: Conceptual Foundations](https://ladal.edu.au/tutorials/regression_concepts/regression_concepts.html)
+- [Regression Analysis: Implementation in R](https://ladal.edu.au/tutorials/regression/regression.html)
+
+Original source material is released under the GNU General Public License, Version 3.
+:::

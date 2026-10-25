@@ -6,7 +6,6 @@ _book/
 _freeze/
 .quarto/
 archive/
-docs/
 README_files/
 chapters/*_files/
 *.html
