@@ -1,106 +1,22 @@
 ---
 title: "Loading and Saving Data in R"
-description: "This tutorial covers how to load and save data in R, including reading CSV, Excel, and plain text files, importing data from URLs, writing data to various formats, and handling common file path issues. It is aimed at beginners in linguistics and the humanities who have completed a basic introduction to R."
-author: "Martin Schweinberger"
-date: "2026-03-28"
-params:
-  title:       "Loading and Saving Data in R"
-  author:      "Martin Schweinberger"
-  year:        "2026"
-  version:       "3.1.1"
-  date_published:       "2026-03-28"
-  url:         "https://ladal.edu.au/tutorials/data_loading/data_loading.html"
-  institution: "The Language Technology and Data Analysis Laboratory (LADAL), The University of Queensland, Australia"
-  description: "This tutorial covers how to load and save data in R, including reading CSV, Excel, and plain text files, importing data from URLs, writing data to various formats, and handling common file path issues. It is aimed at beginners in linguistics and the humanities who have completed a basic introduction to R."
-  keywords:       "data loading, file import, CSV, Excel, R programming, data import, file paths, tidyverse"
-  doi:         "10.5281/zenodo.19332908"
 ---
 
-```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+```{r setup-load, echo=FALSE, message=FALSE, warning=FALSE}
 options(stringsAsFactors = FALSE)
 options("scipen" = 100, "digits" = 4)
 ```
 
-```{r schema-org, echo=FALSE, results='asis'}
-# Schema.org structured data - read by Google for rich search results
-schema_keywords <- paste0(
-  '"', trimws(strsplit(params$keywords, ",")[[1]]), '"',
-  collapse = ", "
-)
-doi_url <- if (nchar(trimws(params$doi)) > 0) {
-  paste0('    "sameAs": "https://doi.org/', params$doi, '",\n')
-} else { "" }
-cat(paste0(
-'<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "LearningResource",
-  "name": "', params$title, '",
-  "description": "', gsub('"', '\\\\"', params$description), '",
-  "url": "', params$url, '",
-', doi_url,
-'  "datePublished": "', params$date_published, '",
-  "version": "', params$version, '",
-  "inLanguage": "en",
-  "educationalLevel": "Graduate",
-  "learningResourceType": "Tutorial",
-  "keywords": [', schema_keywords, '],
-  "license": "https://creativecommons.org/licenses/by/4.0/",
-  "author": {
-    "@type": "Person",
-    "name": "', params$author, '",
-    "sameAs": "https://orcid.org/0000-0003-1923-9153"
-  },
-  "publisher": {
-    "@type": "EducationalOrganization",
-    "name": "Language Technology and Data Analysis Laboratory (LADAL)",
-    "url": "https://ladal.edu.au",
-    "parentOrganization": {
-      "@type": "CollegeOrUniversity",
-      "name": "The University of Queensland"
-    }
-  },
-  "isPartOf": {
-    "@type": "WebSite",
-    "name": "LADAL",
-    "url": "https://ladal.edu.au"
-  }
-}
-</script>'))
-```
-
-
-![Great Court, The University of Queensland](/images/uq1.webp){width="100%" height="200px" loading="eager" fetchpriority="high"}
-
-# Introduction {#intro}
+# Introduction {#sec-load-intro}
 
 Data rarely arrive in a single tidy format. A corpus might be spread across hundreds of plain-text files; an experimental dataset might come from a collaborator as an Excel spreadsheet; a frequency list might be stored as an R object from a previous session; metadata might be embedded in a JSON file exported from a web API; and survey responses might be in an SPSS `.sav` file. Knowing how to read and write data in R is therefore not a preliminary skill to be rushed through — it is a core competency that affects every subsequent step of your analysis.
 
-The tutorial is aimed at beginners to intermediate R users. It assumes you are comfortable with basic R syntax (objects, functions, vectors, data frames) but have no prior experience with the specific packages used here.
-
-::: {.callout-tip}
-## Need to Generate Data from Scratch?
-
-If you do not have real data yet and want to create synthetic datasets for method development, teaching, or power analysis, see the companion tutorial: **[Simulating Data with R](/tutorials/data_simulation/data_simulation.html)**.
-:::
-
-
-::: {.callout-note}
-## Prerequisite Tutorials
-
-Before working through this tutorial, you should be familiar with the content of the following:
-
-- [Getting Started with R](/tutorials/r_intro/r_intro.html) — R objects, basic syntax, RStudio orientation
-- [Handling Tables in R](/tutorials/table/table.html) — data frames, `dplyr` verbs, `tidyr` reshaping
-- [String Processing in R](/tutorials/string/string.html) — character manipulation with `stringr` (useful for working with text files and file paths)
-
-If you are new to R, please work through *Getting Started with R* before proceeding.
-:::
+This chapter is aimed at beginners to intermediate R users. It assumes you are comfortable with basic R syntax (objects, functions, vectors, data frames) covered in Chapter 1 but have no prior experience with the specific packages used here.
 
 ::: {.callout-note}
 ## Learning Objectives
 
-By the end of this tutorial you will be able to:
+By the end of this chapter you will be able to:
 
 1. Load tabular data from plain text (`.csv`, `.tsv`, `.txt`), Excel (`.xlsx`), R-native (`.rda`, `.rds`), JSON, and XML formats into R
 2. Save R data objects back to each of those formats using appropriate functions
@@ -110,39 +26,11 @@ By the end of this tutorial you will be able to:
 6. Read text from Microsoft Word (`.docx`) files using the `officer` package
 :::
 
-
-
-::: {.callout-note}
-## Citation
-
-```{r citation-callout-top, echo=FALSE, results='asis'}
-doi_link <- if (nchar(trimws(params$doi)) > 0) {
-  paste0(
-    " doi: <a href=\"https://doi.org/", params$doi,
-    "\" target=\"_blank\">", params$doi, "</a>."
-  )
-} else { "" }
-cat(
-  params$author, ". ",
-  params$year,   ". *",
-  params$title,  "*. ",
-  params$institution, ". ",
-  "url: ", params$url, " ",
-  "(Version ", params$version, ").",
-  doi_link,
-  sep = ""
-)
-```
-:::
-
-
-This tutorial covers two foundational data-management skills for linguistic research in R: **loading** data from a wide variety of file formats into your R session, and **saving** processed data and R objects back to disk in appropriate formats.
-
-![](/images/gy_chili.png){ width=15% style="float:right; padding:10px" }
+This chapter covers two foundational data-management skills for research in R: **loading** data from a wide variety of file formats into your R session, and **saving** processed data and R objects back to disk in appropriate formats. Data cleaning and manipulation with `dplyr` are covered in Chapter 5.
 
 ---
 
-# Project Structure and File Paths {#paths}
+# Project Structure and File Paths {#sec-load-paths}
 
 ::: {.callout-note}
 ## Section Overview
@@ -162,12 +50,12 @@ There are two approaches to managing paths: the fragile one and the robust one.
 
 ## Recommended Directory Structure {-}
 
-For this tutorial, and for any real analysis project, we recommend the following structure:
+For this chapter, and for any real analysis project, we recommend the following structure:
 
 ```
 myproject/
 ├── myproject.Rproj          ← RStudio project file (the anchor)
-├── load.qmd                 ← this script / document
+├── analysis.qmd             ← this script / document
 ├── data/
 │   ├── testdat.csv
 │   ├── testdat2.csv
@@ -185,6 +73,8 @@ myproject/
     └── (processed data, plots, tables)
 ```
 
+This matches the `R4SHH` folder structure described in the course welcome message.
+
 ::: {.callout-tip}
 ## Creating an RStudio Project
 
@@ -193,7 +83,7 @@ In RStudio: **File → New Project → New Directory → New Project**. Give the
 
 ## Verifying Paths with `here` {-}
 
-```{r paths_here, eval=FALSE, message=FALSE, warning=FALSE}
+```{r paths_here_load, eval=FALSE, message=FALSE, warning=FALSE}
 library(here)
 
 # Check what here() considers the project root
@@ -220,11 +110,11 @@ Run `file.exists(your_path)` before attempting to load a file. If it returns `FA
 
 ---
 
-# Setup {#setup}
+# Setup {#sec-load-setup}
 
 ## Installing Packages {-}
 
-```{r prep0, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r prep0-load, echo=TRUE, eval=FALSE, message=FALSE, warning=FALSE}
 # Run once — comment out after installation
 install.packages("here")        # robust file paths
 install.packages("readr")       # fast CSV/TSV reading (tidyverse)
@@ -233,18 +123,14 @@ install.packages("readxl")      # read Excel files (tidyverse)
 install.packages("writexl")     # write Excel files (lightweight)
 install.packages("jsonlite")    # parse and write JSON
 install.packages("xml2")        # parse and write XML
-install.packages("haven")       # SPSS, Stata, SAS files
-install.packages("dplyr")       # data manipulation
-install.packages("tidyr")       # data reshaping
 install.packages("stringr")     # string manipulation
 install.packages("purrr")       # functional programming (map/walk)
-install.packages("ggplot2")     # visualisation
 install.packages("officer")     # read Word documents
 ```
 
 ## Loading Packages {-}
 
-```{r prep1, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE}
+```{r prep1-load, echo=TRUE, eval=TRUE, message=FALSE, warning=FALSE}
 library(here)
 library(readr)
 library(openxlsx)
@@ -252,17 +138,14 @@ library(readxl)
 library(writexl)
 library(jsonlite)
 library(xml2)
-library(dplyr)
-library(tidyr)
 library(stringr)
 library(purrr)
-library(ggplot2)
 library(officer)
 ```
 
 ---
 
-# Loading and Saving Plain Text Data {#plaintxt}
+# Loading and Saving Plain Text Data {#sec-load-plaintxt}
 
 ::: {.callout-note}
 ## Section Overview
@@ -292,7 +175,7 @@ The base R function `read.csv()` is available without loading any packages and i
 ```{r lcsv_base, message=FALSE, warning=FALSE}
 # Base R CSV loading
 datcsv <- read.csv(
-  here::here("tutorials/data_loading/data", "testdat.csv"),
+  here::here("data", "testdat.csv"),
   header      = TRUE,    # first row = column names (default TRUE)
   strip.white = TRUE,    # trim leading/trailing whitespace from strings
   na.strings  = c("", "NA", "N/A", "missing")  # treat these as NA
@@ -326,7 +209,7 @@ The `readr` package (part of the tidyverse) provides faster, more consistent alt
 ```{r lcsv_readr, message=FALSE, warning=FALSE}
 # readr CSV loading
 datcsv_r <- readr::read_csv(
-  here::here("tutorials/data_loading/data", "testdat.csv"),
+  here::here("data", "testdat.csv"),
   col_types  = cols(),      # suppress type-guessing messages
   na         = c("", "NA", "N/A"),
   trim_ws    = TRUE
@@ -352,7 +235,7 @@ In many European locales the comma is the decimal separator (e.g. `3,14` for π)
 ```{r lcsv_semi, message=FALSE, warning=FALSE}
 # Base R: read.delim with sep = ";"
 datcsv2_base <- read.delim(
-  here::here("tutorials/data_loading/data", "testdat2.csv"),
+  here::here("data", "testdat2.csv"),
   sep    = ";",
   header = TRUE,
   dec    = ","   # comma as decimal separator
@@ -360,7 +243,7 @@ datcsv2_base <- read.delim(
 
 # readr: read_csv2() handles ; delimiter and , decimal automatically
 datcsv2_r <- readr::read_csv2(
-  here::here("tutorials/data_loading/data", "testdat2.csv"),
+  here::here("data", "testdat2.csv"),
   col_types = cols()
 )
 
@@ -372,20 +255,20 @@ head(datcsv2_base)
 ```{r ltsv, message=FALSE, warning=FALSE}
 # readr: read_tsv for tab-separated files
 # dattxt_r <- readr::read_tsv(
-#   here::here("tutorials/data_loading/data", "testdat.txt"),
+#   here::here("data", "testdat.txt"),
 #   col_types = cols()
 # )
 
 # readr: read_delim for any delimiter
 # datpipe <- readr::read_delim(
-#   here::here("tutorials/data_loading/data", "testdat_pipe.txt"),
+#   here::here("data", "testdat_pipe.txt"),
 #   delim     = "|",
 #   col_types = cols()
 # )
 
 # Base R equivalent
 dattxt_base <- read.delim(
-  here::here("tutorials/data_loading/data", "testdat.txt"),
+  here::here("data", "testdat.txt"),
   sep    = "\t",
   header = TRUE
 )
@@ -400,7 +283,7 @@ head(dattxt_base)
 # Base R: write.csv — adds row numbers by default; suppress with row.names = FALSE
 write.csv(
   datcsv,
-  file         = here::here("tutorials/data_loading/data", "testdat_out.csv"),
+  file         = here::here("data", "testdat_out.csv"),
   row.names    = FALSE,   # ALWAYS set this to avoid a spurious row-number column
   fileEncoding = "UTF-8"
 )
@@ -408,13 +291,13 @@ write.csv(
 # readr: write_csv — no row names by default; faster; always UTF-8
 readr::write_csv(
   datcsv_r,
-  file = here::here("tutorials/data_loading/data", "testdat_out_r.csv")
+  file = here::here("data", "testdat_out_r.csv")
 )
 
 # Semi-colon CSV (European locale)
 readr::write_csv2(
   datcsv2_r,
-  file = here::here("tutorials/data_loading/data", "testdat2_out.csv")
+  file = here::here("data", "testdat2_out.csv")
 )
 ```
 
@@ -430,20 +313,20 @@ The base R `write.csv()` adds a column of row numbers by default (row names). Th
 # TSV
 readr::write_tsv(
   datcsv_r,
-  file = here::here("tutorials/data_loading/data", "testdat_out.tsv")
+  file = here::here("data", "testdat_out.tsv")
 )
 
 # Custom delimiter (pipe)
 readr::write_delim(
   datcsv_r,
-  file  = here::here("tutorials/data_loading/data", "testdat_out_pipe.txt"),
+  file  = here::here("data", "testdat_out_pipe.txt"),
   delim = "|"
 )
 
 # Base R: write.table (most flexible)
 write.table(
   datcsv,
-  file      = here::here("tutorials/data_loading/data", "testdat_out.txt"),
+  file      = here::here("data", "testdat_out.txt"),
   sep       = "\t",
   row.names = FALSE,
   quote     = FALSE    # suppress quoting of strings (useful for corpus data)
@@ -472,7 +355,7 @@ German locale settings use `,` as the decimal mark (so `3,14` means 3.14) and `;
 
 ---
 
-# Loading and Saving Excel Files {#excel}
+# Loading and Saving Excel Files {#sec-load-excel}
 
 ::: {.callout-note}
 ## Section Overview
@@ -482,7 +365,7 @@ German locale settings use `,` as the decimal mark (so `3,14` means 3.14) and `;
 
 ## Why Excel Handling Deserves Its Own Section {-}
 
-Excel is the most widely used data format outside of programming environments, and linguistic researchers constantly receive data from collaborators, transcription tools, survey platforms, and corpus annotation software in `.xlsx` format. However, Excel files present challenges that plain-text files do not:
+Excel is the most widely used data format outside of programming environments, and humanities and linguistic researchers constantly receive data from collaborators, transcription tools, survey platforms, and corpus annotation software in `.xlsx` format. However, Excel files present challenges that plain-text files do not:
 
 - **Multiple sheets** in a single file, only one of which contains the data you need
 - **Merged cells and complex headers** that break rectangular data assumptions
@@ -498,11 +381,11 @@ Excel is the most widely used data format outside of programming environments, a
 
 ```{r lxlsx_readxl, message=FALSE, warning=FALSE}
 # List all sheets in the workbook before loading
-readxl::excel_sheets(here::here("tutorials/data_loading/data", "testdat.xlsx"))
+readxl::excel_sheets(here::here("data", "testdat.xlsx"))
 
 # Load the first sheet
 datxlsx <- readxl::read_excel(
-  path      = here::here("tutorials/data_loading/data", "testdat.xlsx"),
+  path      = here::here("data", "testdat.xlsx"),
   sheet     = 1,          # sheet number or name
   col_names = TRUE,       # first row = column names
   na        = c("", "NA", "N/A"),
@@ -517,15 +400,15 @@ head(datxlsx)
 ```{r lxlsx_multisheet, eval=FALSE, message=FALSE, warning=FALSE}
 # Load all sheets at once into a named list
 all_sheets <- purrr::map(
-  readxl::excel_sheets(here::here("tutorials/data_loading/data", "testdat.xlsx")),
+  readxl::excel_sheets(here::here("data", "testdat.xlsx")),
   ~ readxl::read_excel(
-      path  = here::here("tutorials/data_loading/data", "testdat.xlsx"),
+      path  = here::here("data", "testdat.xlsx"),
       sheet = .x,
       na    = c("", "NA")
   )
 ) |>
   purrr::set_names(
-    readxl::excel_sheets(here::here("tutorials/data_loading/data", "testdat.xlsx"))
+    readxl::excel_sheets(here::here("data", "testdat.xlsx"))
   )
 
 # Access individual sheets by name
@@ -554,7 +437,7 @@ Valid types are `"skip"`, `"guess"`, `"logical"`, `"numeric"`, `"date"`, `"text"
 ```{r lxlsx_openxlsx, message=FALSE, warning=FALSE}
 # Load with openxlsx
 datxlsx2 <- openxlsx::read.xlsx(
-  xlsxFile   = here::here("tutorials/data_loading/data", "testdat.xlsx"),
+  xlsxFile   = here::here("data", "testdat.xlsx"),
   sheet      = 1,
   colNames   = TRUE,
   na.strings = c("", "NA")
@@ -572,13 +455,13 @@ head(datxlsx2)
 ```{r sxlsx_writexl, eval=FALSE, message=FALSE, warning=FALSE}
 writexl::write_xlsx(
   x    = datxlsx,
-  path = here::here("tutorials/data_loading/data", "testdat_out.xlsx")
+  path = here::here("data", "testdat_out.xlsx")
 )
 
 # Write multiple sheets: pass a named list
 writexl::write_xlsx(
   x    = list(RawData = datcsv, Processed = datxlsx),
-  path = here::here("tutorials/data_loading/data", "multisheet_out.xlsx")
+  path = here::here("data", "multisheet_out.xlsx")
 )
 ```
 
@@ -588,7 +471,7 @@ writexl::write_xlsx(
 # Simple write
 openxlsx::write.xlsx(
   x    = datxlsx2,
-  file = here::here("tutorials/data_loading/data", "testdat_openxlsx.xlsx")
+  file = here::here("data", "testdat_openxlsx.xlsx")
 )
 
 # Formatted workbook: create, style, save
@@ -611,7 +494,7 @@ openxlsx::addStyle(wb, sheet = "Results", style = header_style,
 openxlsx::freezePane(wb, sheet = "Results", firstRow = TRUE)
 
 openxlsx::saveWorkbook(wb,
-  file      = here::here("tutorials/data_loading/data", "testdat_formatted.xlsx"),
+  file      = here::here("data", "testdat_formatted.xlsx"),
   overwrite = TRUE
 )
 ```
@@ -650,7 +533,7 @@ This is the most reliable solution because it prevents the coercion from happeni
 
 ---
 
-# Loading and Saving R Native Formats {#rformats}
+# Loading and Saving R Native Formats {#sec-load-rformats}
 
 ::: {.callout-note}
 ## Section Overview
@@ -682,7 +565,7 @@ RDS is the recommended format for storing a single R object — a data frame, a 
 
 ```{r rds_load, message=FALSE, warning=FALSE}
 # Load an RDS file — assign to any name you like
-rdadat <- readRDS(here::here("tutorials/data_loading/data", "testdat.rda"))
+rdadat <- readRDS(here::here("data", "testdat.rda"))
 
 str(rdadat)
 head(rdadat)
@@ -692,16 +575,16 @@ head(rdadat)
 # Save any R object as RDS
 saveRDS(
   object   = rdadat,
-  file     = here::here("tutorials/data_loading/data", "testdat_out.rds"),
+  file     = here::here("data", "testdat_out.rds"),
   compress = TRUE   # default; compresses the file (xz, bzip2, or gzip)
 )
 
 # Compare compression options
-saveRDS(rdadat, here::here("tutorials/data_loading/data", "testdat_xz.rds"),
+saveRDS(rdadat, here::here("data", "testdat_xz.rds"),
         compress = "xz")      # smallest file, slowest
-saveRDS(rdadat, here::here("tutorials/data_loading/data", "testdat_gz.rds"),
+saveRDS(rdadat, here::here("data", "testdat_gz.rds"),
         compress = "gzip")    # medium; good for large data
-saveRDS(rdadat, here::here("tutorials/data_loading/data", "testdat_bz2.rds"),
+saveRDS(rdadat, here::here("data", "testdat_bz2.rds"),
         compress = "bzip2")   # medium
 ```
 
@@ -712,7 +595,7 @@ saveRDS(rdadat, here::here("tutorials/data_loading/data", "testdat_bz2.rds"),
 ```{r rdata_load, message=FALSE, warning=FALSE}
 # load() places objects directly into the current environment
 # and invisibly returns their names
-obj_names <- readRDS(here::here("tutorials/data_loading/data", "testdat.rda"))
+obj_names <- readRDS(here::here("data", "testdat.rda"))
 cat("Objects loaded:", paste(obj_names, collapse = ", "), "\n")
 ```
 
@@ -723,10 +606,10 @@ y     <- letters[1:5]
 my_df <- data.frame(a = 1:3, b = c("x", "y", "z"))
 
 save(x, y, my_df,
-     file = here::here("tutorials/data_loading/data", "multiple_objects.rda"))
+     file = here::here("data", "multiple_objects.rda"))
 
 # To save ALL objects in the current environment (use sparingly)
-save.image(file = here::here("tutorials/data_loading/data", "session_snapshot.RData"))
+save.image(file = here::here("data", "session_snapshot.RData"))
 ```
 
 ::: {.callout-warning}
@@ -737,11 +620,11 @@ Saving your entire workspace with `save.image()` or allowing RStudio to save `.R
 
 ## Loading R Data from the Web {-}
 
-R native objects can be loaded directly from a URL without downloading the file first. This is the standard approach for LADAL tutorial data:
+R native objects can be loaded directly from a URL without downloading the file first:
 
 ```{r web_rds, eval=FALSE, message=FALSE, warning=FALSE}
 # Load an RDS object directly from a URL
-webdat <- base::readRDS(url("https://ladal.edu.au/tutorials/data_loading/data/testdat.rda", "rb"))
+webdat <- base::readRDS(url("https://slcladal.github.io/data/alice.rda", "rb"))
 
 # Equivalently, for a file on GitHub or any web server:
 # webdat <- readRDS(url("https://raw.githubusercontent.com/.../testdat.rda", "rb"))
@@ -783,17 +666,17 @@ This is one of the most dangerous behaviours of `load()`. It inserts objects dir
 
 ---
 
-# Loading and Saving JSON and XML {#jsonxml}
+# Loading and Saving JSON and XML {#sec-load-jsonxml}
 
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** What JSON and XML are and where linguists encounter them; how to parse both formats into R data frames using `jsonlite` and `xml2`; and how to write R data back to these formats
+**What you will learn:** What JSON and XML are and where researchers in the humanities encounter them; how to parse both formats into R data frames using `jsonlite` and `xml2`; and how to write R data back to these formats
 :::
 
 ## JSON {-}
 
-**JSON (JavaScript Object Notation)** is the dominant data exchange format for web APIs, annotation tools, and many corpus management systems. It represents data as nested key-value pairs and arrays. Linguists encounter JSON when:
+**JSON (JavaScript Object Notation)** is the dominant data exchange format for web APIs, annotation tools, and many corpus management systems. It represents data as nested key-value pairs and arrays. Researchers in the humanities encounter JSON when:
 
 - Downloading corpus metadata or concordances from a web API (e.g. CLARIN VLO, AntConc, SketchEngine)
 - Working with annotation exports from tools like CATMA, INCEpTION, or Label Studio
@@ -847,7 +730,7 @@ participants
 ```{r json_load_file, eval=FALSE, message=FALSE, warning=FALSE}
 # Load from a local file
 json_data <- jsonlite::fromJSON(
-  txt               = here::here("tutorials/data_loading/data", "data.json"),
+  txt               = here::here("data", "data.json"),
   simplifyDataFrame = TRUE,   # convert arrays of objects to data frames
   simplifyVector    = TRUE,   # convert scalar arrays to vectors
   flatten           = TRUE    # flatten nested objects into columns
@@ -911,7 +794,7 @@ cat(json_out)
 # Write to file
 jsonlite::write_json(
   participants,
-  path       = here::here("tutorials/data_loading/data", "participants_out.json"),
+  path       = here::here("data", "participants_out.json"),
   pretty     = TRUE,
   auto_unbox = TRUE
 )
@@ -919,7 +802,7 @@ jsonlite::write_json(
 
 ## XML {-}
 
-**XML (eXtensible Markup Language)** is older than JSON and more verbose, but it remains the dominant format in computational linguistics and digital humanities. Linguists encounter XML in:
+**XML (eXtensible Markup Language)** is older than JSON and more verbose, but it remains the dominant format in computational linguistics and digital humanities. Researchers encounter XML in:
 
 - **TEI (Text Encoding Initiative)** markup for edited texts, manuscripts, and historical corpora
 - **CoNLL-U** and related annotation formats (sometimes XML-wrapped)
@@ -1046,7 +929,7 @@ xml2::xml_add_child(sent_node, "token", pos = "VBZ", "requires")
 xml2::xml_add_child(sent_node, "token", pos = "NN", "data")
 
 xml2::write_xml(new_xml,
-  file     = here::here("tutorials/data_loading/data", "output_corpus.xml"),
+  file     = here::here("data", "output_corpus.xml"),
   encoding = "UTF-8"
 )
 ```
@@ -1073,7 +956,7 @@ In XPath, attributes are referenced with the `@` prefix inside square brackets. 
 
 ---
 
-# Loading Built-In and Package Datasets {#builtins}
+# Loading Built-In and Package Datasets {#sec-load-builtins}
 
 ::: {.callout-note}
 ## Section Overview
@@ -1083,16 +966,13 @@ In XPath, attributes are referenced with the `@` prefix inside square brackets. 
 
 ## Base R Datasets {-}
 
-R ships with a large collection of built-in datasets that are immediately available without downloading anything. For linguists, they provide convenient practice data and well-documented benchmarks.
+R ships with a large collection of built-in datasets that are immediately available without downloading anything. For humanities researchers, they provide convenient practice data and well-documented benchmarks.
 
 ```{r builtin_list, message=FALSE, warning=FALSE}
 # List datasets across all installed packages (first 20)
-all_datasets <- data(package = .packages(all.available = TRUE))$results |>
-  as.data.frame() |>
-  dplyr::select(Package, Item, Title) |>
-  head(20)
-
-all_datasets
+all_datasets <- as.data.frame(data(package = .packages(all.available = TRUE))$results)
+all_datasets <- all_datasets[, c("Package", "Item", "Title")]
+head(all_datasets, 20)
 
 # Load built-in datasets by name (no file path needed)
 data("iris")       # Fisher's iris measurements — classic ML benchmark
@@ -1114,9 +994,10 @@ letter_freq <- data.frame(
                 0.77,4.0,2.4,6.7,7.5,1.9,0.10,6.0,6.3,9.1,
                 2.8,0.98,2.4,0.15,2.0,0.074)
 )
-letter_freq |>
-  dplyr::arrange(desc(frequency)) |>
-  head(10)
+
+# Sort by frequency, descending, and show top 10
+letter_freq_sorted <- letter_freq[order(-letter_freq$frequency), ]
+head(letter_freq_sorted, 10)
 
 # The 'languageR' package contains many linguistic datasets
 # (install if needed: install.packages("languageR"))
@@ -1162,7 +1043,7 @@ The `data()` function loads built-in datasets from R packages into the current e
 
 ---
 
-# Loading and Saving Unstructured Text Data {#textdata}
+# Loading and Saving Unstructured Text Data {#sec-load-textdata}
 
 ::: {.callout-note}
 ## Section Overview
@@ -1172,7 +1053,7 @@ The `data()` function loads built-in datasets from R packages into the current e
 
 ## Single Text Files {-}
 
-Corpus linguists routinely work with raw text stored in plain-text (`.txt`) files. R provides three primary functions for reading these:
+Corpus researchers routinely work with raw text stored in plain-text (`.txt`) files. R provides three primary functions for reading these:
 
 | Function | Returns | Best for |
 |----------|---------|---------|
@@ -1185,7 +1066,7 @@ Corpus linguists routinely work with raw text stored in plain-text (`.txt`) file
 ```{r text_scan, message=FALSE, warning=FALSE}
 # scan(): reads tokens (whitespace-separated), returns a character vector
 testtxt_words <- scan(
-  here::here("tutorials/data_loading/data", "english.txt"),
+  here::here("data", "english.txt"),
   what  = "char",
   quiet = TRUE    # suppress "Read N items" message
 )
@@ -1197,7 +1078,7 @@ head(testtxt_words, 20)
 ```{r text_readlines, message=FALSE, warning=FALSE}
 # readLines(): reads complete lines, returns a character vector
 testtxt_lines <- readLines(
-  con      = here::here("tutorials/data_loading/data", "english.txt"),
+  con      = here::here("data", "english.txt"),
   encoding = "UTF-8",
   warn     = FALSE
 )
@@ -1209,7 +1090,7 @@ head(testtxt_lines, 5)
 ```{r text_readfile, eval=FALSE, message=FALSE, warning=FALSE}
 # readr::read_file(): loads the entire file as one string
 testtxt_full <- readr::read_file(
-  here::here("tutorials/data_loading/data", "english.txt")
+  here::here("data", "english.txt")
 )
 
 cat("Character count:", nchar(testtxt_full), "\n")
@@ -1235,14 +1116,14 @@ utf_text  <- iconv(raw_text, from = "latin1", to = "UTF-8")
 # writeLines(): write a character vector (one element per line)
 writeLines(
   text     = testtxt_lines,
-  con      = here::here("tutorials/data_loading/data", "english_out.txt"),
+  con      = here::here("data", "english_out.txt"),
   useBytes = FALSE
 )
 
 # write_file(): write a single character string
 readr::write_file(
   x    = testtxt_full,
-  file = here::here("tutorials/data_loading/data", "english_out2.txt")
+  file = here::here("data", "english_out2.txt")
 )
 ```
 
@@ -1253,7 +1134,7 @@ When working with corpora, you will often need to load many text files at once a
 ```{r text_multiple, message=FALSE, warning=FALSE}
 # Step 1: get all file paths
 fls <- list.files(
-  path       = here::here("tutorials/data_loading/data", "testcorpus"),
+  path       = here::here("data", "testcorpus"),
   pattern    = "\\.txt$",
   full.names = TRUE
 )
@@ -1298,7 +1179,7 @@ corpus_df
 ## Saving Multiple Text Files {-}
 
 ```{r text_multiple_save, eval=FALSE, message=FALSE, warning=FALSE}
-out_dir <- here::here("tutorials/data_loading/data", "testcorpus_out")
+out_dir <- here::here("data", "testcorpus_out")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 out_paths <- file.path(out_dir, paste0(names(txts_purrr), ".txt"))
@@ -1312,7 +1193,7 @@ cat("Saved", length(out_paths), "files.\n")
 Interview transcripts, annotated texts, and survey instruments are often stored as Microsoft Word `.docx` files. The `officer` package reads `.docx` files and returns a structured data frame where each paragraph, heading, and table cell is a separate row.
 
 ```{r docx_load, message=FALSE, warning=FALSE}
-doc_object <- officer::read_docx(here::here("tutorials/data_loading/data", "mydoc.docx"))
+doc_object <- officer::read_docx(here::here("data", "mydoc.docx"))
 content    <- officer::docx_summary(doc_object)
 
 str(content)
@@ -1320,20 +1201,17 @@ head(content, 15)
 ```
 
 ```{r docx_filter, message=FALSE, warning=FALSE}
-# Filter to non-empty paragraphs
-paragraphs <- content |>
-  dplyr::filter(content_type == "paragraph",
-                !is.na(text),
-                nchar(trimws(text)) > 0) |>
-  dplyr::select(style_name, text)
+# Filter to non-empty paragraphs (base R; dplyr is covered in Chapter 5)
+is_para <- content$content_type == "paragraph" &
+           !is.na(content$text) &
+           nchar(trimws(content$text)) > 0
 
+paragraphs <- content[is_para, c("style_name", "text")]
 head(paragraphs, 10)
 
 # Extract only body text (style "Normal" in most templates)
-body_text <- paragraphs |>
-  dplyr::filter(style_name == "Normal") |>
-  dplyr::pull(text) |>
-  paste(collapse = " ")
+body_rows <- paragraphs[paragraphs$style_name == "Normal", "text"]
+body_text <- paste(body_rows, collapse = " ")
 
 cat("Body text (first 200 chars):\n", substr(body_text, 1, 200), "\n")
 ```
@@ -1344,9 +1222,8 @@ cat("Body text (first 200 chars):\n", substr(body_text, 1, 200), "\n")
 Headings are stored with style names like `"heading 1"`, `"heading 2"`, etc.:
 
 ```r
-headings <- content |>
-  dplyr::filter(grepl("^heading", style_name, ignore.case = TRUE)) |>
-  dplyr::select(style_name, text)
+is_heading <- grepl("^heading", content$style_name, ignore.case = TRUE)
+headings   <- content[is_heading, c("style_name", "text")]
 ```
 
 Useful for segmenting interview transcripts by topic or speaker turn.
@@ -1377,65 +1254,8 @@ d) `txts <- scan(here::here("transcripts"), what = "char", quiet = TRUE)`
 
 ---
 
-# Citation and Session Info {-}
-
-
 ::: {.callout-note}
-## Citation
+## Attribution
 
-```{r citation-callout, echo=FALSE, results='asis'}
-doi_link <- if (nchar(trimws(params$doi)) > 0) {
-  paste0(
-    " doi: <a href=\"https://doi.org/", params$doi,
-    "\" target=\"_blank\">", params$doi, "</a>."
-  )
-} else { "" }
-cat(
-  params$author, ". ",
-  params$year,   ". *",
-  params$title,  "*. ",
-  params$institution, ". ",
-  "url: ", params$url, " ",
-  "(Version ", params$version, ").",
-  doi_link,
-  sep = ""
-)
-```
-
-```{r citation-bibtex, echo=FALSE, results='asis'}
-key <- paste0(
-  tolower(gsub(" ", "", gsub(",.*", "", params$author))),
-  params$year,
-  tolower(gsub("[^a-zA-Z]", "", strsplit(params$title, " ")[[1]][1]))
-)
-cat("```\n")
-cat("@manual{", key, ",\n",           sep = "")
-cat("  author       = {", params$author,      "},\n", sep = "")
-cat("  title        = {", params$title,       "},\n", sep = "")
-cat("  year         = {", params$year,        "},\n", sep = "")
-cat("  note         = {", params$url,         "},\n", sep = "")
-cat("  organization = {", params$institution, "},\n", sep = "")
-cat("  edition      = {", params$version,     "}\n",  sep = "")
-cat("  doi      = {", params$doi,     "}\n",  sep = "")
-cat("}\n```\n")
-```
+This chapter is adapted from the LADAL tutorial [Loading and Saving Data in R](https://ladal.edu.au/tutorials/load/load.html) by Martin Schweinberger. Original source material is released under the GNU General Public License, Version 3.
 :::
-
-
-```{r session_info}
-sessionInfo()
-```
-
-::: {.callout-note}
-## AI Transparency Statement
-
-This tutorial was written with the assistance of **Claude** (claude.ai), a large language model created by Anthropic. Claude was used to substantially expand and restructure a shorter existing LADAL tutorial on loading and saving data. All content was reviewed and approved by the named author (Martin Schweinberger), who takes full responsibility for its accuracy.
-:::
-
-
-[Back to top](#intro)
-
-[Back to LADAL home](/)
-
-
-# References {-}
