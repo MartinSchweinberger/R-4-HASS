@@ -1,0 +1,12 @@
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+_book/
+_freeze/
+.quarto/
+archive/
+docs/
+README_files/
+chapters/*_files/
+*.html

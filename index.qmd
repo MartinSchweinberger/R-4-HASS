@@ -1,0 +1,48 @@
+# Course Overview {.unnumbered}
+
+This block seminar provides an intensive, hands-on introduction to the R programming language and its ecosystem, specifically tailored to the needs of linguists and researchers in the humanities. R has become a central tool for data-driven research across disciplines, offering powerful capabilities for data management, statistical analysis, visualisation, and reproducible research. The course is designed for participants with little or no prior programming experience and focuses on developing practical skills that can be directly applied to linguistic and humanities research contexts.
+
+Throughout the seminar, participants will learn how to set up and manage R sessions effectively, work within the RStudio integrated development environment (IDE), and adopt best practices for organising projects and ensuring reproducibility. The course emphasises a workflow-oriented approach: from importing raw data, through cleaning, processing, and annotation, to analysis, visualisation, and publication-ready outputs.
+
+By the end of the course, participants will be able to work confidently with real-world datasets, produce clear and informative visualisations using ggplot2, conduct basic multivariate statistical analyses, and create dynamic, shareable research outputs using Quarto.
+
+## Aims and Learning Objectives
+
+The overarching aim of this seminar is to equip participants with a solid foundation in R that enables them to independently conduct data-driven research in linguistics and the humanities. Upon successful completion of the course, participants will be able to:
+
+- Understand the role of R and RStudio in contemporary linguistic and humanities research.
+- Set up, configure, and manage R sessions and projects in a structured and reproducible way.
+- Import, save, and export a variety of common data formats (e.g. CSV, TSV, Excel, text-based data).
+- Work with core R data structures, including vectors, factors, data frames, and lists.
+- Clean, process, and annotate data using modern, tidy data principles.
+- Apply basic exploratory and multivariate statistical techniques relevant to linguistic and humanities datasets.
+- Create high-quality, publication-ready data visualisations using the ggplot2 package.
+- Document analyses and results using Quarto and generate reports in multiple output formats (HTML, PDF, EPUB).
+- Publish and share research materials via GitHub, supporting transparency, collaboration, and long-term accessibility.
+
+## Target Audience and Prerequisites
+
+The course is intended for students and early-career researchers in linguistics, applied linguistics, literary studies, cultural studies, history, and related humanities disciplines who work with quantitative, qualitative, or mixed-methods data and wish to enhance their analytical and computational skills.
+
+No prior experience with programming or R is assumed. Basic computer literacy is required, and participants are expected to bring their own laptops. All necessary software is open source and freely available.
+
+## How This Book Is Organised
+
+Each chapter corresponds to one unit of the block seminar and combines short conceptual explanations with worked examples and exercises. Chapters are designed to be worked through in order, since later units build on data structures and techniques introduced earlier.
+
+::: {.callout-note}
+## Status of this book
+
+This is a work in progress. Some units listed in the course description are not yet included as chapters because source material is still being prepared. The currently available chapters are:
+
+- String Processing in R
+- Regular Expressions in R
+- Mixed-Effects Models
+- Text Analysis: Practical Implementation in R
+
+Additional units (Introduction to R and RStudio; Working with Data; Data Cleaning and Annotation; Data Visualisation with ggplot2; Statistical and Multivariate Analysis; Reproducible Research with Quarto; Publishing via GitHub) will be added as their materials are finalised.
+:::
+
+## Acknowledgements
+
+Several chapters in this book adapt tutorial material originally developed by Martin Schweinberger for the [Language Technology and Data Analysis Laboratory (LADAL)](https://ladal.edu.au), The University of Queensland, Australia, released under a [CC BY 4.0 licence](https://creativecommons.org/licenses/by/4.0/). The original tutorials have been restructured, edited, and adapted for use in this seminar; individual chapters note their LADAL source. The author of this book takes responsibility for all adaptations.

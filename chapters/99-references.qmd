@@ -1,0 +1,7 @@
+# References {.unnumbered}
+
+::: {.callout-warning}
+## TODO: verify bibliography entries
+
+Several entries in `references.bib` were reconstructed from in-text citations in the source material and are marked `% VERIFY`. Check these against the original publications before this book is finalised — see `references.bib` for details.
+:::
