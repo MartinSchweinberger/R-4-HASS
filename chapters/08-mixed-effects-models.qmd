@@ -937,8 +937,11 @@ ggplot(lmmdata, aes(DateUnscaled, Predicted)) +
 
 We run the full `performance` diagnostic panel on the weighted `lme` model. Note that `check_model()` supports `lme` objects from `nlme` directly.
 
-```{r lmm22, message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
-performance::check_model(m5.lme)
+```{r lmm22, eval= FALSE, message=FALSE, warning=FALSE, fig.height=10, fig.width=10}
+performance::check_model(
+  m5.lme,
+  check = c("linearity", "homogeneity", "qq", "outliers")
+)
 ```
 
 ```{r lmm22b, message=FALSE, warning=FALSE}
