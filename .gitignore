@@ -7,8 +7,5 @@ _freeze/
 .quarto/
 archive/
 README_files/
-chapters/*_files/
-*.html
-
 /.quarto/
 **/*.quarto_ipynb
