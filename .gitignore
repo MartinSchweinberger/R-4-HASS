@@ -9,3 +9,6 @@ archive/
 README_files/
 /.quarto/
 **/*.quarto_ipynb
+teaching/*.html
+teaching/*.pdf
+teaching/*_files/

@@ -1,252 +1,291 @@
-# R-4-HASS — Quarto Book Project
+# Quantitative and Reproducible Research with R in the Humanities
 
-Working materials for *Quantitative and Reproducible Research with R in the Humanities*. Teaching material for the LMU Munich block seminar (18–19 Dec 2026 & 8–9 Jan 2027).
+**Blockseminar at Ludwig-Maximilians-Universität München**
+Course number 14186 · Winter semester 2026/27
+Instructor: Martin Schweinberger (University of Queensland)
 
-Repo: <https://github.com/MartinSchweinberger/R-4-HASS>
-Expected published URL: <https://martinschweinberger.github.io/R-4-HASS/>
+Dates: **18–19 December 2026** and **8–9 January 2027**
 
-## Status
+Published book: <https://martinschweinberger.github.io/R-4-HASS/>
 
-Quarto **book** project (`project: type: book`, native `.qmd`, not bookdown). 10 of 11 planned units are drafted; chapters 3, 4, 8, 9 are the earlier June drafts that still need the adaptation pass; chapter 11 content was folded into chapter 10 by design.
+---
 
-| # | Unit | File | Status |
-|---|------|------|--------|
-| 1 | Introduction to R and RStudio | `chapters/01-r_intro.qmd` | ✅ adapted |
-| 2 | Working with Data in R | `chapters/02-data_loading.qmd` | ✅ adapted |
-| 3 | String Processing | `chapters/03-string-processing.qmd` | ⚠️ June draft — adaptation pass pending |
-| 4 | Regular Expressions | `chapters/04-regular-expressions.qmd` | ⚠️ June draft — adaptation pass pending |
-| 5 | Data Cleaning and Tables | `chapters/05-tables.qmd` | ✅ adapted |
-| 6 | Data Visualisation with ggplot2 | `chapters/06-data_viz_intro.qmd` | ✅ adapted (aggressively trimmed from LADAL original) |
-| 7 | Statistics: Inferential Tests and Regression | `chapters/07-statistics.qmd` | ✅ adapted (merge of 3 LADAL tutorials) |
-| 8 | Mixed-Effects Models | `chapters/08-mixed-effects-models.qmd` | ⚠️ June draft — adaptation pass pending |
-| 9 | Text Analysis (Corpus Methods) | `chapters/09-text-analysis.qmd` | ⚠️ June draft — adaptation pass pending |
-| 10 | Reproducible Research & Publishing | `chapters/10-publish.qmd` | ✅ adapted (also covers planned unit 11) |
-| 11 | Publishing via GitHub | — | ✻ merged into Chapter 10 |
+## About this course
 
-**Scope deviations from the course description to note:**
+An intensive, hands-on introduction to R for linguists and humanities
+researchers. By the end of the four days you will have:
 
-- Chapter 7 drops PCA and clustering ("multivariate techniques" in the course description). The chapter now focuses on classical inference and regression as the foundation for Chapter 8.
-- Chapter 10 combines the planned Units 10 (Quarto authoring) and 11 (GitHub publishing) into one unit. The chapter is heavy on publishing and lighter on authoring, on the assumption that students will have been reading a Quarto book throughout the course.
-- Chapter 6 trimmed the LADAL data-viz tutorial from ~4,700 lines to ~550 lines. The advanced topics (patchwork, annotations, legend fine-tuning, shapes/lines detail) are pointed at as further resources rather than taught.
+- A working R / RStudio setup, a public GitHub repository, and the skills
+  to maintain both
+- Confidence importing, cleaning, and visualising linguistic data
+- Working knowledge of core text analytics methods — concordancing,
+  frequency, collocation, keyword analysis, and network graphs
+- An introduction to the main statistical models used in modern corpus
+  linguistics (mixed-effects models and conditional inference trees)
+- A reproducible Quarto document, hosted as a public website on GitHub
+  Pages, that you can use as the template for your Prüfungsleistung
 
-## Publishing to GitHub Pages
+The course is **practice-oriented**. Short conceptual intros followed by
+you working on your own machine, then I demonstrate, then you apply what
+you've seen. Expect to spend most of each day with your hands on the
+keyboard.
 
-### Current state
+---
 
-`docs/` is in `.gitignore` — nothing is being served yet. To go live, choose one of the two approaches below.
+## Four-day timeline
 
-### Approach A — Manual (recommended for first publish)
+| Day   | Date         | Focus                                 | Topics covered                                                                                      |
+|-------|--------------|---------------------------------------|-----------------------------------------------------------------------------------------------------|
+| Day 1 | Fri 18 Dec   | Foundations                           | RStudio, projects, packages · Git & GitHub · data types & import · `dplyr` · first `ggplot2`         |
+| Day 2 | Sat 19 Dec   | Text analytics                        | String processing · regular expressions · quanteda workflow · concordancing · frequency · collocation & network graphs |
+| Day 3 | Fri 8 Jan    | Statistics and modelling              | Descriptive statistics · regression concepts · mixed-effects models · conditional inference trees   |
+| Day 4 | Sat 9 Jan    | Reproducible publishing               | Quarto documents · rendering · GitHub Pages · publishing your own research website                  |
 
-Simplest, works today, consistent with what Chapter 10 teaches. The trade-off: you must re-render locally before every push.
+### Typical day structure
 
-1. **Remove `docs/` from `.gitignore`**:
-   ```
-   # Edit .gitignore and delete the `docs/` line
-   ```
+> ⚠ **Confirm with your instructor.** The schedule below is indicative. Please check the final times on the LSF entry.
 
-2. **Install LaTeX for PDF output** (one-time, if you plan to generate PDF alongside HTML):
-   ```r
-   install.packages("tinytex")
-   tinytex::install_tinytex()
-   ```
+| Time        | Activity               |
+|-------------|------------------------|
+| 09:00–09:10 | Welcome / recap        |
+| 09:10–10:10 | Session 1              |
+| 10:10–10:25 | Break                  |
+| 10:25–11:55 | Session 2              |
+| 11:55–12:55 | Lunch                  |
+| 12:55–14:10 | Session 3              |
+| 14:10–14:25 | Break                  |
+| 14:25–15:25 | Session 4              |
+| 15:25–16:15 | Session 5              |
+| 16:15–16:30 | Wrap-up / next-day preview |
 
-3. **Render the book locally** from the project root:
-   ```
-   quarto render
-   ```
-   HTML lands in `docs/`. Open `docs/index.html` in a browser to review.
+Total contact time: **8 academic hours (6 real hours) per day**, 32
+academic hours across the four days.
 
-4. **Commit and push**:
-   ```
-   git add docs/ .gitignore
-   git commit -m "Publish rendered book to docs/"
-   git push
-   ```
+---
 
-5. **Enable Pages on GitHub**:
-   - Go to <https://github.com/MartinSchweinberger/R-4-HASS/settings/pages>
-   - **Source**: *Deploy from a branch*
-   - **Branch**: `main`, **Folder**: `/docs`
-   - **Save**
+## Before Day 1 — what you need to do
 
-6. Wait 1–3 minutes. The site goes live at <https://martinschweinberger.github.io/R-4-HASS/>.
+### 1. Install the software (all free and open source)
 
-For every subsequent update: edit → `quarto render` → review `docs/index.html` → `git add docs/` → commit → push.
+Install, in this order:
 
-### Approach B — GitHub Actions (later migration)
+1. **R** (latest version) — <https://cran.r-project.org/>
+2. **RStudio Desktop** — <https://posit.co/download/rstudio-desktop/>
+3. **Quarto** — <https://quarto.org/docs/get-started/>
+4. **Git** — <https://git-scm.com/downloads> (make sure to tick "add to PATH" during installation on Windows)
+5. **A free GitHub account** — <https://github.com/>
 
-Cleaner long-term: Actions renders on push, you never commit `docs/`. Takes an afternoon to set up correctly because the Action has to install all your R package dependencies on each run. Worth doing once the book is stable and you want students to be able to contribute without having Quarto locally.
+### 2. Install the R packages
 
-Create `.github/workflows/publish.yml`:
+Open RStudio and run this once in the Console:
 
-```yaml
-name: Render and Publish
+```r
+install.packages(c(
+  # Core tidyverse and workflow
+  "tidyverse", "here", "readxl", "writexl",
+  "flextable", "knitr", "rmarkdown", "checkdown",
 
-on:
-  push:
-    branches: main
-  workflow_dispatch:
+  # Visualisation
+  "scales", "RColorBrewer", "viridis",
 
-jobs:
-  build-deploy:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
+  # Statistics
+  "e1071", "car", "effectsize", "broom", "report", "performance",
 
-      - uses: quarto-dev/quarto-actions/setup@v2
+  # Mixed-effects models
+  "lme4", "lmerTest", "MuMIn", "sjPlot",
 
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: '4.3.2'
+  # Tree-based models
+  "partykit", "ggparty", "party", "Hmisc",
 
-      - name: Install R package dependencies
-        run: |
-          install.packages(c(
-            "tidyverse", "here", "flextable", "checkdown",
-            "ggplot2", "dplyr", "tidyr", "stringr", "readr",
-            "readxl", "jsonlite", "xml2",
-            "e1071", "effectsize", "report", "performance", "car", "broom",
-            "scales", "RColorBrewer", "viridis",
-            "lme4", "lmerTest", "MuMIn", "sjPlot",
-            "quanteda", "tm", "tidytext", "gutenbergr",
-            "rmarkdown", "knitr"
-          ))
-        shell: Rscript {0}
+  # Text analytics
+  "quanteda", "quanteda.textstats", "quanteda.textplots",
+  "tidytext", "tokenizers", "gutenbergr", "tm",
 
-      - name: Render and publish
-        uses: quarto-dev/quarto-actions/publish@v2
-        with:
-          target: gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # Data formats
+  "jsonlite", "xml2"
+))
 ```
 
-Then on GitHub: **Settings → Pages → Source: GitHub Actions**. The first push after this triggers a build (visible in the Actions tab). Published to `gh-pages` branch, which Pages serves automatically.
+This takes 15–30 minutes depending on your connection. Run it the day
+before, not on the morning of Day 1.
 
-Note: the Action takes 5–10 minutes per build because it reinstalls all R packages each time. Caching via `r-lib/actions/setup-r-dependencies` with `renv` is the proper fix but requires an `renv.lock` file in the repo.
+### 3. Create your course project
 
-## Before you render
+In RStudio: **File → New Project → New Directory**, name it `R-4-HASS`,
+save it somewhere you'll find again.
 
-### 1. Missing data files (will cause hard errors)
+> If your pre-course email asked you to create a folder called `R4SHH`,
+> use `R-4-HASS` instead — it matches this repository and will save
+> confusion on Day 1.
 
-Copy these from the LADAL tutorial data folders into `data/` at the repo root. All chapters use `here::here("data", "filename.rda")` so the location is standardised.
+### 4. Have your laptop charged and ready
 
-**Chapter 2 — Data Loading:**
-- `testdat.csv`, `testdat2.csv`, `testdat.txt`, `testdat.xlsx`, `testdat.rda`, `english.txt`, `data.json`, `data.xml`, `mydoc.docx`
+You will spend four full days on your own laptop. Bring a charger. If
+your laptop is on an institutional lockdown (university-managed,
+corporate security), check in advance that you have administrator
+rights to install software.
 
-**Chapter 3 — String Processing** (June draft):
-- `tx1.rda`, `tx2.rda`, `tx3.rda`, `tx4.rda`, `testcorpus/linguistics04.txt`
-- The `linguistics04.txt` has hardcoded quiz answers (101 words, 673 characters) tied to this specific file — see TODO callout in the chapter.
+### 5. Confirm your Studiengang
 
-**Chapter 6 — Data Visualisation:**
-- `pvd.rda` (Penn Parsed Corpora of Historical English)
+If you haven't already, submit this short form so I can register your
+Prüfungsleistung correctly:
 
-**Chapter 7 — Statistics:**
-- Inferential: `itdata.rda`, `ptdata.rda`, `fedata.rda`, `mwudata.rda`, `uhmdata.rda`, `frdata.rda`, `x2data.rda`, `x2edata.rda`, `mdata.rda`, `d03.rda`
-- Regression: `sld.rda`, `mld.rda`, `bld.rda`
+👉 <https://forms.gle/3R8pgTvNDLd5AuNP9>
 
-**Chapter 8 — Mixed-Effects Models** (June draft):
-- `lmd.rda`, `mbd.rda`, `cld.rda`, `ratex.rda`, `pict.rda`
+### 6. Troubleshooting
 
-**Chapter 9 — Text Analysis** (June draft):
-- `darwin.rda`, `melville.rda`, `orwell.rda`
-- `alice.rda` is optional — the chapter falls back to downloading via `gutenbergr`.
+If any installation fails: email me (see **Contact** below) with the
+specific error message. Don't arrive on Day 1 with it still broken —
+Day 1 is tight and I can't individually debug setup issues for everyone
+during class.
 
-Each location is also flagged with a `callout-warning` in the chapter itself.
+---
 
-### 2. checkdown rendering — unverified
+## The course book
 
-All checkdown interactive quiz blocks (radio-button questions, hints) remain in chapters 3, 4, 7, 8, 9. The package is built for plain RMarkdown/Quarto HTML and *should* work in a Quarto book, but this has not been confirmed. After first render, check the quiz widgets actually display and function. Fallback: convert to static `callout-tip` "Exercise" blocks. Quick fix if needed.
+The course has a dedicated online book covering every topic in detail:
 
-### 3. Bibliography — needs verification
+**<https://martinschweinberger.github.io/R-4-HASS/>**
 
-`references.bib` contains 10 citation keys from the June drafts: Barr et al. 2013, Bartoń/MuMIn, Bell 2008, Friedl 2006, Johnson 2009/2014, Murayama 2014, Peng 2016, Pinheiro & Bates 2000, Winter 2019, Zuur & Ieno. Several entries marked `% VERIFY` because exact page numbers, editions, or (in one case) year could not be confirmed against primary sources. Check before publishing.
+| Chapter | Topic                                               | Primary day   |
+|---------|-----------------------------------------------------|---------------|
+| 1       | Introduction to R and RStudio                       | Day 1         |
+| 2       | Working with Data in R                              | Day 1         |
+| 3       | String Processing                                   | Day 2         |
+| 4       | Regular Expressions                                 | Day 2         |
+| 5       | Data Cleaning and Tables                            | Day 1         |
+| 6       | Data Visualisation with `ggplot2`                   | Day 1         |
+| 7       | Statistics: Inferential Tests and Regression        | Day 3         |
+| 8       | Mixed-Effects Models (incl. Conditional Inference Trees) | Day 3    |
+| 9       | Text Analysis (Corpus Methods)                      | Day 2         |
+| 10      | Reproducible Research and Publishing                | Day 4         |
 
-The newly-adapted chapters (1, 2, 5, 6, 7, 10) do not add new bib entries — they reference Winter (2019), Gries (2021), Field et al. (2012), Wickham (2016) in prose only. Add proper entries if you want these cite-linked.
+### How to use the book
 
-### 4. Content gaps flagged in-text
+- **During the course:** the book is your reference. We won't read it
+  cover-to-cover in class; instead, each session covers key points and
+  you follow up in the book for depth.
+- **Before each day:** skim the relevant chapters. Full reading is not
+  required — a 15-minute browse of the headings and intro of each
+  chapter is enough.
+- **Between the two blocks** (Dec 19 → Jan 8): if you want extra prep,
+  Chapter 7 (statistics) before Day 3 pays off.
+- **After the course:** the book is your reference for your
+  Prüfungsleistung.
 
-Three structural gaps:
+---
 
-- **Chapter 8 (Mixed-Effects Models)** originally presumed a regression-fundamentals background. **Chapter 7 now fills that gap** — linear regression, logistic regression, diagnostics, interpretation. Update any prerequisite callouts in Ch 8 accordingly on the next adaptation pass.
-- **Chapter 9 (Text Analysis)** is adapted from "Part 2" of a two-part LADAL series; "Part 1" (introta, conceptual foundations) is not in this book. Options: add introta as new content, write a short refresher into Ch 9, or brief participants verbally.
-- **Chapter 7** does not cover PCA or clustering (the "multivariate techniques" part of the course description). Points to LADAL tutorials and standard references in its Further Resources section.
+## Data for the course
 
-### 5. Pre-course email to students needs updating
+Corpus and example data will be distributed on **USB stick** on Day 1
+(copyright restrictions mean they cannot be shared online). You will
+copy the files into the `data/` folder of your `R-4-HASS` project.
 
-The welcome email already sent to students contains **stale LADAL URLs** (from the old LADAL slug naming): fix before pointing anyone at the links. Replace in that email:
+Public datasets referenced in the book (e.g. Alice in Wonderland via
+`gutenbergr`) can be downloaded directly from R without a USB.
 
-- `/tutorials/r_intro/r_intro.html` → `/tutorials/intror/intror.html`
-- `/tutorials/quant_intro/quant_intro.html` → `/tutorials/introquant/introquant.html`
-- `/tutorials/data_loading/data_loading.html` → `/tutorials/load/load.html`
-- `/tutorials/regular_expressions/` → `/tutorials/regex/`
-- `/tutorials/publish/` → `/tutorials/bookdown/`
-- `/tutorials/text_analysis_intro/` → `/tutorials/introta/`
-- `/tutorials/text_analysis/text_analysis.html` is correct — leave alone
+---
 
-The pre-course package install list in the email covers only 4 packages (tidyverse, here, flextable, readxl). The full book uses roughly 40. Send a follow-up with the complete install block (easiest: lift the `install-*` chunks from each chapter's setup section).
+## Assessment (Prüfungsleistung)
 
-## Chapter adaptation conventions
+| Studiengang / Modul                              | What you submit                                                                                                                                                                                                      |
+|--------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Hauptseminar P 12.2** (Lehramt Gymnasium)      | **Hausarbeit** — a term paper (ca. 15–20 pages) on an English linguistics or closely related topic, using textual data analysed in R. Standard structure: introduction, background, data & methods, results, discussion. Submission of your analysis code alongside the paper is encouraged. |
+| **Masterseminar WP 33.1**                        | **Reproducible Quarto document** via public GitHub repository. Present one method from the seminar on a worked example. Scope: ca. 8–12 pages rendered HTML.                                                        |
+| **GGSP and all other Studiengänge**              | Reproducible Quarto document (as above). Scope: ca. 5–8 pages rendered HTML.                                                                                                                                       |
 
-Apply these when converting the remaining June drafts (chapters 3, 4, 8, 9).
+**Submission deadline:** 31 March 2027 for all tracks.
 
-### Strip LADAL boilerplate
+> ⚠ **Verify independently with your Prüfungsamt.** Prüfungsordnungen
+> vary; the overview above is a guide, not a binding commitment.
 
-- YAML `params:` block
-- `schema-org` JSON-LD chunk (SEO metadata, irrelevant outside the LADAL site)
-- Decorative UQ Great Court banner (`uq1.webp`) and chili icons (`gy_chili.png`, `yr_chili.jpg`, `g_chili.jpg`)
-- "Prerequisite Tutorials" callout at the top (replace with a short note referencing book chapters if needed)
-- "Citation" callout at the top with the auto-generated BibTeX chunk
-- "Citation & Session Info" block at the bottom and the `sessionInfo()` call
-- AI Transparency Statement callout
-- "Back to top" / "Back to HOME" navigation links
-- Empty References section (handled book-wide by `references.bib` + `99-references.qmd`)
+The technical skills needed for the Quarto document route (Quarto,
+Git, GitHub, GitHub Pages) are covered during the seminar — especially
+Day 4.
 
-Replace with a single `callout-note` **Attribution** block at the end of the chapter pointing to the LADAL source URL.
+---
 
-### Namespace heading IDs
+## How this repository is organised
 
-Every section ID gets a unique `{#sec-<topic>-<section>}` prefix because the LADAL originals all reuse generic IDs (`#intro`, `#setup`, `#preparation`, `#prep`) that collide once chapters live in one book.
+```
+R-4-HASS/
+├── chapters/        # The book chapters (one .qmd per chapter)
+├── data/            # Example data (populate from USB on Day 1)
+├── docs/            # Rendered book (what GitHub Pages serves)
+├── teaching/        # Instructor's day-by-day teaching scripts
+├── _quarto.yml      # Book configuration
+├── index.qmd        # Book landing page
+├── references.bib   # Bibliography
+└── README.md        # This file
+```
 
-- `#intro` → `#sec-dataviz-intro`, `#sec-stats-intro`, `#sec-publish-intro`
-- `#setup` → `#sec-<topic>-setup`
-- `#assumptions` → `#sec-stats-assumptions`
-- etc.
+You don't need to clone this repository — the book is readable online.
+If you want to clone it (to read offline, or to copy a code example):
 
-For cross-references between chapters, use `@sec-...` (Quarto cross-reference syntax), not raw `#anchor` links.
+```bash
+git clone https://github.com/MartinSchweinberger/R-4-HASS.git
+```
 
-### Rename collision-prone chunks
+Your own project (which you create fresh on Day 1) will live in a
+separate folder with the same name `R-4-HASS`, in your own GitHub
+account.
 
-Chunk labels must be unique book-wide. Suffix collision-prone names with the chapter topic:
+---
 
-- `setup` → `setup-dataviz`, `setup-stats`, `setup-publish`
-- `load`, `load-data`, `prep3`, `prep5` → `-<topic>` suffix
-- Any chunk whose name is likely used elsewhere (plot1, model1, check, install) → `-<topic>` suffix
+## Getting help
 
-### Fix data paths
+### During the Blockseminar
 
-- `base::readRDS("tutorials/<topic>/data/<file>.rda", "rb")` → `base::readRDS(here::here("data", "<file>.rda"))`
-- `read.csv("data/<file>.csv")` → `read.csv(here::here("data", "<file>.csv"))`
+Raise your hand. If you're stuck, chances are at least two other people
+are stuck on the same thing.
 
-The `here::here()` call makes paths work regardless of where in the project the chapter is being rendered from.
+### Between sessions and after the course
 
-### Fix LADAL cross-references
+Email **m.schweinberger@uq.edu.au** with `LMU` at the start of the
+subject line:
 
-- Internal cross-refs to another LADAL tutorial that **is** in this book → convert to `@sec-...`
-- Cross-refs to tutorials **not** in this book → either remove, or keep as external hyperlinks to the live LADAL page
+> `LMU — question about mixed-effects models`
 
-## Open TODOs
+Emails without the `LMU` prefix may be missed. Note that I am based
+in Australia (UTC+10) outside the Blockseminar weekends, so expect a
+timezone delay in replies.
 
-1. **Adapt June drafts** — chapters 3, 4, 8, 9 need the convention pass above
-2. **Wire everything into `_quarto.yml`** — chapters 3, 4, 8, 9 are the only ones currently active; uncomment 1, 2, 5, 6, 7, 10 and sort
-3. **Source missing data files** (see §1 above)
-4. **First end-to-end render test** — `quarto render` from the project root, fix whatever breaks
-5. **Verify checkdown** rendering in the Quarto book context
-6. **Verify bibliography entries** marked `% VERIFY`
-7. **Update Chapter 8 prerequisites callout** — it can now point to Chapter 7 for the regression background that was previously a gap
-8. **Decide on introta** for Chapter 9 — add, write a short refresher, or brief verbally
-9. **Fix the welcome email** — replace stale LADAL URLs (see §5)
-10. **Send follow-up email** with the full ~40-package install block
-11. **Publish to GitHub Pages** — Approach A for first publish; migrate to Approach B later if desired
+### Where to search first
+
+Before emailing:
+
+1. The relevant book chapter
+2. `?function_name` in R (built-in help)
+3. The LADAL tutorial that chapter is based on: <https://ladal.edu.au/>
+4. Stack Overflow with the `[r]` tag
+
+---
+
+## Common first-day problems
+
+| Symptom                                          | Fix                                                                 |
+|--------------------------------------------------|---------------------------------------------------------------------|
+| `Error: could not find function "..."`           | Load the package: `library(pkg)`; install if missing                |
+| `object '...' not found`                         | Run the code that creates it first                                  |
+| `cannot open file '...'`                         | Check `getwd()`; use `here::here()`                                 |
+| `git: command not found`                         | Reinstall Git with "add to PATH" option                             |
+| No Git tab in RStudio                            | Tools → Project Options → Git/SVN, then restart RStudio             |
+| Weird characters (Mßller instead of Müller)      | Encoding issue — specify UTF-8 at import time                       |
+
+---
+
+## Credits and licensing
+
+The course material in this repository is adapted from tutorials
+published by the **Language Technology and Data Analysis Laboratory
+(LADAL)** at the University of Queensland: <https://ladal.edu.au/>
+
+Original LADAL tutorials by Martin Schweinberger and collaborators;
+adaptation for the LMU Blockseminar also by Martin Schweinberger. See
+individual chapters for attribution notes.
+
+Licence: CC BY-SA 4.0 for text content; MIT for code.
+
+---
+
+**Looking forward to meeting you all in December.**

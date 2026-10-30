@@ -1,0 +1,763 @@
+---
+title: "Day 1 — Foundations"
+subtitle: "Blockseminar: Quantitative and Reproducible Research with R in the Humanities"
+author: "Martin Schweinberger"
+date: "2026-12-18"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    code-fold: false
+    theme: cosmo
+---
+
+::: {.callout-note}
+## Instructor-facing script
+
+This is **your** teaching script for Day 1, not a student handout. It gives
+the running order, timings, demo code to project, and exercise prompts.
+Students work from the book (chapters 1, 2, 5, 6, 10) and the data files
+distributed on USB.
+
+**Pattern per section** (your decision):
+1. Short intro — you set up the concept
+2. Students try — on their own machines, before you've shown them
+3. Demo — you work it live, explaining as you go
+4. Exercise — closes the section, students apply what they just saw
+:::
+
+## Day 1 at a glance
+
+| Time        | Section                                  | Book     | Duration |
+|-------------|------------------------------------------|----------|----------|
+| 09:00–09:10 | Opening                                  | —        | 10 min   |
+| 09:10–10:10 | §1. RStudio, projects, packages          | Ch 1     | 60 min   |
+| 10:10–10:25 | Break                                    | —        | 15 min   |
+| 10:25–11:55 | §2. Git & GitHub setup                   | Ch 10 §  | 90 min   |
+| 11:55–12:55 | Lunch                                    | —        | 60 min   |
+| 12:55–14:10 | §3. Data in R — types and import         | Ch 2     | 75 min   |
+| 14:10–14:25 | Break                                    | —        | 15 min   |
+| 14:25–15:25 | §4. Data manipulation with `dplyr`       | Ch 5     | 60 min   |
+| 15:25–16:15 | §5. First `ggplot2`                      | Ch 6     | 50 min   |
+| 16:15–16:30 | Wrap-up + Day 2 preview                  | —        | 15 min   |
+
+**Teaching minutes:** 360 (= 8 academic hours × 45 min). **Door-to-door:** 7.5 hours.
+
+## Before you start the room
+
+Pre-session checklist (10 min before 09:00):
+
+- [ ] Projector works, your screen is at or near 150% zoom (RStudio text readable from the back)
+- [ ] USB sticks with corpus data ready to hand round at Break 1
+- [ ] Your R-4-HASS repo clone is on your laptop, logged into GitHub, PAT in credential store
+- [ ] A pinned browser tab on <https://github.com/MartinSchweinberger/R-4-HASS> and one on <https://ladal.edu.au/>
+- [ ] Pre-prepared bits/notes for the inevitable "I don't have R installed" / "my Git says command not found" cases
+- [ ] Flipchart or whiteboard for the few diagrams (project vs working directory; local vs remote repo)
+
+::: {.callout-warning}
+## Student install state — assume partial compliance
+
+Pre-course email asked students to install R, RStudio, Quarto, Git, and
+create a GitHub account before Day 1. Realistic compliance from 35
+students: ~25 fully compliant, ~7 partially, ~3 nothing done. Have a
+"catch-up corner" plan — a visible place where students who are behind
+work alongside the rest. Don't block the whole room on their issues.
+:::
+
+---
+
+## 09:00–09:10 · Opening (10 min)
+
+Short. Students have been in talks before; the first 10 min signals how
+this day will run.
+
+**What to cover:**
+
+- Who you are, one sentence on what the course is for
+- Four-day arc (foundations → text analytics → statistics & modelling → publishing)
+- Where the materials live: the book (point at the GitHub URL on screen),
+  the per-day scripts (today's is this file), the data on USB
+- Prüfungsleistung reminder (one line each for Hausarbeit route vs
+  Quarto-document route)
+- The daily rhythm: short intro, you try, I demo, exercises; two breaks + lunch
+- End-of-day goal: every student leaves with a working R project, a
+  public GitHub repo, imported real linguistic data, and a saved plot
+
+**Do not cover:**
+
+- Why R vs SPSS tangent (lose 5 min, gain nothing)
+- Full tour of the book TOC (point at it, move on)
+- History of R, tidyverse philosophy, functional-vs-imperative — any of this
+
+---
+
+## 09:10–10:10 · §1. RStudio, projects, packages (60 min)
+
+**Aim.** Every student has an R project called R-4-HASS, a `scripts/`
+folder, a running `day1.R`, and the four core packages loaded without
+errors.
+
+**Reading / reference.** Book Ch 1 (`01-r_intro.qmd`), §§1–3.
+
+### 1.1 Intro (10 min)
+
+Key points to make:
+
+- RStudio ≠ R. R is the engine; RStudio is the dashboard. If RStudio
+  crashes, your R work is still safe (saved scripts and data).
+- The four panes: script editor (top-left), console (bottom-left),
+  environment (top-right), files/plots/help (bottom-right).
+- An R **project** is a self-contained working directory. One project
+  per piece of work. The `.Rproj` file sets the working directory
+  automatically — you never need `setwd()`.
+- A **package** is other people's R code. Install once (`install.packages()`),
+  load every session (`library()`).
+- `<-` vs `=`: both work for assignment; `<-` is community convention.
+
+Don't labour the assignment operator discussion. One sentence, move on.
+
+### 1.2 Students try (15 min)
+
+Prompt on screen (leave it up):
+
+> 1. Open RStudio. Point at each of the four panes in turn.
+> 2. **File → New Project → New Directory**, call it `R-4-HASS`. Save it
+>    somewhere you'll find again (your `Documents` folder is fine).
+> 3. In the Files pane, create a new folder called `scripts`.
+> 4. **File → New File → R Script**, save it as `scripts/day1.R`.
+> 5. Type `1 + 1` on the first line. Run it with Ctrl/Cmd + Enter.
+> 6. Below that: `my_name <- "your name"`. Run it. Check Environment pane.
+
+Walk the room. Expect: students without R installed, students with
+RStudio opening on a non-English locale, students whose `Documents` is
+synced to OneDrive and so the project refuses to save. Flag these to
+the catch-up corner; don't stop.
+
+### 1.3 Demo (20 min)
+
+Project on screen:
+
+```{r demo-1-3, eval=TRUE}
+# Where am I?
+getwd()
+
+# Make sure the four core packages are installed
+# (Pre-course email asked students to do this already — this is a check)
+# install.packages(c("tidyverse", "here", "readxl", "flextable"))
+
+# Load them
+library(tidyverse)   # dplyr, ggplot2, readr, tidyr, stringr, forcats, purrr, tibble
+library(here)        # robust file paths
+library(readxl)      # Excel files
+library(flextable)   # nice tables for reports
+
+# What does `here` give us?
+here::here()              # project root
+here::here("scripts")     # project root + /scripts
+
+# Scope operator — "this function from this package"
+# Useful when two packages export the same name
+stringr::str_length("Blockseminar")
+```
+
+Talking points while typing (not after):
+
+- `tidyverse` is a bundle — one call loads eight packages
+- `library(here)` + `here::here()` means your script works on anyone's machine
+- `::` is a safety net; use it in production code and when you want to be
+  explicit about which package a function comes from
+
+### 1.4 Exercise (15 min)
+
+> **Task.** Add three more folders to your `R-4-HASS` project: `data/`,
+> `figures/`, and `output/`. In your `day1.R`, write code that uses
+> `here::here()` to print the full path to each of these folders.
+> Save the script.
+>
+> **Bonus.** Install one additional package of your choice from
+> `install.packages("<name>")` and load it.
+
+Common slips to watch for:
+
+- Students creating folders in Finder/Explorer, then not seeing them in
+  the Files pane → press F5 or click the refresh icon
+- Students pasting `install.packages()` into the script and running it
+  every time → tell them to comment it out: `# install.packages(...)`
+- `here()` without `library(here)` → good teaching moment on load-then-use
+
+**Hand off to §2:** *"You now have a project. Next we're going to put
+it on GitHub so you can back it up, share it, and — on Day 4 — turn it
+into a public website."*
+
+---
+
+## 10:10–10:25 · Break (15 min)
+
+Hand out USB sticks with data files. Mention that the `data/` folder
+they just created is where everything will go after lunch.
+
+---
+
+## 10:25–11:55 · §2. Git & GitHub setup (90 min)
+
+**Aim.** Every student has their R-4-HASS project connected to a public
+GitHub repository and has pushed at least one commit from RStudio.
+
+**Reading / reference.** Book Ch 10 (`10-publish.qmd`), §§ on Git basics
+and PAT setup. (Note: Ch 10 is publishing-focused — the Git basics are
+background for that chapter, not the main thrust. For today, we're
+using the Git parts and skipping the Quarto-publishing parts.)
+
+::: {.callout-important}
+## This is the highest-risk section of Day 1
+
+Set a hard timebox. If a student is still blocked at 11:40, tell them
+to finish at home, and move on. The goal is that most students have
+a repo online by lunch — not that every student does.
+:::
+
+### 2.1 Intro (15 min)
+
+Key points:
+
+- **Git** is a tool on your laptop that tracks changes to files.
+  **GitHub** is a website that stores Git repositories online.
+  The two are not the same thing. Git works without GitHub; GitHub
+  without Git is just file storage.
+- A **commit** is a snapshot of your project at a point in time, with a
+  message explaining what changed. A **push** sends your commits to
+  GitHub. A **pull** gets other people's commits down.
+- Authentication: HTTPS + Personal Access Token (PAT). SSH keys are
+  cleaner but harder to set up for 35 beginners in 90 minutes. We use PAT.
+- A PAT is like a password with scopes. It's shown ONCE. If you lose it,
+  generate a new one.
+
+Draw on the whiteboard: *your laptop (local repo)* ↔ *GitHub (remote repo)*,
+with push/pull arrows. Keep it on the board.
+
+### 2.2 Students try (25 min)
+
+Prompt on screen:
+
+> **A. Verify Git is installed.** Open the Terminal tab in RStudio
+> (Tools → Terminal → New Terminal). Type:
+>
+> ```bash
+> git --version
+> ```
+>
+> You should see something like `git version 2.43.0`. If not,
+> flag this and visit catch-up corner.
+>
+> **B. Tell Git who you are.** In Terminal:
+>
+> ```bash
+> git config --global user.name "Your Name"
+> git config --global user.email "your-email@example.com"
+> ```
+>
+> Use the email you used to sign up for GitHub.
+>
+> **C. Create an empty repo on GitHub.**
+>
+> 1. Go to <https://github.com> and sign in.
+> 2. Click **New** (green button, top-left after sign-in).
+> 3. Repository name: `R-4-HASS`.
+> 4. Public. Do NOT add a README, .gitignore, or license (we have one locally).
+> 5. Click **Create repository**.
+> 6. Leave this page open — the next step uses the URL shown.
+
+### 2.3 Demo (25 min)
+
+PAT generation — do this with students, step by step:
+
+> **D. Generate a Personal Access Token.**
+>
+> 1. On GitHub, click your profile picture → **Settings**
+> 2. Scroll down the sidebar → **Developer settings**
+> 3. **Personal access tokens** → **Tokens (classic)**
+> 4. **Generate new token** → **Generate new token (classic)**
+> 5. Note: `R-4-HASS laptop` (or similar)
+> 6. Expiration: 90 days is fine
+> 7. Scopes: tick `repo` (that's the whole top block)
+> 8. **Generate token**
+> 9. **Copy the token immediately — this is the only time it is shown.**
+>    Paste it into a text file as a backup until it's stored by Git.
+
+Then wire the local R-4-HASS up to the new empty GitHub repo. In Terminal
+inside the R-4-HASS project:
+
+```bash
+# Initialise git tracking in the current folder
+git init
+
+# Stage everything currently in the folder
+git add .
+
+# Create the first commit
+git commit -m "Initial commit"
+
+# Rename default branch to main (if not already)
+git branch -M main
+
+# Connect this local repo to the GitHub remote
+# (replace USERNAME with the student's GitHub username)
+git remote add origin https://github.com/USERNAME/R-4-HASS.git
+
+# Push to GitHub — this will prompt for username + PAT
+git push -u origin main
+```
+
+When prompted:
+
+- Username: your GitHub username
+- Password: paste the PAT (NOT your GitHub login password)
+
+The PAT will be stored by the OS credential manager (Git Credential
+Manager on Windows, Keychain on macOS, libsecret on Linux). Students
+should only need to paste once.
+
+Refresh the GitHub repo page in the browser — files should appear.
+
+### 2.4 Exercise (25 min)
+
+> **Task.** Make a small change and push it from RStudio (not Terminal).
+>
+> 1. Open `day1.R` in RStudio.
+> 2. Add a comment at the top: `# Day 1 — my first commit from RStudio`.
+> 3. Save the file.
+> 4. In the top-right pane, click the **Git** tab.
+>    (If no Git tab: Tools → Project Options → Git/SVN → set version
+>    control to Git, restart RStudio.)
+> 5. Tick the box next to `day1.R` under "Staged".
+> 6. Click **Commit**. In the message box, type: `Add header comment`.
+>    Click **Commit** again.
+> 7. Click **Push** (green up arrow).
+> 8. Refresh your GitHub repo page in the browser. The change should be there.
+
+Common failure modes and quick fixes:
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `git: command not found` | Git not on PATH | Reinstall from git-scm.com, tick "add to PATH" |
+| No Git tab in RStudio | Project not Git-tracked, or RStudio needs restart | Tools → Project Options → Git/SVN, then restart |
+| `Permission denied (publickey)` | Trying SSH not HTTPS | Switch remote to HTTPS: `git remote set-url origin https://...` |
+| PAT paste shows asterisks only, won't accept | Terminal hiding paste for security | Try Ctrl+Shift+V on Windows, Cmd+V on Mac — it's working |
+| `rejected — fetch first` | Repo was created with README on GitHub | Delete the GitHub repo, recreate without README, retry |
+
+**Hand off:** *"Everyone with a repo online, raise a hand. [Count.] Those
+without one, grab me or sit with the catch-up corner over lunch. We
+move on."*
+
+---
+
+## 11:55–12:55 · Lunch (60 min)
+
+Catch-up corner remains available. Resist eating with just one student
+— they'll want individual help the whole hour.
+
+---
+
+## 12:55–14:10 · §3. Data in R — types and import (75 min)
+
+**Aim.** Every student imports CSV, TSV, and Excel files from the USB
+data into their project and can describe what came in with `str()`,
+`glimpse()`, `summary()`.
+
+**Reading / reference.** Book Ch 2 (`02-data_loading.qmd`).
+
+### 3.1 Intro (15 min)
+
+Key points:
+
+- **Vectors** are the basic R object: `c(1, 2, 3)`, `c("a", "b", "c")`.
+- **Factors** are vectors where each value is one of a set of levels.
+  Useful for categorical variables (gender, register, speaker).
+- **Data frames** are tables where each column is a vector of the same
+  length. **Tibbles** are the tidyverse version: better print output
+  and fewer surprises.
+- File formats: CSV is the lingua franca. TSV when commas are in your
+  data. Excel is common in humanities but has encoding and date pitfalls.
+  `.rda` / `.RData` are R's own format — fastest to read, R-only.
+- `readr::read_csv()` reads much faster than base R's `read.csv()`,
+  and returns a tibble.
+
+Draw on the whiteboard: a tibble = rows (observations) × columns
+(variables). Keep it there.
+
+### 3.2 Students try (20 min)
+
+Prompt on screen:
+
+> **A. Build a tibble by hand.** In `day1.R`:
+>
+> ```r
+> speakers <- tibble::tibble(
+>   speaker  = c("S01", "S02", "S03", "S04", "S05"),
+>   age      = c(23, 45, 67, 34, 29),
+>   register = c("spoken", "written", "spoken", "spoken", "written"),
+>   tokens   = c(1203, 847, 2104, 1567, 923)
+> )
+>
+> speakers
+> ```
+>
+> **B. Inspect it:**
+>
+> ```r
+> str(speakers)        # structure
+> dplyr::glimpse(speakers)  # tidyverse glimpse
+> summary(speakers)    # five-number summary + factor counts
+> head(speakers, 3)    # top 3 rows
+> ```
+>
+> **C. One question:** what does `speakers$register` give you back?
+> Run it and see.
+
+### 3.3 Demo (25 min)
+
+Move the data from USB into `data/` first (show them):
+
+```{r demo-3-3, eval=TRUE}
+# Where should the data be?
+here::here("data")
+
+# Load the main test files
+testdat_csv  <- readr::read_csv(here::here("data", "testdat.csv"))
+testdat_tsv  <- readr::read_tsv(here::here("data", "testdat.txt"))
+testdat_xlsx <- readxl::read_excel(here::here("data", "testdat.xlsx"))
+
+# Compare them — they should look similar if the files were created in parallel
+dplyr::glimpse(testdat_csv)
+dplyr::glimpse(testdat_tsv)
+dplyr::glimpse(testdat_xlsx)
+
+# Inspect in more detail
+summary(testdat_csv)
+
+# What if the encoding is wrong?
+# You see "Mßller" instead of "Müller"? Try specifying UTF-8:
+testdat_csv2 <- readr::read_csv(
+  here::here("data", "testdat.csv"),
+  locale = readr::locale(encoding = "UTF-8")
+)
+
+# Save a processed version back out
+readr::write_csv(testdat_csv, here::here("output", "testdat_clean.csv"))
+```
+
+Talking points:
+
+- `read_csv()` tells you what it did — read the specification output;
+  don't ignore it
+- Use `here::here()` consistently; never `read_csv("data/testdat.csv")`
+- Encoding problems are the single most common import issue in
+  humanities data — if the text looks garbled, it's an encoding issue
+  nine times out of ten
+- `.rda` files are loaded with `readRDS()` (single object) or `load()`
+  (names appear in environment); show which the LADAL files use
+
+### 3.4 Exercise (15 min)
+
+> **Task.**
+>
+> 1. Import `testdat2.csv` into R.
+> 2. Use `glimpse()` to describe its structure.
+> 3. Save it as an Excel file in your `output/` folder using
+>    `writexl::write_xlsx()` (install `writexl` first if needed).
+> 4. Open the Excel file to verify it looks right.
+>
+> **Reflect.** What was the easiest format to work with, and why?
+
+---
+
+## 14:10–14:25 · Break (15 min)
+
+Catch-up corner for anyone still fighting Git.
+
+---
+
+## 14:25–15:25 · §4. Data manipulation with `dplyr` (60 min)
+
+**Aim.** Every student uses `filter()`, `select()`, `mutate()`, `arrange()`,
+`group_by()` + `summarise()` on a real dataset to answer a question.
+
+**Reading / reference.** Book Ch 5 (`05-tables.qmd`).
+
+### 4.1 Intro (10 min)
+
+Key points:
+
+- `dplyr` has five "verbs" that cover 90% of data wrangling:
+  - `filter()` — keep rows that match a condition
+  - `select()` — keep columns you want
+  - `mutate()` — add or change columns
+  - `arrange()` — sort rows
+  - `summarise()` — collapse rows into summary statistics
+- `group_by()` is the modifier that makes `summarise()` operate
+  per-group rather than over the whole table.
+- The pipe `|>` (or `%>%`) means "take what's on the left, feed it
+  into the function on the right as the first argument". Reads as
+  "then".
+
+### 4.2 Students try (15 min)
+
+Prompt (dataset here is the one they imported in §3; adjust to your
+provided data):
+
+> Using `testdat_csv` (or whichever one you prefer):
+>
+> ```r
+> # Keep only rows where some column meets a condition
+> testdat_csv |>
+>   dplyr::filter(SomeVariable == "SomeValue")
+>
+> # Keep only certain columns
+> testdat_csv |>
+>   dplyr::select(SomeVariable, AnotherVariable)
+>
+> # Try one on your own: filter + select combined
+> ```
+>
+> Replace `SomeVariable` and `SomeValue` with real column names and
+> values from your data. Use `glimpse()` to remind yourself what's there.
+
+### 4.3 Demo (20 min)
+
+Build up a pipeline, line by line, explaining each verb:
+
+```{r demo-4-3, eval=TRUE}
+# Starting from the raw tibble
+testdat_csv |>
+  dplyr::glimpse()
+
+# Filter: just one subset
+testdat_csv |>
+  dplyr::filter(Age > 30)
+
+# Add filter + select + arrange
+testdat_csv |>
+  dplyr::filter(Age > 30) |>
+  dplyr::select(Speaker, Age, Register) |>
+  dplyr::arrange(dplyr::desc(Age))
+
+# mutate — add a derived column
+testdat_csv |>
+  dplyr::mutate(
+    age_group = dplyr::case_when(
+      Age < 30 ~ "young",
+      Age < 60 ~ "middle",
+      TRUE     ~ "older"
+    )
+  )
+
+# group_by + summarise — the classic group analysis
+testdat_csv |>
+  dplyr::group_by(Register) |>
+  dplyr::summarise(
+    n       = dplyr::n(),
+    mean_age = mean(Age, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+(Note: `Age`, `Speaker`, `Register` are placeholders — swap for your
+dataset's actual column names.)
+
+Talking points:
+
+- Build the pipeline incrementally — add one verb, run, check output,
+  add the next. Don't write the whole chain and hope.
+- `|>` is R 4.1+. `%>%` is tidyverse's older pipe — they're nearly
+  equivalent. Students will see both in the wild.
+- `.groups = "drop"` silences a benign warning — explain once, move on.
+- `dplyr::` prefix is for teaching clarity; in practice, students will
+  write `filter()` after `library(dplyr)`.
+
+### 4.4 Exercise (15 min)
+
+> **Task.** Answer these three questions about the dataset using `dplyr`:
+>
+> 1. How many observations are in each register?
+> 2. What is the mean of some numeric variable, broken down by group?
+> 3. Which 5 rows have the highest value on some variable?
+>
+> Write each as a single `|>` pipeline. Save each in `day1.R` with a
+> comment above explaining what it does.
+
+(Rephrase these to match the actual columns of the dataset students
+have.)
+
+---
+
+## 15:25–16:15 · §5. First `ggplot2` (50 min)
+
+**Aim.** Every student creates a bar chart and a scatter plot with
+`ggplot2`, customises labels, and saves one plot to `figures/` with
+`ggsave()`.
+
+**Reading / reference.** Book Ch 6 (`06-data_viz_intro.qmd`).
+
+### 5.1 Intro (10 min)
+
+Key points:
+
+- `ggplot2` is built on the **grammar of graphics**: every plot is
+  (data) + (aesthetic mapping) + (geometric layer) + (optional
+  statistics, scales, facets, themes).
+- The template:
+
+  ```r
+  ggplot(data = <DATA>, aes(x = <X>, y = <Y>, colour = <GROUP>)) +
+    geom_<TYPE>() +
+    labs(title = "...", x = "...", y = "...") +
+    theme_bw()
+  ```
+
+- Layers are added with `+`, NOT `|>`. This trips everyone up once.
+- `aes()` maps variables → visual properties. Anything inside `aes()`
+  is data-driven; anything outside is fixed.
+
+### 5.2 Students try (10 min)
+
+> Make a basic bar chart of the counts of some categorical variable:
+>
+> ```r
+> ggplot(data = testdat_csv, aes(x = Register)) +
+>   geom_bar()
+> ```
+>
+> Then try a scatter plot of two numeric variables:
+>
+> ```r
+> ggplot(data = testdat_csv, aes(x = Age, y = Tokens)) +
+>   geom_point()
+> ```
+>
+> Adjust column names to match your data.
+
+### 5.3 Demo (15 min)
+
+Build up a publication-ready plot:
+
+```{r demo-5-3, eval=TRUE}
+# Start simple
+p <- ggplot(data = testdat_csv, aes(x = Age, y = Tokens))
+p
+
+# Add a geom
+p + geom_point()
+
+# Colour by group
+p + geom_point(aes(colour = Register))
+
+# Add a smoother
+p +
+  geom_point(aes(colour = Register)) +
+  geom_smooth(method = "lm", se = FALSE)
+
+# Labels and theme
+p +
+  geom_point(aes(colour = Register), size = 2) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title    = "Tokens by speaker age",
+    subtitle = "Linear fit by register",
+    x        = "Speaker age (years)",
+    y        = "Tokens produced",
+    colour   = "Register"
+  ) +
+  theme_bw()
+
+# Save it
+ggsave(
+  filename = here::here("figures", "tokens-by-age.png"),
+  width    = 7,
+  height   = 4.5,
+  dpi      = 300
+)
+```
+
+Talking points:
+
+- Build the plot in layers; print after each addition
+- `theme_bw()` + explicit axis labels = 90% of publication quality
+- Save as PNG for most purposes; PDF if going into LaTeX
+- Default `ggsave` dimensions are too big for most needs; always set
+  `width` and `height`
+
+### 5.4 Exercise (15 min)
+
+> **Task.**
+>
+> 1. Make a boxplot of a numeric variable by a categorical variable.
+> 2. Customise with `labs()` — give it a proper title, axis labels, caption.
+> 3. Change the theme to `theme_minimal()` or `theme_classic()`.
+> 4. Save to `figures/` as a PNG, 7 × 4 inches, 300 dpi.
+> 5. Commit and push the figure to GitHub (practice the full cycle).
+
+---
+
+## 16:15–16:30 · Wrap-up (15 min)
+
+Points to make:
+
+- **What they just did:** project set up, Git/GitHub, data imported,
+  manipulated with `dplyr`, visualised with `ggplot2`, pushed figures.
+  That's the full day-one R workflow.
+- **Day 2 preview:** text analytics. Strings, regex, concordancing,
+  collocation, networks. Working with a literary corpus (Alice in
+  Wonderland + a few others). Same workflow pattern.
+- **Between blocks (optional, not graded):**
+  - Install the fuller package list (hand out or email the list — the
+    ~40-package superset is in each chapter's setup code)
+  - Re-run today's exercises with a different dataset of your own
+  - Read Ch 1, 2, 5, 6 in the book for depth
+- **Prüfungsleistung reminder:** your pushed GitHub repo today is
+  the start of your Quarto document submission for most tracks.
+  Keep committing to it.
+
+Encourage questions. Flag your email with "LMU" prefix convention.
+
+---
+
+## Appendix A — Risk register for Day 1
+
+| # | Risk | Likelihood | Mitigation |
+|---|---|---|---|
+| 1 | Students without R/RStudio installed | High | Catch-up corner, don't block |
+| 2 | §2 PAT confusion with 35 students | High | Set hard timebox, "finish at home" fallback |
+| 3 | §2 overruns, pushing §3 into lunch | Medium | Cut §2 exercise to 15 min if §2.3 ran long |
+| 4 | USB data distribution is slow | Medium | Hand out at Break 1, not during §3 |
+| 5 | OneDrive/corporate laptop lockdown | Low–Medium | Have alternative install path for Git ready |
+| 6 | Encoding issues breaking imports | Medium | Explicit UTF-8 locale in demo code |
+| 7 | ggplot2 `+` vs `|>` confusion | High | Call this out explicitly in §5.1 |
+
+## Appendix B — If you fall behind
+
+If §2 (Git/GitHub) overruns to 12:15:
+
+- Shorten §3 Intro to 10 min (skip the vectors/factors discussion, go
+  straight to tibbles)
+- Shorten §4 Exercise to 10 min (two questions instead of three)
+- Keep §5 as is — the publication-quality plot is a satisfying ending
+
+If §2 is still running at 12:30:
+
+- Declare Git/GitHub "finish over lunch and after Day 2"
+- Skip to §3; those with repos online can commit as they go, others
+  can commit at end of Day 2
+
+## Appendix C — Data files assumed in `data/`
+
+For Day 1 you need (copy from LADAL `data_loading` tutorial folder,
+listed in R-4-HASS README §1):
+
+- `testdat.csv`, `testdat2.csv` — small demo CSV
+- `testdat.txt` — TSV version
+- `testdat.xlsx` — Excel version
+
+For §4 and §5 you may wish to swap in a richer linguistic dataset — the
+`pvd.rda` corpus used by Ch 6 is a good candidate once students have
+`load()`ed it. Check before Day 1 that these files are on the USB sticks.

@@ -1,0 +1,934 @@
+---
+title: "Day 2 — Text analytics"
+subtitle: "Blockseminar: Quantitative and Reproducible Research with R in the Humanities"
+author: "Martin Schweinberger"
+date: "2026-12-19"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    code-fold: false
+    theme: cosmo
+---
+
+::: {.callout-note}
+## Instructor-facing script
+
+This is **your** teaching script for Day 2. Students work from the book
+(chapters 3, 4, 9) and the corpus data distributed on USB on Day 1.
+
+**Pattern per section:** intro → students try → demo → exercise.
+:::
+
+## Day 2 at a glance
+
+| Time        | Section                                  | Book     | Duration |
+|-------------|------------------------------------------|----------|----------|
+| 09:00–09:10 | Opening                                  | —        | 10 min   |
+| 09:10–10:15 | §1. String processing                    | Ch 3     | 65 min   |
+| 10:15–10:30 | Break                                    | —        | 15 min   |
+| 10:30–11:55 | §2. Regular expressions                  | Ch 4     | 85 min   |
+| 11:55–12:55 | Lunch                                    | —        | 60 min   |
+| 12:55–13:35 | §3. What is text analytics + quanteda    | Ch 9.1–2 | 40 min   |
+| 13:35–14:35 | §4. Concordancing / KWIC                 | Ch 9.3   | 60 min   |
+| 14:35–14:50 | Break                                    | —        | 15 min   |
+| 14:50–15:35 | §5. Word frequency                       | Ch 9.4   | 45 min   |
+| 15:35–16:15 | §6. Collocation and network graphs       | Ch 9.5   | 40 min   |
+| 16:15–16:30 | Wrap-up + Day 3 preview                  | —        | 15 min   |
+
+**Teaching minutes:** 360 (= 8 academic hours). **Door-to-door:** 7.5 hours.
+
+## Before you start the room
+
+Pre-session checklist:
+
+- [ ] Alice.rda, darwin.rda, melville.rda, orwell.rda on students' USB sticks
+- [ ] Correction email with the full ~40-package install block has been sent and acknowledged
+- [ ] Your laptop has the above data in `data/` and quanteda loads without errors
+- [ ] A pinned browser tab on <https://regex101.com/> (useful visual aid in §2)
+- [ ] Whiteboard clear of yesterday's project-vs-remote-repo diagram
+
+::: {.callout-warning}
+## No tutor on the floor — adjust accordingly
+
+You are alone with 35 students. The main consequence is in §2 (regex)
+where individual debugging eats most of a tutor's day. Design decisions
+baked in:
+
+- Shared visible failure cases (regex101 projected) instead of circulating
+- Pre-written "stretch" exercises so faster students don't call for help
+- Explicit "it's fine not to get this fully today" framing in §2 intro
+
+Don't try to debug individual regexes with 34 others waiting. If a
+student is stuck, point them at regex101 and move on.
+:::
+
+---
+
+## 09:00–09:10 · Opening (10 min)
+
+Quick. Students know the drill from Day 1.
+
+**What to cover:**
+
+- "Welcome back. Everyone pushed something yesterday?" (quick hands)
+- Today: text as data. Most humanities data IS text, so this is where
+  the course gets practical for your Hausarbeit / Quarto document.
+- Arc of the day: strings and regex first (the raw tools), then corpus
+  methods built on quanteda (concordancing, frequency, collocation,
+  networks).
+- The afternoon is where students see what "doing corpus linguistics"
+  looks like end to end.
+
+**Don't cover:**
+
+- Recap of Day 1 beyond the one check-in question
+- Why text analytics matters as a field — just show what it does, don't
+  pitch it
+
+---
+
+## 09:10–10:15 · §1. String processing (65 min)
+
+**Aim.** Every student can split, join, replace, and clean strings
+using `stringr` on a realistic text sample.
+
+**Reading / reference.** Book Ch 3 (`03-string-processing.qmd`).
+
+::: {.callout-note}
+## Chapter state
+
+Ch 3 is a June draft still needing the LADAL adaptation pass before Day 2.
+Students should still have readable content, but the `checkdown`
+retention questions in the chapter are NOT the exercises you'll run —
+those are below. Use the chapter as reference material.
+:::
+
+### 1.1 Intro (10 min)
+
+Key points:
+
+- A **string** is a sequence of characters: `"hello"`, `"Blockseminar"`,
+  `"A wee girl of her age, like"`. In R, you use double quotes by
+  convention.
+- Strings are not numbers. `"5" + "3"` is an error. If you want to add
+  numbers represented as strings, you convert first with `as.numeric()`.
+- Base R has string functions (`paste`, `nchar`, `strsplit`, `gsub`),
+  but `stringr` is more consistent: every function starts with
+  `str_`, every function takes the string as its first argument.
+- Encoding: text in R is UTF-8. If you see `Mßller` instead of `Müller`
+  or `â€™` instead of `'`, that's an encoding problem at import time,
+  not a string problem — fix at import.
+
+Don't get into Unicode normalisation forms (NFC/NFD). It's a rabbit hole.
+
+### 1.2 Students try (15 min)
+
+Prompt on screen:
+
+> With `library(stringr)` loaded, try these in `scripts/day2.R`:
+>
+> ```r
+> library(stringr)
+>
+> # A single string
+> greeting <- "Welcome to the Blockseminar"
+> str_length(greeting)
+> str_to_lower(greeting)
+> str_to_upper(greeting)
+>
+> # A vector of strings
+> speakers <- c("John Smith", "jane DOE", " Alice Zhang ", "Mohammed-Ali Khan")
+> str_length(speakers)
+> str_to_title(speakers)
+> str_trim(speakers)
+>
+> # Combining operations with the pipe
+> speakers |>
+>   str_trim() |>
+>   str_to_title()
+> ```
+>
+> What does `str_trim()` do that's different from `str_to_lower()`?
+
+Walk the room briefly, but don't engage long questions — the demo
+covers the main functions.
+
+### 1.3 Demo (20 min)
+
+Project on screen. Build up to a realistic cleaning task:
+
+```{r demo-1-3, eval=FALSE}
+library(stringr)
+
+# A messy sample — fake transcript line
+line <- "  SP01: And then she was, like, 'oh no!' You know?  "
+
+# Clean step by step
+line |> str_trim()
+line |> str_trim() |> str_to_lower()
+
+# Replace: remove the speaker tag
+line |>
+  str_trim() |>
+  str_replace("^SP\\d+:\\s*", "")       # we'll meet \\d+ properly in §2
+
+# Split a sentence into words
+line |>
+  str_trim() |>
+  str_split(" ")                          # returns a list
+
+# Split and unlist for a plain vector
+line |>
+  str_trim() |>
+  str_split(" ") |>
+  unlist()
+
+# Detect: does a string contain something?
+speakers <- c("John Smith", "Jane Doe", "Alice Zhang", "Mohammed-Ali Khan")
+str_detect(speakers, "Smith")
+str_detect(speakers, "-")
+
+# Extract: pull out what matches
+emails <- c(
+  "contact m.schweinberger@uq.edu.au please",
+  "or j.smith@lmu.de for admin",
+  "no email here"
+)
+str_extract(emails, "[a-z.]+@[a-z.]+")    # again, pattern is §2 material
+```
+
+Talking points:
+
+- Everything in `stringr` is **vectorised**: operations run element-wise
+  on a vector of strings
+- Chain operations with the pipe — reads top-to-bottom like a
+  cleaning recipe
+- `str_split()` returns a list because different strings can split
+  into different numbers of pieces; `unlist()` or `|> purrr::flatten_chr()`
+  flattens when you want one vector
+
+### 1.4 Exercise (20 min)
+
+> **Task.** You have a vector of five raw transcript lines (type this in):
+>
+> ```r
+> transcript <- c(
+>   "  SP01: Hello, how are you today?  ",
+>   "SP02: Oh fine, fine. And you?",
+>   "  sp01: can't complain really  ",
+>   "SP03: Did you see the news?",
+>   "SP02: Which news?   "
+> )
+> ```
+>
+> Clean this transcript so that:
+>
+> 1. All leading/trailing whitespace is removed
+> 2. Speaker tags are uppercase (SP01, not sp01)
+> 3. The speaker tag is separated from the utterance in a tidy tibble
+>    with two columns: `speaker` and `utterance`
+>
+> Save your pipeline to `day2.R`. Commit it to Git before Break 1.
+>
+> **Stretch** (for the fast students, don't call me over): count the
+> number of utterances per speaker.
+
+---
+
+## 10:15–10:30 · Break (15 min)
+
+---
+
+## 10:30–11:55 · §2. Regular expressions (85 min)
+
+**Aim.** Every student can read and write regexes with character
+classes, quantifiers, anchors, and groups, and can use them with
+`stringr` functions.
+
+**Reading / reference.** Book Ch 4 (`04-regular-expressions.qmd`).
+
+::: {.callout-important}
+## This is the hardest section of the course
+
+Regex is cognitively hard. 10 of 35 students will leave this session
+not fully getting it. **That's OK — tell them so, up front.** Regex is a
+lifetime skill; today is the first exposure, not mastery.
+
+Keep regex101 projected on the shared screen the whole section. Use it
+for every pattern. The real-time visual match highlighting is worth
+more than any explanation.
+:::
+
+### 2.1 Intro (15 min)
+
+Key points:
+
+- A **regular expression** (regex, regexp) is a pattern that describes
+  a set of strings. `"the"` matches the literal string "the". `"\\d+"`
+  matches any sequence of one or more digits.
+- Regex has special characters (**meta characters**) that mean "something
+  other than themselves": `. * + ? ^ $ [ ] ( ) { } | \`. If you want to
+  match these literally, escape with `\\`.
+- The core building blocks:
+  - **Character classes**: `[abc]` matches a, b, or c. `[a-z]` any
+    lowercase. `[^a-z]` NOT lowercase.
+  - **Shorthand classes**: `\\d` digit, `\\w` word character,
+    `\\s` whitespace. Uppercase versions negate: `\\D`, `\\W`, `\\S`.
+  - **Quantifiers**: `*` zero or more, `+` one or more, `?` zero or one,
+    `{n}` exactly n, `{n,m}` between n and m.
+  - **Anchors**: `^` start of string, `$` end of string, `\\b` word
+    boundary.
+  - **Groups**: `(...)` captures. `(a|b)` matches a or b.
+- In R, you write regex as a string, so **backslashes are doubled**:
+  `\\d` in R = `\d` in regex docs. This confuses everyone initially.
+- Honest framing: "You will not master this today. You will see it
+  used, do a few of your own, and build intuition. By your Hausarbeit
+  you'll be googling specific patterns, and that's normal — I still
+  do that."
+
+Project regex101.com (switch to "ECMAScript" flavour — close enough
+to R's defaults for teaching).
+
+### 2.2 Students try (20 min)
+
+Prompt on screen:
+
+> With `library(stringr)` loaded, type these in `day2.R` and run each.
+> For each, say out loud (to yourself) what you think the pattern matches:
+>
+> ```r
+> library(stringr)
+>
+> words <- c("cat", "cats", "dog", "doggy", "123", "hello42", "hi!")
+>
+> str_detect(words, "cat")           # literal match
+> str_detect(words, "^cat")          # starts with "cat"
+> str_detect(words, "cat$")          # ends with "cat"
+> str_detect(words, "\\d")           # contains a digit
+> str_detect(words, "\\d+")          # contains one or more digits
+> str_detect(words, "^\\d+$")        # IS entirely digits
+> str_detect(words, "[aeiou]")       # contains any vowel
+> str_detect(words, "^[aeiou]")      # starts with a vowel
+> str_detect(words, "y$")            # ends with "y"
+> str_detect(words, "s$|y$")         # ends with "s" OR "y"
+> ```
+>
+> Which ones surprised you? Any you can't explain to yourself?
+
+### 2.3 Demo (25 min)
+
+Project regex101. Build patterns up live, pasting a text sample:
+
+```
+Dear Sir/Madam,
+Please contact me at john.smith@uq.edu.au or j.doe@lmu.de.
+Our office hours are 9:00-17:00 Monday-Friday.
+We received 42 enquiries last week and 17 the week before.
+Call me on +49-89-12345678.
+```
+
+On regex101, build these up one at a time, type live:
+
+| Pattern | Matches |
+|---|---|
+| `\d+` | Any run of digits |
+| `\d{2}:\d{2}` | Clock times |
+| `\d{1,3}-\d{1,3}-\d{4,}` | Phone numbers |
+| `\w+@\w+\.\w+` | Simple email pattern |
+| `[a-z.]+@[a-z.]+\.[a-z]+` | Better email pattern |
+| `[A-Z][a-z]+` | Capitalised words |
+| `\b[A-Z][a-z]+\b` | Same but word-bounded |
+
+Then switch to R and show them running against real text:
+
+```{r demo-2-3, eval=FALSE}
+# A string with mixed content
+text <- "Please contact me at john.smith@uq.edu.au or j.doe@lmu.de.
+We received 42 enquiries last week and 17 the week before."
+
+# Extract all digits (returns first match per element)
+str_extract(text, "\\d+")
+
+# Extract ALL matches (returns a list)
+str_extract_all(text, "\\d+")
+
+# Flatten with unlist for a plain vector
+str_extract_all(text, "\\d+") |> unlist()
+
+# Email addresses
+str_extract_all(text, "[a-z.]+@[a-z.]+\\.[a-z]+") |> unlist()
+
+# Replace: anonymise emails
+str_replace_all(text, "[a-z.]+@[a-z.]+\\.[a-z]+", "[EMAIL]")
+
+# Count: how many digit-runs?
+str_count(text, "\\d+")
+
+# Split: on any whitespace or punctuation
+str_split(text, "[\\s[:punct:]]+") |> unlist()
+```
+
+Talking points:
+
+- The doubled backslash: `\\d` in R string = `\d` in regex
+- `str_extract` gets the first match; `str_extract_all` gets all
+- `[[:punct:]]`, `[[:alpha:]]`, `[[:space:]]` are POSIX character
+  classes — more portable than `\\w`
+
+### 2.4 Exercise (25 min)
+
+> **Task.** Load this text in R:
+>
+> ```r
+> sample <- c(
+>   "The meeting is on 2026-12-19 at 09:00.",
+>   "Email m.schweinberger@uq.edu.au before 2026-11-30.",
+>   "Call +49-89-2180-5555 or +61-7-3365-1111.",
+>   "Our paper (Smith et al., 2023) argues the opposite.",
+>   "In 1994, Chomsky wrote that linguistics..."
+> )
+> ```
+>
+> Write regex patterns to:
+>
+> 1. Extract all **dates** in YYYY-MM-DD format
+> 2. Extract all **four-digit years** in parentheses or free text
+> 3. Extract all **phone numbers**
+> 4. Replace all **email addresses** with "[REDACTED]"
+> 5. Extract everything inside **parentheses** (contents only, not the brackets)
+>
+> Save your patterns to `day2.R` with a comment above each saying
+> what it matches. Commit before lunch.
+>
+> **Stretch:** find all **sentences that mention a year** (so the match
+> is the whole sentence containing a year).
+
+---
+
+## 11:55–12:55 · Lunch (60 min)
+
+Don't eat with just one student — same reason as Day 1.
+
+---
+
+## 12:55–13:35 · §3. What is text analytics + the quanteda workflow (40 min)
+
+**Aim.** Students understand text analytics as a research methodology
+(not a toolkit) and have the three core quanteda objects (corpus,
+tokens, dfm) built from Alice.
+
+**Reading / reference.** Book Ch 9 (`09-text-analysis.qmd`), §§9.1–9.2.
+
+::: {.callout-note}
+## §9.1 is new content you need to draft
+
+Section 9.1 "What is text analytics?" doesn't exist yet — it was agreed
+as a short new section (150–200 lines) lifted from LADAL's Part 1
+tutorial (`text_analysis_intro.html`). Draft before Day 2.
+:::
+
+### 3.1 Intro (15 min)
+
+Key points — this is the one section of today that's deliberately more
+lecture than hands-on:
+
+- **Text as data.** When you count how many times a word appears,
+  compare its distribution across texts, or measure how closely two
+  words co-occur, you're treating text as data. The methods come from
+  corpus linguistics and NLP but the research questions are
+  humanities questions.
+- **Core methods, briefly:**
+  - **Concordancing**: where does this word appear and in what context?
+  - **Frequency analysis**: which words appear how often?
+  - **Collocation**: which words co-occur more than chance?
+  - **Keyword analysis**: what makes this corpus distinctive compared
+    to another?
+- **Research design matters.** What is your corpus? Is it
+  representative of the population you want to generalise about? What
+  counts as a document? These decisions are made before the code.
+- **The quanteda workflow.** Three objects you'll use repeatedly:
+  - `corpus()` — the document collection with metadata
+  - `tokens()` — the tokenised text (list of character vectors)
+  - `dfm()` — document-feature matrix (documents × word frequencies)
+- Everything else is operations on these three. Learn the shape of
+  this workflow once and most of corpus analysis in R is accessible.
+
+Draw on the whiteboard: text file → corpus → tokens → dfm, with
+arrows and the functions that transition between them.
+
+### 3.2 Students try (10 min)
+
+> Load Alice and build the three objects:
+>
+> ```r
+> library(quanteda)
+> library(dplyr)
+> library(here)
+>
+> # Load Alice (plain text — one line per element)
+> alice_raw <- readRDS(here::here("data", "alice.rda"))
+>
+> length(alice_raw)
+> head(alice_raw, 5)
+>
+> # Build the corpus
+> alice_corpus <- corpus(paste(alice_raw, collapse = " "))
+> alice_corpus
+>
+> # Tokenise
+> alice_tokens <- tokens(alice_corpus,
+>                        remove_punct = TRUE,
+>                        remove_numbers = TRUE)
+>
+> # Document-feature matrix
+> alice_dfm <- dfm(alice_tokens)
+> alice_dfm
+> ```
+>
+> Everyone with these three objects in their environment, raise a hand.
+
+### 3.3 Demo (15 min)
+
+Show inspection and basic operations:
+
+```{r demo-3-3, eval=FALSE}
+# How big is each?
+ndoc(alice_corpus)
+sum(ntoken(alice_tokens))
+nfeat(alice_dfm)
+
+# Peek at tokens
+head(alice_tokens[[1]], 20)
+
+# Peek at the dfm (as a tiny matrix slice)
+alice_dfm[1, 1:10]
+
+# Convert to tidy data if that's more comfortable
+alice_dfm |>
+  quanteda::convert(to = "data.frame") |>
+  dplyr::glimpse()
+
+# Chapter-level corpus — split on CHAPTER markers
+alice_chapters <- paste(alice_raw, collapse = " ") |>
+  stringr::str_replace_all(
+    "(CHAPTER [XVI]{1,7}\\.{0,1}) ",
+    "|||\\1 "
+  ) |>
+  tolower() |>
+  stringr::str_split("\\|\\|\\|") |>
+  unlist() |>
+  (\(x) x[nchar(stringr::str_trim(x)) > 0])()
+
+length(alice_chapters)
+
+# Rebuild corpus with chapters as separate documents
+alice_corpus_ch <- corpus(alice_chapters)
+ndoc(alice_corpus_ch)
+```
+
+Talking points:
+
+- Everything downstream builds on these three objects
+- Pay attention to WHAT counts as a document for your research
+  question — the whole book? Each chapter? Each paragraph?
+- The chapter-splitting is a nice crossover: you just used
+  regex (`[XVI]{1,7}`) in a real analysis
+- No exercise here — §4 is the application
+
+---
+
+## 13:35–14:35 · §4. Concordancing / KWIC (60 min)
+
+**Aim.** Every student produces a KWIC concordance for a word in Alice,
+filters it, and interprets the patterns.
+
+**Reading / reference.** Book Ch 9 (`09-text-analysis.qmd`),
+concordancing section.
+
+### 4.1 Intro (10 min)
+
+Key points:
+
+- **KWIC (Key Word In Context)**: display a target word in its
+  context. Left context — keyword — right context. The foundational
+  display of corpus linguistics.
+- Before you compute frequency, run keyword analysis, or model
+  collocates, you should **look** at your target in context. Many
+  surprises are visible to the eye but hidden by aggregate statistics.
+- `quanteda::kwic()` takes tokens (not corpus), a pattern, and a
+  window size. Returns a data frame of matches.
+- Pattern can be literal, glob (`walk*`), regex (`walk.*`), or
+  phrase (`phrase("poor alice")`).
+
+### 4.2 Students try (15 min)
+
+> Use the `alice_tokens` object from §3. Try these:
+>
+> ```r
+> # Simple word search
+> kwic_alice <- kwic(alice_tokens, pattern = "alice", window = 5)
+> head(kwic_alice)
+>
+> # How many matches?
+> nrow(kwic_alice)
+>
+> # Try your own word
+> # (pick something you'd expect to appear a lot — "rabbit", "queen", "little")
+> ```
+
+### 4.3 Demo (20 min)
+
+Build up more sophisticated searches:
+
+```{r demo-4-3, eval=FALSE}
+# All forms of "walk" — regex pattern
+kwic_walk <- kwic(alice_tokens,
+                  pattern = "walk.*",
+                  valuetype = "regex",
+                  window = 5)
+
+# What distinct forms came back?
+unique(kwic_walk$keyword)
+
+# Phrase search
+kwic_pooralice <- kwic(alice_tokens,
+                       pattern = phrase("poor alice"),
+                       window = 6)
+
+# Sorting a concordance to see patterns
+# — what word comes just after "said"?
+kwic_said <- kwic(alice_tokens, pattern = "said", window = 4) |>
+  as.data.frame() |>
+  dplyr::mutate(R1 = stringr::word(post, 1)) |>
+  dplyr::arrange(R1)
+
+head(kwic_said, 10)
+
+# Count what follows "said" most often
+kwic_said |>
+  dplyr::count(R1, sort = TRUE) |>
+  head(10)
+```
+
+Talking points:
+
+- The `valuetype` argument is the main gotcha — default is `"glob"`,
+  which gives you `*` and `?` wildcards; `"regex"` gives you the full
+  regex grammar you just learned
+- Sorting a concordance by one position (L1, R1, R2…) is a basic but
+  powerful move — reveals patterns the human eye catches that
+  frequency misses
+- The `R1` sorting of "said" shows dialogue attribution patterns —
+  typical corpus linguistics insight
+
+### 4.4 Exercise (15 min)
+
+> **Task.** For a word of your choice in Alice (something content-ful,
+> not "the" or "a"):
+>
+> 1. Produce a KWIC concordance with a window of 5
+> 2. Report how many occurrences there are
+> 3. Sort by the first word to the right (R1)
+> 4. Count the top 5 words that follow your target
+> 5. Write a one-line interpretation: what pattern do you see?
+>
+> Commit your code and interpretation to `day2.R`.
+>
+> **Stretch:** compare the same target word in Alice vs one of Darwin,
+> Melville, or Orwell (you'll need to load another text and tokenise
+> it the same way).
+
+---
+
+## 14:35–14:50 · Break (15 min)
+
+---
+
+## 14:50–15:35 · §5. Word frequency (45 min)
+
+**Aim.** Every student builds a frequency table from a dfm, handles
+stopwords, visualises top words, and compares frequency across two
+corpora.
+
+**Reading / reference.** Book Ch 9, word frequency section.
+
+### 5.1 Intro (10 min)
+
+Key points:
+
+- **Zipf's law.** A tiny number of words account for a huge share of
+  all tokens. Function words (`the`, `and`, `of`) dominate every
+  English text regardless of topic.
+- **Stopwords.** The high-frequency function words you often remove
+  before frequency analysis — because what you care about is content
+  words. BUT: stopword removal is appropriate only when the research
+  question is about content. For stylistic analysis, authorship, or
+  discourse, function words are the signal, not the noise.
+- `quanteda.textstats::textstat_frequency()` on a dfm gives a
+  frequency table.
+
+### 5.2 Students try (10 min)
+
+> ```r
+> library(quanteda.textstats)
+>
+> # Frequency table from the full dfm
+> freq_all <- textstat_frequency(alice_dfm) |>
+>   as.data.frame()
+>
+> head(freq_all, 15)
+> ```
+>
+> What do you see at the top? Does it surprise you?
+
+### 5.3 Demo (15 min)
+
+```{r demo-5-3, eval=FALSE}
+library(ggplot2)
+
+# Remove stopwords — rebuild the dfm
+alice_dfm_nostop <- alice_tokens |>
+  tokens_remove(stopwords("english")) |>
+  dfm()
+
+freq_nostop <- textstat_frequency(alice_dfm_nostop) |>
+  as.data.frame()
+
+head(freq_nostop, 15)
+
+# Plot top 15 content words
+freq_nostop |>
+  head(15) |>
+  ggplot(aes(x = reorder(feature, frequency), y = frequency)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "15 most frequent content words in Alice",
+    x = NULL,
+    y = "Frequency"
+  ) +
+  theme_bw()
+
+# Dispersion — how does "queen" vary across chapters?
+# (reuses the chapter-split from §3)
+dispersion <- data.frame(
+  chapter = seq_along(alice_chapters),
+  n_queen = stringr::str_count(alice_chapters, "\\bqueen\\b"),
+  n_words = stringr::str_count(alice_chapters, "\\S+")
+) |>
+  dplyr::mutate(queen_per1k = n_queen / n_words * 1000) |>
+  dplyr::filter(n_words > 50)
+
+ggplot(dispersion, aes(x = chapter, y = queen_per1k)) +
+  geom_line(colour = "tomato") +
+  geom_point(colour = "tomato", size = 2) +
+  labs(
+    title = "Dispersion of 'queen' across Alice's chapters",
+    x = "Chapter",
+    y = "Frequency per 1,000 words"
+  ) +
+  theme_bw()
+```
+
+Talking points:
+
+- Zipf's law in action — top of the list is function words
+- After stopword removal, you see content: alice, said, little, queen, time
+- Dispersion plots are more informative than raw frequency for most
+  humanities questions ("where in the text does this appear?")
+
+### 5.4 Exercise (10 min)
+
+> **Task.** For Alice:
+>
+> 1. Produce the top-20 frequency list AFTER stopword removal
+> 2. Produce a dispersion plot across chapters for ONE other content
+>    word of your choice
+> 3. Interpret in one line
+>
+> Save the figure to `figures/` with `ggsave()` (practice from Day 1).
+> Commit.
+
+---
+
+## 15:35–16:15 · §6. Collocation and network graphs (40 min)
+
+**Aim.** Every student extracts collocates of a target word and
+visualises them as a network graph.
+
+**Reading / reference.** Book Ch 9, collocation and network sections.
+
+### 6.1 Intro (10 min)
+
+Key points:
+
+- **Collocation**: words that co-occur more than chance. *Strong coffee*
+  is a collocation; *powerful coffee* is not. Native speakers know
+  which pairs work; collocation statistics let you detect them in a
+  corpus.
+- Count how often two words appear together in a window (sentence,
+  N words), compute what you'd expect by chance, compare observed vs
+  expected.
+- Measures: Mutual Information (MI), log-likelihood (G²), Delta P,
+  phi (φ). Each has biases — MI inflates for rare words, G²
+  inflates for frequent ones. For teaching, phi is a reasonable
+  balanced default.
+- Network graphs: visualise a word and its top collocates as nodes
+  connected by edges weighted by co-occurrence. Pretty, and
+  surprisingly diagnostic — the semantic neighbourhood of a word is
+  often visually obvious.
+
+### 6.2 Students try (10 min)
+
+> ```r
+> # Sentence-level collocation requires sentence tokens
+> library(tokenizers)
+>
+> alice_sentences <- paste(alice_raw, collapse = " ") |>
+>   tokenize_sentences() |>
+>   unlist() |>
+>   stringr::str_replace_all("[^[:alnum:] ]", " ") |>
+>   stringr::str_squish() |>
+>   tolower() |>
+>   (\(x) x[nchar(x) > 5])()
+>
+> length(alice_sentences)
+> head(alice_sentences, 3)
+> ```
+
+### 6.3 Demo (15 min)
+
+```{r demo-6-3, eval=FALSE}
+# Feature Co-occurrence Matrix at sentence level
+alice_fcm <- alice_sentences |>
+  tokens() |>
+  dfm() |>
+  fcm(tri = FALSE)
+
+# Top collocates of "alice" — using quanteda's built-in top-features
+top_colls <- alice_fcm["alice", ] |>
+  as.matrix() |>
+  as.data.frame() |>
+  tibble::rownames_to_column("word") |>
+  dplyr::rename(cooc = alice) |>
+  dplyr::arrange(desc(cooc)) |>
+  head(20)
+
+top_colls
+
+# Build network for top collocates of "alice"
+library(quanteda.textplots)
+
+# Restrict the fcm to alice + its top collocates
+coll_fcm <- alice_sentences |>
+  tokens() |>
+  dfm() |>
+  dfm_select(pattern = c("alice", top_colls$word)) |>
+  fcm(tri = FALSE)
+
+# quanteda's built-in network plot
+textplot_network(coll_fcm,
+                 min_freq = 0.5,
+                 edge_alpha = 0.5)
+```
+
+Talking points:
+
+- The semantic neighbourhood of "alice" shows up: actions she takes
+  (said, thought, went), characters she meets (queen, king, cat), her
+  description (poor, little)
+- `textplot_network()` is the easy path; `ggraph` gives finer control
+  for publication (point students at it for the Hausarbeit)
+- Collocation networks are a nice bridge from frequency to meaning
+
+### 6.4 Exercise (if time, 5 min)
+
+> **Task.** Pick a different target word in Alice (something interesting:
+> `queen`, `rabbit`, `tea`, `like`). Build its collocation network.
+>
+> Save the plot and commit.
+
+---
+
+## 16:15–16:30 · Wrap-up (15 min)
+
+Points to make:
+
+- **What they did today:** strings → regex → quanteda workflow →
+  concordancing → frequency → collocation → networks. That IS a
+  corpus linguistics pipeline.
+- **Day 3 preview (3 weeks away):** statistics. Descriptive first,
+  then regression, mixed-effects models, conditional inference
+  trees. Application-focused — no mathematical formalism.
+- **Between blocks (optional):**
+  - Re-run today's quanteda pipeline on a text you care about
+    (another novel from Gutenberg, your own corpus, a document
+    collection)
+  - Read Ch 7 (statistics) in the book before Day 3 if you want a
+    head start on the stats material
+  - Push whatever you did today to GitHub
+
+Flag again: Prüfungsleistung expectations. The Quarto document
+submission for most tracks will likely involve exactly this kind of
+pipeline on their own data.
+
+Explicit comfort: "If regex still feels fuzzy, that's completely
+normal. You'll get it with practice. Google is a legitimate tool for
+regex — I use it every week."
+
+---
+
+## Appendix A — Risk register for Day 2
+
+| # | Risk | Likelihood | Mitigation |
+|---|---|---|---|
+| 1 | quanteda install fails for some students | Medium | Correction email pre-course; have binary wheels ready on USB |
+| 2 | Regex §2 overruns, cascading | High | Hard timebox §2 at 11:55; cut Exercise 2.4 to 15 min if needed |
+| 3 | Alice.rda not on USB sticks | Low | Verified pre-session, see checklist |
+| 4 | Students without Day 1 setup | Medium | Can't recover — pair them with a student who's set up |
+| 5 | textplot_network silently empty if min_freq too high | Medium | Lower `min_freq` to 0.5 or 0 for teaching |
+| 6 | encoding of darwin/melville/orwell files | Medium | Check pre-session on your laptop first |
+| 7 | 35 students, one of you — regex debugging doesn't scale | High | Point at regex101, don't individualise help |
+
+## Appendix B — If you fall behind
+
+If §2 (regex) overruns past 12:10:
+
+- Cut Exercise 2.4 to the first three items only (dates, years, phones)
+- Keep §3 at 40 min — don't rush the quanteda workflow setup
+- Shorten §4 Exercise to just a KWIC + count (no sorting)
+
+If §3–4 are running by 14:00:
+
+- Day's on track; proceed as planned
+
+If you're behind at 15:00:
+
+- Cut §6 to intro + demo only (no exercise)
+- Day 2's goal is strings, regex, and quanteda basics — networks are
+  nice-to-have
+
+## Appendix C — Data files assumed in `data/`
+
+For Day 2 you need:
+
+- `alice.rda` (Alice in Wonderland) — primary demo text
+- `darwin.rda`, `melville.rda`, `orwell.rda` — for comparison / stretch
+
+Source: LADAL `textanalysis` tutorial `data/` folder.
+Copy to `R-4-HASS/data/` before Day 1 (same batch as Day 1 USB).
+
+## Appendix D — Content gaps to close before Day 2
+
+- [ ] Adaptation pass on Ch 3 (string processing) — strip LADAL
+      boilerplate, namespace heading IDs, fix data paths
+- [ ] Adaptation pass on Ch 4 (regex) — same
+- [ ] Adaptation pass on Ch 9 (text analysis) — same
+- [ ] Draft new §9.1 "What is text analytics?" (~150–200 lines from
+      LADAL Part 1 `text_analysis_intro`)
+- [ ] Verify `textplot_network()` works with current quanteda.textplots
+      version on your machine
+- [ ] Correction email with full package list and corrected LADAL URLs
+      sent to students

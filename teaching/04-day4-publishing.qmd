@@ -1,0 +1,854 @@
+---
+title: "Day 4 — Reproducible publishing"
+subtitle: "Blockseminar: Quantitative and Reproducible Research with R in the Humanities"
+author: "Martin Schweinberger"
+date: "2026-01-09"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    code-fold: false
+    theme: cosmo
+---
+
+::: {.callout-note}
+## Instructor-facing script
+
+This is **your** teaching script for Day 4 — the final day. Students
+work from the book (Ch 10).
+
+**Pattern per section:** intro → students try → demo → exercise.
+
+**End-of-day goal:** every student has a public website at
+`https://THEIR_USERNAME.github.io/R-4-HASS/` serving their own Quarto
+document. This IS the Prüfungsleistung template for most tracks.
+:::
+
+## Day 4 at a glance
+
+| Time        | Section                                       | Book   | Duration |
+|-------------|-----------------------------------------------|--------|----------|
+| 09:00–09:10 | Opening                                       | —      | 10 min   |
+| 09:10–10:10 | §1. Quarto basics                             | Ch 10  | 60 min   |
+| 10:10–10:25 | Break                                         | —      | 15 min   |
+| 10:25–11:40 | §2. Writing an analytical document            | Ch 10  | 75 min   |
+| 11:40–12:40 | Lunch                                         | —      | 60 min   |
+| 12:40–13:30 | §3. Rendering and output formats              | Ch 10  | 50 min   |
+| 13:30–13:45 | Break                                         | —      | 15 min   |
+| 13:45–15:15 | §4. Publishing to GitHub Pages                | Ch 10  | 90 min   |
+| 15:15–16:00 | §5. Making it yours — themes and customisation| Ch 10  | 45 min   |
+| 16:00–16:30 | Showcase + wrap-up + farewell                 | —      | 30 min   |
+
+**Teaching minutes:** 360 (= 8 academic hours). **Door-to-door:** 7.5 hours.
+
+## Before you start the room
+
+Pre-session checklist:
+
+- [ ] Your laptop has `quarto --version` working from the Terminal
+- [ ] You have `tinytex` installed (`tinytex::install_tinytex()`) in case anyone asks about PDF output
+- [ ] A pinned browser tab on <https://quarto.org/docs/guide/>
+- [ ] A pinned browser tab on your own published site (e.g. `martinschweinberger.github.io/R-4-HASS/`) as the "look what you'll have by end of day" showcase
+- [ ] Whiteboard clear for the project-folder diagram
+
+::: {.callout-tip}
+## Day 4 should feel different from Days 1–3
+
+The arc of the day: by lunch, every student has written a Quarto
+document. By mid-afternoon, it renders. By end of day, it's online.
+That's a satisfying day. Lean into the "you built this" framing in the
+wrap-up — students who leave with a working public URL remember this
+course.
+:::
+
+---
+
+## 09:00–09:10 · Opening (10 min)
+
+**What to cover:**
+
+- "Welcome to the last day. Here's what we'll do: by 16:30 every one
+  of you will have a public website serving your own research
+  document."
+- Project on screen: your published book at
+  `martinschweinberger.github.io/R-4-HASS/`. "This is a Quarto book
+  published via GitHub Pages. By end of day you'll have one of your
+  own."
+- Why this matters for the Prüfungsleistung: the Quarto document
+  submission for most tracks IS what we're building today. You walk
+  out with the template, you fill it with your own data by 31 March.
+- The arc: Quarto document → render → push → publish → live URL. We'll
+  do each step in turn.
+
+**Don't cover:**
+
+- Why reproducibility matters — pitching this would waste time
+  students want to spend on hands-on work
+- The history of R Markdown or the pandoc toolchain
+
+---
+
+## 09:10–10:10 · §1. Quarto basics (60 min)
+
+**Aim.** Every student has a working Quarto project with `_quarto.yml`
+and an `index.qmd` that renders.
+
+**Reading / reference.** Book Ch 10 (`10-publish.qmd`).
+
+### 1.1 Intro (10 min)
+
+Key points:
+
+- **Quarto** is the next-generation R Markdown. It takes a `.qmd` file
+  (narrative + code) and renders it to HTML, PDF, Word, EPUB, or a
+  website.
+- A **Quarto document** = one `.qmd` file. Good for a single report.
+- A **Quarto project** = a folder with a `_quarto.yml` config + one or
+  more `.qmd` files. Needed for websites, books, blogs, or when you
+  want more control over output location.
+- The anatomy of a `.qmd` file:
+  1. YAML header (title, author, format options) — between `---` lines
+  2. Markdown narrative (headings, text, lists, links)
+  3. Code chunks (R code that executes when you render)
+- **Visual editor vs source editor.** RStudio has both. Visual is
+  friendlier for the narrative; source gives you full control. Switch
+  with the toggle in the top-right of the editor pane. We'll use source.
+
+### 1.2 Students try (15 min)
+
+Prompt on screen:
+
+> **In your R-4-HASS project:**
+>
+> 1. File → New File → Text File. Save it as `_quarto.yml` in the
+>    project root (not in `scripts/`, not in `data/` — the top level).
+>
+> 2. Paste this into `_quarto.yml`:
+>
+>    ```yaml
+>    project:
+>      type: website
+>      output-dir: docs
+>
+>    website:
+>      title: "My R-4-HASS Portfolio"
+>      navbar:
+>        left:
+>          - href: index.qmd
+>            text: Home
+>
+>    format:
+>      html:
+>        theme: cosmo
+>        toc: true
+>    ```
+>
+> 3. File → New File → Quarto Document. Title: "Alice in Wonderland —
+>    a corpus analysis". Save it as `index.qmd` in the project root.
+>
+> 4. Delete the template content below the YAML.
+>
+> 5. Add a one-sentence intro:
+>
+>    ```
+>    This document reports a short corpus analysis of Lewis Carroll's
+>    *Alice's Adventures in Wonderland* using the quanteda package.
+>    ```
+>
+> 6. Click **Render** (the blue arrow icon at the top of the editor).
+
+The Render button triggers Quarto to process the file. First render
+takes 10–20 seconds. A preview opens.
+
+### 1.3 Demo (20 min)
+
+Project on screen. Build up `index.qmd` to show the main pieces:
+
+````markdown
+---
+title: "Alice in Wonderland: a corpus analysis"
+author: "Your Name"
+date: today
+format:
+  html:
+    toc: true
+    theme: cosmo
+---
+
+# Introduction
+
+Lewis Carroll's *Alice's Adventures in Wonderland* (1865) is a classic
+of children's literature. In this document I apply simple corpus-
+analytic methods to the text to illustrate what quantitative analysis
+can reveal about even familiar material.
+
+The analysis uses the `quanteda` package [@benoit2018quanteda].
+
+# Methods
+
+```{{r setup}}
+#| message: false
+#| warning: false
+
+library(quanteda)
+library(quanteda.textstats)
+library(dplyr)
+library(ggplot2)
+library(here)
+
+alice_raw <- readRDS(here::here("data", "alice.rda"))
+```
+
+The text was split into chapters, tokenised, and English stopwords
+were removed before frequency analysis.
+
+```{{r prepare}}
+alice_corpus <- corpus(paste(alice_raw, collapse = " "))
+alice_tokens <- tokens(alice_corpus,
+                        remove_punct = TRUE,
+                        remove_numbers = TRUE) |>
+  tokens_remove(stopwords("english"))
+alice_dfm <- dfm(alice_tokens)
+```
+
+# Results
+
+The top 15 content words in Alice are shown in @fig-freq.
+
+```{{r}}
+#| label: fig-freq
+#| fig-cap: "Fifteen most frequent content words in Alice."
+#| echo: false
+
+freq <- textstat_frequency(alice_dfm) |>
+  as.data.frame() |>
+  head(15)
+
+ggplot(freq, aes(x = reorder(feature, frequency), y = frequency)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(x = NULL, y = "Frequency") +
+  theme_bw()
+```
+
+# Discussion
+
+The predominance of character names (*alice*, *queen*, *king*) and
+dialogue markers (*said*, *thought*) reflects the novel's narrative
+style: dialogue-heavy, character-driven.
+````
+
+Talking points while typing:
+
+- YAML keys are indented with 2 spaces, no tabs
+- Code chunks start with ```` ```{r} ```` and end with ```` ``` ````
+- Chunk options use the `#|` prefix (new Quarto syntax); older R
+  Markdown used chunk headers like ```` ```{r setup, message = FALSE} ```` — both work but `#|` is preferred
+- `#| echo: false` hides the code; the output still shows
+- `#| label: fig-freq` plus `fig-cap:` lets you cross-reference the
+  figure elsewhere with `@fig-freq`
+
+### 1.4 Exercise (15 min)
+
+> **Task.** Starting from the demo above as a template:
+>
+> 1. Change the title to something that makes sense for your own analysis
+> 2. Add your name to `author:`
+> 3. Add an Introduction section (2–3 sentences)
+> 4. Add a Methods section with a code chunk that loads `library(dplyr)`
+>    and reads some data (either the Alice data or your own)
+> 5. Render. Verify it looks right in the preview.
+>
+> Commit `_quarto.yml` and `index.qmd` to Git.
+
+Common failure modes:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| "Could not find Quarto" | Quarto not installed | Visit quarto.org/docs/get-started/, install, restart RStudio |
+| YAML error on render | Indentation wrong (tabs vs spaces) | Replace tabs with 2 spaces |
+| Code chunk doesn't run | Package not loaded or data missing | Add `library(...)` to setup chunk |
+| Preview opens then closes | Browser blocking local HTML | Use the Viewer pane in RStudio instead |
+
+---
+
+## 10:10–10:25 · Break (15 min)
+
+---
+
+## 10:25–11:40 · §2. Writing an analytical document (75 min)
+
+**Aim.** Every student has a complete short analytical document with
+intro, methods, results (with figures and tables), and discussion.
+This is the template they'll adapt for their Prüfungsleistung.
+
+**Reading / reference.** Book Ch 10, document-authoring section.
+
+### 2.1 Intro (10 min)
+
+Key points:
+
+- An analytical document is just a formal version of a lab notebook:
+  intro (what question), methods (how you did it), results (what you
+  found), discussion (what it means).
+- The point of Quarto for this: the code, the output, and the
+  narrative are in one file. Change the data, re-render, everything
+  updates. That's reproducibility in practice.
+- Minimal structure for the Prüfungsleistung submission:
+  - Introduction (1–2 paragraphs)
+  - Methods (1 paragraph + code chunks)
+  - Results (1–2 figures + 1 table, with code)
+  - Discussion (1 paragraph)
+- Length targets by Studiengang are in the course README — your task
+  today is to build the shell at the shorter end, then fill it with
+  your own data after the course.
+
+### 2.2 Students try (15 min)
+
+> Using your `index.qmd` from §1, add these section headings (each with
+> a one-line placeholder beneath):
+>
+> ```
+> # Introduction
+>
+> Placeholder.
+>
+> # Methods
+>
+> Placeholder.
+>
+> # Results
+>
+> Placeholder.
+>
+> # Discussion
+>
+> Placeholder.
+>
+> # References
+>
+> ::: {#refs}
+> :::
+> ```
+>
+> Render. Confirm the TOC on the left updates to show the sections.
+
+### 2.3 Demo (30 min)
+
+Build the document out piece by piece — the Alice example from §1
+is a good scaffold. Add:
+
+**A table using `flextable`:**
+
+````markdown
+```{{r}}
+#| label: tbl-top10
+#| tbl-cap: "Top 10 content words in Alice."
+#| echo: false
+
+library(flextable)
+
+freq |>
+  head(10) |>
+  dplyr::select(feature, frequency, rank) |>
+  flextable() |>
+  flextable::set_table_properties(width = .5, layout = "autofit") |>
+  flextable::theme_zebra()
+```
+````
+
+**Cross-references:**
+
+```markdown
+As @tbl-top10 shows, *alice* and *said* dominate the frequency list.
+@fig-freq visualises the same distribution.
+```
+
+**A callout:**
+
+```markdown
+::: {.callout-note}
+Note that stopwords have been removed; function words like *the* and
+*and* would otherwise dominate the top of the list.
+:::
+```
+
+**Citations (if `references.bib` exists in the project):**
+
+In YAML header, add:
+```yaml
+bibliography: references.bib
+```
+
+Then in prose:
+```markdown
+The analysis follows standard corpus-linguistic practice [@baker2006].
+```
+
+Talking points:
+
+- `#| echo: false` hides the code chunk from output but keeps the
+  figure/table. Useful for the Prüfungsleistung if the reader shouldn't
+  see the plotting code.
+- `#| echo: true` (default) shows both code and output. Useful for a
+  reproducible analysis document where the code IS part of the point.
+- Cross-references use `@fig-NAME`, `@tbl-NAME`, `@sec-NAME`,
+  `@eq-NAME`.
+- `::: {.callout-note}` creates a styled box. Variants:
+  `callout-tip`, `callout-warning`, `callout-important`,
+  `callout-caution`.
+
+### 2.4 Exercise (20 min)
+
+> **Task.** Build out your document:
+>
+> 1. Write a 2–3 sentence Introduction
+> 2. In Methods, include a code chunk that loads the libraries you
+>    used in Days 1–3 and reads your data
+> 3. In Results, include at least one figure (with cross-reference)
+>    and one table (with cross-reference)
+> 4. Write 2–3 sentences of Discussion
+> 5. Render. Verify figures and tables appear with their numbers and
+>    captions.
+>
+> Commit the finished document to Git.
+
+---
+
+## 11:40–12:40 · Lunch (60 min)
+
+---
+
+## 12:40–13:30 · §3. Rendering and output formats (50 min)
+
+**Aim.** Every student renders their document to HTML (works) and
+understands how to render to PDF (may or may not work depending on
+LaTeX install). All output lands in `docs/`.
+
+**Reading / reference.** Book Ch 10, rendering section.
+
+### 3.1 Intro (10 min)
+
+Key points:
+
+- **Render** = run all the code, produce the output file(s). HTML is
+  default and most reliable.
+- Because of `output-dir: docs` in `_quarto.yml`, Quarto puts the
+  rendered files in `docs/`, not in the project root. This is what
+  we want for GitHub Pages.
+- Multiple output formats are supported. HTML needs no extra install.
+  PDF needs LaTeX (install `tinytex` once with
+  `tinytex::install_tinytex()`).
+- The Render button triggers whichever format is listed FIRST in
+  `format:`. For multiple formats, use the Terminal:
+  `quarto render index.qmd --to html` or `--to pdf`.
+
+### 3.2 Students try (10 min)
+
+> 1. Verify the `output-dir: docs` line is in your `_quarto.yml` under
+>    `project:`
+> 2. Click Render in RStudio
+> 3. Open your `docs/` folder in Finder/Explorer. You should see
+>    `index.html` and a `site_libs/` or `index_files/` folder with CSS
+>    and JavaScript dependencies.
+> 4. Open `docs/index.html` in a browser. It should look like your
+>    preview, but as a standalone file.
+
+### 3.3 Demo (15 min)
+
+Show the Terminal rendering workflow:
+
+```bash
+# In the Terminal tab inside RStudio
+quarto render                       # render whole project
+quarto render index.qmd             # render one file
+quarto render index.qmd --to html   # explicit format
+quarto render index.qmd --to pdf    # requires LaTeX
+```
+
+Show PDF troubleshooting:
+
+```r
+# If PDF rendering fails with LaTeX errors:
+install.packages("tinytex")
+tinytex::install_tinytex()
+# Then retry quarto render --to pdf
+```
+
+Show adding multiple formats to YAML:
+
+```yaml
+format:
+  html:
+    theme: cosmo
+    toc: true
+  pdf:
+    documentclass: article
+```
+
+Talking points:
+
+- For your Prüfungsleistung, HTML is likely sufficient — it's what
+  GitHub Pages serves, and it renders interactive content (tables,
+  code folding) that PDF can't.
+- PDF is nice for printing and for traditionalist readers but is
+  slower to render and more fragile to produce.
+- If a chunk errors during render, the whole render fails. Debug by
+  running chunks interactively in RStudio first.
+
+### 3.4 Exercise (15 min)
+
+> **Task.**
+>
+> 1. Render your document to HTML (should already work)
+> 2. Open `docs/index.html` in a browser — looks right?
+> 3. Try adding `pdf:` to your YAML `format:` block
+> 4. Render to PDF via Terminal: `quarto render index.qmd --to pdf`
+> 5. If PDF fails: that's fine — install `tinytex` and try again, or
+>    skip PDF and stick with HTML for the course
+>
+> **Stretch:** add `code-fold: true` to the YAML's `html:` block. Render.
+> What changes about how code chunks are displayed?
+
+---
+
+## 13:30–13:45 · Break (15 min)
+
+---
+
+## 13:45–15:15 · §4. Publishing to GitHub Pages (90 min)
+
+**Aim.** Every student has their rendered document live at a public
+URL at `https://THEIR_USERNAME.github.io/R-4-HASS/`.
+
+**Reading / reference.** Book Ch 10, publishing section.
+
+::: {.callout-important}
+## This is the Day 4 payoff — don't let it slip past 15:15
+
+If students don't have a live URL by 15:15, §5 (customisation) becomes
+pointless. Design decisions baked in:
+
+- Step-by-step prompt on screen (students follow exactly)
+- Minimum viable Pages setup — not GitHub Actions, not custom domains
+- Celebrate each student who gets live, by name — social proof pulls
+  the rest along
+:::
+
+### 4.1 Intro (15 min)
+
+Key points:
+
+- **GitHub Pages** is a free static hosting service built into GitHub.
+  Push HTML to a configured folder; GitHub serves it as a website at
+  `https://USERNAME.github.io/REPO-NAME/`.
+- Your Day 1 R-4-HASS repo already exists on GitHub. Today we
+  configure it to serve the `docs/` folder as a website.
+- Two things need to happen:
+  1. The rendered HTML lives in `docs/` (done in §3)
+  2. GitHub Pages is enabled in the repo settings, pointing at the
+     `docs/` folder on the `main` branch
+- One extra file is needed: `.nojekyll`. It's an empty file that tells
+  GitHub "don't try to process these files with Jekyll" (GitHub's
+  default static-site generator, which clashes with Quarto output).
+- First render → push → enable Pages takes 1–3 minutes to go live.
+  Subsequent re-renders are instant once Pages is enabled: push, wait a
+  minute, refresh.
+
+### 4.2 Students try (20 min)
+
+> **Step 1: Create `.nojekyll` in your project root.**
+>
+> In RStudio Terminal:
+>
+> ```bash
+> touch .nojekyll
+> ```
+>
+> (On Windows, if `touch` doesn't exist, use File → New File → Text
+> File, save as `.nojekyll` with nothing in it.)
+>
+> **Step 2: Check your `.gitignore`.**
+>
+> Open `.gitignore` in RStudio. If `docs/` or `/docs/` is listed,
+> delete that line and save.
+>
+> **Step 3: Commit everything.**
+>
+> In RStudio's Git tab:
+>
+> 1. Tick `_quarto.yml`, `index.qmd`, `.nojekyll`, `.gitignore`, and
+>    the whole `docs/` folder
+> 2. Commit with message "Set up Quarto site for publishing"
+> 3. Push to GitHub
+>
+> Verify on GitHub that your repo now shows a `docs/` folder with
+> `index.html` inside.
+
+### 4.3 Demo (30 min)
+
+Project on screen. Walk through enabling GitHub Pages, slowly:
+
+> **Step 4: Enable GitHub Pages on your repo.**
+>
+> 1. Go to your repo on GitHub:
+>    `https://github.com/YOUR_USERNAME/R-4-HASS`
+> 2. Click **Settings** (top right of the repo)
+> 3. In the left sidebar, click **Pages**
+> 4. Under "Build and deployment":
+>    - **Source**: *Deploy from a branch*
+>    - **Branch**: `main`
+>    - **Folder**: `/docs`
+> 5. Click **Save**
+>
+> **Step 5: Wait.**
+>
+> GitHub takes 1–3 minutes to build and deploy your site for the first
+> time. The Pages settings page will show a URL and a status message.
+>
+> **Step 6: Visit your site.**
+>
+> Your URL will be:
+> `https://YOUR_USERNAME.github.io/R-4-HASS/`
+>
+> If the URL shows a 404 initially: wait another minute, try again. If
+> after 5 minutes it's still 404: refresh the Settings → Pages page
+> and check the status.
+
+Live-demo this on your own GitHub (do it with a test repo you've
+cloned beforehand, or re-use the course repo). Students watch the URL
+go from 404 to live — the social proof is important.
+
+Common failure modes:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| 404 after 5 minutes | Pages not configured | Settings → Pages, check source is `main` + `/docs` |
+| Site shows but no styling | `.nojekyll` missing | Add it, commit, push, wait |
+| Figures missing on live site | `docs/index_files/` not pushed | Check `.gitignore`, re-add and push |
+| URL shows README instead of document | `index.html` not in `docs/` | Re-render; check `output-dir: docs` is in `_quarto.yml` |
+
+### 4.4 Exercise (25 min)
+
+> **Task.** Get your site live.
+>
+> 1. Verify `.nojekyll` exists
+> 2. Verify `docs/index.html` exists
+> 3. Verify everything is pushed to GitHub
+> 4. Enable Pages per the demo
+> 5. **Wait for your URL to go live.**
+> 6. When it works: shout out so I can celebrate it. Open your URL
+>    in the browser. Everyone in the room should see your name on
+>    the board as "LIVE".
+>
+> **While you wait, work on these:**
+>
+> - Make an edit to `index.qmd` (fix a typo, improve a sentence)
+> - Render
+> - Commit
+> - Push
+> - Refresh your live URL in 1 minute — the change should appear
+>
+> This is the full re-publication cycle. You'll do this dozens of
+> times during the Prüfungsleistung work.
+
+Set up a whiteboard column: write student names in a "LIVE" list as
+each one gets their URL working. Social reinforcement.
+
+---
+
+## 15:15–16:00 · §5. Making it yours — themes and customisation (45 min)
+
+**Aim.** Every student personalises their site with a theme, a title,
+and (optionally) a favicon. The site should feel like THEIRS, not
+like a template.
+
+**Reading / reference.** Book Ch 10, customisation section.
+
+### 5.1 Intro (10 min)
+
+Key points:
+
+- Quarto comes with 25+ built-in Bootstrap themes. Change one YAML
+  line, re-render, new look.
+- Dark mode support is one more YAML line.
+- You can customise further with CSS, but you don't need to for the
+  Prüfungsleistung — pick a theme, adjust the title, done.
+- The browsable list of themes:
+  <https://quarto.org/docs/output-formats/html-themes.html>
+
+### 5.2 Students try (10 min)
+
+> In `_quarto.yml`, under `format: html:`, try changing `theme`:
+>
+> ```yaml
+> format:
+>   html:
+>     theme: cosmo        # replace with: cerulean, journal, flatly,
+>                         # litera, lumen, lux, sandstone, simplex,
+>                         # yeti, cosmo, united, pulse, sketchy...
+>     toc: true
+> ```
+>
+> Render. See the change. Try another theme. Settle on one you like.
+
+### 5.3 Demo (15 min)
+
+Show the extras students might want:
+
+```yaml
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    toc: true
+    toc-location: left     # or right, body
+    code-fold: true        # readers can expand/collapse code
+    code-tools: true       # adds a copy button
+    code-copy: true
+    fontsize: 1.1em
+    linkcolor: steelblue
+    highlight-style: github
+```
+
+For a favicon (optional):
+
+```yaml
+website:
+  title: "My R-4-HASS Portfolio"
+  favicon: favicon.png
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+```
+
+Put a 32×32 or 64×64 pixel PNG in your project root called
+`favicon.png`.
+
+Talking points:
+
+- `theme: light / dark` gives you a toggle in the top-right of the
+  rendered page — users switch themselves
+- Fiddling with themes is addictive — set a timebox for students, 15
+  min max, don't let them lose the afternoon on this
+- The `code-fold: true` option is particularly nice for the Prüfungs-
+  leistung: readers who don't care about code hide it; readers who
+  do, expand it
+
+### 5.4 Exercise (10 min)
+
+> **Task.**
+>
+> 1. Choose a theme that matches your taste
+> 2. (Optional) Add a dark theme variant
+> 3. Add `code-fold: true` so code chunks start hidden
+> 4. Update the site title in `_quarto.yml` to something personal
+> 5. Render, push, refresh your live URL, admire
+>
+> **If you have extra time:** make a 64×64 favicon
+> (<https://favicon.io/> is a free tool) and add it to your project.
+
+---
+
+## 16:00–16:30 · Showcase + wrap-up + farewell (30 min)
+
+**Suggested structure:**
+
+### 16:00–16:15 · Showcase (15 min)
+
+- Ask for volunteers (expect 5–8 hands). Project each student's URL
+  on the main screen in turn. 60 seconds each.
+- Point out what's different about each: topic, theme, whether they
+  used their own data, structural choices.
+- The purpose: everyone sees that building a published document is
+  achievable. The students who were quietly stuck see what the
+  achievable thing looks like.
+
+### 16:15–16:25 · The Prüfungsleistung path (10 min)
+
+- "What you built today is the shell. Over the next three months, you
+  fill it with your own data and analysis."
+- Deadline: 31 March 2027
+- The three tracks (reiterate briefly, don't labour)
+- Where to get help: email with `LMU` subject prefix
+
+### 16:25–16:30 · Farewell (5 min)
+
+- What they've done in four days: R setup → Git/GitHub → data
+  wrangling → visualisation → text analytics → mixed-effects models →
+  CITs → Quarto → public publishing. That's a complete reproducible
+  research toolchain.
+- Honest framing: "You will not retain all of this. You WILL retain
+  more than you think, and when you need something back, the book is
+  there."
+- Thanks for the four days. Good luck with the Prüfungsleistung. See
+  you on GitHub.
+
+::: {.callout-tip}
+## For your own records
+
+Note which students have live URLs by the end of the day. These are
+the students most likely to submit a Quarto document (as opposed to
+Hausarbeit) for Prüfungsleistung. Useful to know when their files
+land in March.
+:::
+
+---
+
+## Appendix A — Risk register for Day 4
+
+| # | Risk | Likelihood | Mitigation |
+|---|---|---|---|
+| 1 | Quarto not installed | Medium | Pre-session email verified install; have installer bookmark ready |
+| 2 | `_quarto.yml` indentation errors | High | Students pasting the yaml block; show them YAML is sensitive to tabs vs spaces |
+| 3 | `output-dir: docs` not taking effect | Medium | Verify students saved `_quarto.yml` and restarted their R session |
+| 4 | GitHub Pages 404 for >5 min | High | Patience — first builds genuinely take 1–3 min; after 5 min, check Settings → Pages status message |
+| 5 | PDF rendering fails for everyone who tries | Very high | Pre-plan: tell students PDF is optional, HTML is the submission format |
+| 6 | Student has no new GitHub commits since Day 1 (lost repo) | Low | Need to help them re-clone; worst case, create fresh repo in §4.2 |
+| 7 | Student's site is live but renders a blank page | Medium | Usually missing `.nojekyll` or `_files/` folder — see §4 troubleshooting table |
+
+## Appendix B — If you fall behind
+
+If §1 (Quarto basics) runs past 10:30:
+
+- Shorten §2 Intro to 5 min, cut Exercise 2.4 to steps 1–3
+- Keep §3 at full 50 min — rendering is prerequisite for §4
+- Protect §4 at 90 min
+
+If §4 (publishing) runs past 15:30:
+
+- Cut §5 to 30 min: just change theme + title + one re-render cycle
+- Keep the showcase at 15 min — it's a payoff moment
+
+If a student can't get their URL live by 15:15:
+
+- Pair them with a classmate who IS live during §5
+- They can finish at home with the book's publishing chapter
+- Don't let one stuck student eat the showcase time
+
+## Appendix C — Content gaps to close before Day 4
+
+- [ ] Verify Ch 10's publishing instructions match the workflow in this script (both use "Approach A" — commit `docs/` manually, deploy from `main`/`/docs`)
+- [ ] Verify `alice.rda` is still in students' `data/` from Day 2
+- [ ] Create a demo "finished" index.qmd on your laptop before Day 4 — one that renders cleanly as the model answer
+- [ ] Pre-register the `.nojekyll` file in your own book repo if not already present (it is per the README)
+- [ ] Decide if you'll award any informal recognition for the first live URL / best theme / most interesting analysis — small social reinforcements make the showcase land
+
+## Appendix D — What to say in the final 10 minutes
+
+A rough script for the farewell, if that helps:
+
+> "Four days ago, most of you had never written an R script. Today,
+> every one of you has a public URL serving your own research
+> document. That's a serious skill shift in a short time.
+>
+> The Prüfungsleistung is where you consolidate it. You have until
+> 31 March. My advice: start soon, work in small sessions, commit
+> often, and when you get stuck, email me with LMU in the subject
+> line. The book will fill in the gaps as you need them.
+>
+> Thank you for four days of attention and effort. I'm looking
+> forward to seeing what you build. See you on GitHub."

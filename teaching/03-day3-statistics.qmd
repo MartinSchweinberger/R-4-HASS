@@ -1,0 +1,763 @@
+---
+title: "Day 3 — Statistics and modelling"
+subtitle: "Blockseminar: Quantitative and Reproducible Research with R in the Humanities"
+author: "Martin Schweinberger"
+date: "2026-01-08"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: false
+    code-fold: false
+    theme: cosmo
+---
+
+::: {.callout-note}
+## Instructor-facing script
+
+This is **your** teaching script for Day 3. Students work from the book
+(chapters 7 and 8).
+
+**Pattern per section:** intro → students try → demo → exercise.
+
+Day 3 is three weeks after Day 2 (Christmas break in between). Assume
+most students have forgotten some of what you did, and have NOT read
+ahead. The §1 refresher handles both.
+:::
+
+## Day 3 at a glance
+
+| Time        | Section                                       | Book     | Duration |
+|-------------|-----------------------------------------------|----------|----------|
+| 09:00–09:10 | Opening                                       | —        | 10 min   |
+| 09:10–10:00 | §1. Refresher — stats and regression concepts | Ch 7     | 50 min   |
+| 10:00–10:15 | Break                                         | —        | 15 min   |
+| 10:15–12:00 | §2. Linear mixed-effects models               | Ch 8     | 105 min  |
+| 12:00–13:00 | Lunch                                         | —        | 60 min   |
+| 13:00–14:15 | §3. Logistic mixed-effects models             | Ch 8     | 75 min   |
+| 14:15–14:30 | Break                                         | —        | 15 min   |
+| 14:30–15:30 | §4. Conditional inference trees               | Ch 8 §X  | 60 min   |
+| 15:30–16:30 | Prüfungsleistung Q&A + Day 4 preview          | —        | 60 min   |
+
+**Teaching minutes:** 360 (= 8 academic hours). **Door-to-door:** 7.5 hours.
+
+## Before you start the room
+
+Pre-session checklist:
+
+- [ ] `lmd.rda` (or your chosen logistic MEM data) on students' USB sticks or in the `data/` folder
+- [ ] `treedata.txt` on students' USB sticks or in the `data/` folder
+- [ ] Full package install done (from the pre-course email); specifically
+      check: `lme4`, `lmerTest`, `performance`, `MuMIn`, `sjPlot`,
+      `partykit`, `ggparty`, `Hmisc`
+- [ ] Your laptop: can you fit `lmer(Reaction ~ Days + (Days | Subject), data = sleepstudy)` without warnings?
+- [ ] Whiteboard clear for the random-intercepts-vs-slopes diagram
+
+::: {.callout-warning}
+## No tutor again — specific risks for Day 3
+
+Mixed-effects models produce confusing output and cryptic errors
+(convergence failures, singular fits, boundary issues). Debugging
+individual models with 35 students is impossible. Design decisions
+baked in:
+
+- Specific, pre-tested model formulas — don't let students invent
+  their own in §2 or §3
+- The `performance` package for diagnostics (one function, nice output)
+  rather than base R residual plots
+- Framing throughout: "this is a tool you'll keep learning for years"
+  — don't try to teach everything today
+:::
+
+---
+
+## 09:00–09:10 · Opening (10 min)
+
+Quick welcome back after the Christmas break.
+
+**What to cover:**
+
+- Hope everyone had a good break
+- Where we are: Days 1–2 covered the workflow and text analytics. Days
+  3–4 cover the statistical and publishing layers that round out the
+  course.
+- Today: statistics and modelling. Specifically mixed-effects models
+  and conditional inference trees — the two methods that are now
+  standard in corpus linguistics and sociolinguistics.
+- The pitch, honestly stated: "You will not master mixed-effects
+  models in one day. You WILL leave able to fit, interpret, and
+  report one. That's enough to use them in your Hausarbeit or Quarto
+  document."
+
+**Don't cover:**
+
+- Recap of Day 1–2 beyond "we're on Day 3"
+- Theoretical statistics content students didn't miss
+
+---
+
+## 09:10–10:00 · §1. Refresher — stats and regression concepts (50 min)
+
+**Aim.** Every student can read an `lm()` output: identify the intercept,
+coefficients, standard errors, p-values, and R². Know what a coefficient
+means (not just how to find one).
+
+**Reading / reference.** Book Ch 7 (`07-statistics.qmd`).
+
+### 1.1 Intro (15 min)
+
+Key points — these are the concepts you'll lean on all day:
+
+- **Descriptive statistics** describe your sample. **Inferential
+  statistics** let you generalise from your sample to a population.
+- **A regression model** describes how one variable (outcome) depends
+  on one or more others (predictors). Linear regression predicts a
+  continuous outcome; logistic regression predicts a binary one.
+- **Coefficients** = the regression equation. For `lm(y ~ x)`:
+  - Intercept = predicted y when x = 0
+  - Slope of x = change in y per unit change in x
+- **Standard error** = uncertainty around the coefficient
+- **p-value** = probability of seeing a coefficient this large (or
+  larger) if the true coefficient were zero. Small p = evidence
+  against "no effect".
+- **R²** = proportion of variance in y explained by the model. Not a
+  measure of being "right" — a measure of fit.
+
+Don't:
+
+- Define *null hypothesis* formally (you'll lose the room)
+- Talk about assumptions (homoscedasticity, independence) — covered when needed
+- Introduce t-tests and chi-square separately (regression subsumes them)
+
+### 1.2 Students try (10 min)
+
+> Fit a quick linear model to a built-in R dataset:
+>
+> ```r
+> # Built-in dataset: 32 cars, miles-per-gallon vs weight
+> head(mtcars)
+>
+> # Fit: mpg as a function of weight
+> m1 <- lm(mpg ~ wt, data = mtcars)
+> summary(m1)
+> ```
+>
+> Look at the output. Can you say in one sentence what the model shows?
+
+Walk the room briefly. Help students read the summary — point at the
+coefficient estimate, SE, p-value, R² at the bottom.
+
+### 1.3 Demo (15 min)
+
+Build intuition — plot the model, add a second predictor, show how
+coefficients change:
+
+```{r demo-1-3, eval=FALSE}
+library(ggplot2)
+library(broom)
+
+# The simple model
+m1 <- lm(mpg ~ wt, data = mtcars)
+summary(m1)
+
+# Tidy output
+broom::tidy(m1)
+broom::glance(m1)
+
+# Visualise
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Weight (1000 lbs)", y = "Miles per gallon",
+       title = "mpg ~ wt") +
+  theme_bw()
+
+# Add a second predictor
+m2 <- lm(mpg ~ wt + hp, data = mtcars)
+summary(m2)
+
+# Compare: how did the wt coefficient change?
+broom::tidy(m1)
+broom::tidy(m2)
+
+# What about a categorical predictor?
+mtcars$cyl_f <- factor(mtcars$cyl)
+m3 <- lm(mpg ~ wt + cyl_f, data = mtcars)
+summary(m3)
+```
+
+Talking points:
+
+- Each coefficient is "the effect of this predictor **holding others
+  constant**"
+- Adding predictors changes the coefficients of ones already there —
+  this is why *controlling for* matters
+- Categorical predictors: R picks a reference level, each other level
+  is a coefficient saying how far it is from the reference
+- `broom::tidy()` gives you the coefficients as a tibble — nice for
+  reporting
+
+No exercise — this is a refresher. §2 is where application starts.
+
+---
+
+## 10:00–10:15 · Break (15 min)
+
+Have the room look at `sleepstudy` before you break. One-line prompt:
+"Load `library(lme4)`, type `head(sleepstudy)`, come back after the
+break ready to model it."
+
+---
+
+## 10:15–12:00 · §2. Linear mixed-effects models (105 min)
+
+**Aim.** Every student fits a linear mixed-effects model, interprets
+the fixed effects, and understands why random intercepts are needed.
+
+**Reading / reference.** Book Ch 8 (`08-mixed-effects-models.qmd`).
+
+::: {.callout-note}
+## Dataset: `sleepstudy` from the `lme4` package
+
+`sleepstudy` is a built-in dataset: 18 subjects, each measured for 10
+days of sleep deprivation, with reaction time as the outcome. It's the
+canonical teaching example for `lmer`. No file to load — just
+`library(lme4)`.
+:::
+
+### 2.1 Intro (20 min)
+
+Key points — take time here, the concepts matter:
+
+- **The problem.** Most real data is grouped. Subjects produce multiple
+  tokens. Speakers come from multiple corpora. Students belong to
+  multiple schools. If you fit a plain `lm()` on grouped data, you
+  violate independence of observations — one of the fundamental
+  assumptions.
+- **Treating subject as a fixed effect** (one dummy per subject) uses
+  up degrees of freedom and doesn't let you generalise beyond the
+  specific subjects you have.
+- **The mixed-effects solution.** Treat subject as a **random effect**:
+  model each subject as drawn from a population of subjects. You
+  estimate the *variability* among subjects, not each subject's
+  intercept individually. Fewer parameters, generalisable results.
+- **Random intercepts.** Each subject gets their own baseline. All
+  subjects share the same slope for predictors.
+- **Random slopes.** Each subject gets their own baseline AND their
+  own slope for a predictor. Allows the effect of a predictor to
+  vary across subjects.
+- **The notation.** `(1 | Subject)` = random intercept for Subject.
+  `(1 + Days | Subject)` = random intercept AND random slope for Days
+  by Subject. The `1` is the intercept; `Days` is the predictor whose
+  slope varies.
+
+Draw on the whiteboard:
+
+1. A scatter plot of outcome vs predictor, with points coloured by subject
+2. A single regression line through all points (= plain `lm()`)
+3. Parallel lines, one per subject (= random intercepts)
+4. Non-parallel lines, one per subject (= random intercepts + slopes)
+
+This diagram is more useful than any formula.
+
+### 2.2 Students try (20 min)
+
+> With `library(lme4)` loaded:
+>
+> ```r
+> library(lme4)
+> library(lmerTest)   # adds p-values to lmer output
+>
+> # Inspect the data
+> head(sleepstudy)
+> summary(sleepstudy)
+>
+> # Simplest: ignore the grouping (WRONG but useful to see)
+> m0 <- lm(Reaction ~ Days, data = sleepstudy)
+> summary(m0)
+>
+> # Add random intercept by Subject
+> m1 <- lmer(Reaction ~ Days + (1 | Subject), data = sleepstudy)
+> summary(m1)
+> ```
+>
+> Compare the Days coefficient in `m0` and `m1`. Did it change?
+>
+> Then look at the "Random effects" section of the lmer output. What's
+> the standard deviation of the Subject intercept?
+
+Walk the room, point at the "Random effects" block — it's the key
+thing that distinguishes `lmer` from `lm` output.
+
+### 2.3 Demo (35 min)
+
+Build up to a model with random intercepts AND slopes:
+
+```{r demo-2-3, eval=FALSE}
+library(lme4)
+library(lmerTest)
+library(ggplot2)
+library(performance)
+library(sjPlot)
+
+# Random intercept only
+m1 <- lmer(Reaction ~ Days + (1 | Subject), data = sleepstudy)
+summary(m1)
+
+# Random intercept AND slope
+m2 <- lmer(Reaction ~ Days + (1 + Days | Subject), data = sleepstudy)
+summary(m2)
+
+# What changed?
+#  - Random effects block now has 2 variances + 1 correlation
+#  - Fixed effects estimates are similar
+#  - Model has more parameters → compare with AIC
+
+anova(m1, m2)  # likelihood ratio test
+AIC(m1, m2)    # information criterion comparison
+
+# Visualise individual subject lines
+ggplot(sleepstudy, aes(x = Days, y = Reaction, group = Subject)) +
+  geom_point(alpha = 0.3) +
+  geom_line(stat = "smooth", method = "lm", se = FALSE,
+            alpha = 0.4, colour = "steelblue") +
+  geom_smooth(aes(group = 1), method = "lm",
+              se = FALSE, colour = "red", linewidth = 1.2) +
+  labs(title = "Individual subject slopes (blue) vs population slope (red)",
+       x = "Days of sleep deprivation",
+       y = "Reaction time (ms)") +
+  theme_bw()
+
+# Diagnostics — one line with performance
+performance::check_model(m2)
+
+# Model summary table for publication
+sjPlot::tab_model(m2)
+
+# R² (marginal = fixed only; conditional = fixed + random)
+performance::r2(m2)
+```
+
+Talking points:
+
+- The Days coefficient (~10 ms/day) is the main finding — reaction
+  time slows by ~10 ms per day of sleep deprivation
+- The random slope variance tells you subjects differ in how fast
+  they slow down — not just WHERE they start
+- `anova(m1, m2)` is a likelihood ratio test — formally compares
+  nested models
+- `performance::check_model()` gives you ALL the diagnostics in one
+  call — residuals, normality, collinearity, outliers
+- `sjPlot::tab_model()` gives you a publication-ready summary table
+
+### 2.4 Exercise (30 min)
+
+> **Task.** Still using `sleepstudy`:
+>
+> 1. Fit a model with ONLY a random intercept for Subject (`m1`
+>    from the demo)
+> 2. Fit a model with random intercept AND random slope for Days
+>    (`m2` from the demo)
+> 3. Compare them with `anova(m1, m2)` — which is preferred?
+> 4. For the winning model: report the Days coefficient with its SE
+>    and p-value in one sentence of plain English
+> 5. Produce `performance::check_model()` output. Flag any assumption
+>    that looks violated
+> 6. Produce `sjPlot::tab_model(m2)` — save the HTML
+>
+> Commit everything to `day3.R`.
+>
+> **Stretch:** add a quadratic term for Days (`Days + I(Days^2)`). Does
+> the model prefer it over a linear fit?
+
+Common failure modes:
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `boundary (singular) fit` | Random slope variance ~0 | Model is overspecified — drop random slope |
+| `Model failed to converge` | Not enough data / too complex | Simplify random structure |
+| p-values missing from summary | Didn't load `lmerTest` | `library(lmerTest)` then refit |
+
+---
+
+## 12:00–13:00 · Lunch (60 min)
+
+---
+
+## 13:00–14:15 · §3. Logistic mixed-effects models (75 min)
+
+**Aim.** Every student fits a logistic mixed-effects model, interprets
+the output (log-odds vs probabilities), and understands when logistic
+vs linear is appropriate.
+
+**Reading / reference.** Book Ch 8 (`08-mixed-effects-models.qmd`),
+logistic section.
+
+::: {.callout-note}
+## Dataset: `lmd.rda` (placeholder)
+
+I've written this section assuming `lmd.rda` has a binary outcome
+variable and at least two predictors + a grouping variable (speaker or
+item). If your actual data file has different columns, swap the column
+names in the demo and exercise code before Day 3.
+:::
+
+### 3.1 Intro (15 min)
+
+Key points:
+
+- **When to go logistic.** Your outcome is binary: present/absent,
+  used/not-used, correct/incorrect, yes/no. A linear model is wrong
+  for binary outcomes — predictions can fall outside [0, 1] and
+  residuals are not normal.
+- **The link function.** Logistic regression models the LOG-ODDS of
+  the outcome, not the probability directly. `glm(y ~ x,
+  family = binomial)` does the maths.
+- **Interpreting coefficients.** A log-odds of 0.5 means… nothing
+  intuitive. Exponentiate to get odds ratios: `exp(0.5) = 1.65` →
+  "odds of the outcome are 1.65 times higher per unit of x".
+- **The mixed version.** Same random-effects idea as linear MEM, but
+  with `glmer()` and `family = binomial`. Random intercepts and
+  slopes for Speaker/Item/etc. are standard.
+- **A caution.** Logistic MEMs are more fragile than linear MEMs.
+  They need more data, converge less reliably, and warn more. We'll
+  use the simplest possible structure that answers the question.
+
+### 3.2 Students try (15 min)
+
+> Load the data (swap `lmd.rda` for whatever file you have):
+>
+> ```r
+> library(lme4)
+> library(lmerTest)
+> library(here)
+>
+> lmd <- readRDS(here::here("data", "lmd.rda"))
+> head(lmd)
+> glimpse(lmd)
+>
+> # Check: what's the binary outcome?
+> # (If `Outcome` isn't the actual column name, use whichever is)
+> table(lmd$Outcome)
+> ```
+>
+> Fit the simplest possible logistic MEM:
+>
+> ```r
+> m_log1 <- glmer(Outcome ~ Predictor1 + (1 | Speaker),
+>                 data = lmd,
+>                 family = binomial)
+> summary(m_log1)
+> ```
+>
+> (Swap column names to match your data.)
+
+### 3.3 Demo (25 min)
+
+```{r demo-3-3, eval=FALSE}
+library(lme4)
+library(lmerTest)
+library(sjPlot)
+library(performance)
+
+# Fit the model
+m_log <- glmer(Outcome ~ Predictor1 + Predictor2 + (1 | Speaker),
+               data = lmd,
+               family = binomial)
+summary(m_log)
+
+# The log-odds coefficients mean nothing intuitive
+# Exponentiate to odds ratios
+exp(fixef(m_log))
+
+# Or get odds ratios + CIs with sjPlot
+sjPlot::tab_model(m_log)
+
+# Visualise predicted probabilities for one predictor
+sjPlot::plot_model(m_log, type = "pred", terms = "Predictor1")
+
+# Diagnostics
+performance::check_model(m_log)
+
+# Model fit metrics
+performance::r2(m_log)
+```
+
+Talking points:
+
+- The intercept in log-odds space is almost never interpretable
+  directly — always visualise or exponentiate
+- `sjPlot::plot_model(type = "pred")` is the single most useful
+  function for communicating logistic regression results
+- Marginal R² tells you how much variance the fixed effects explain;
+  conditional R² adds the random effects
+- Convergence warnings are common. If you get one, try:
+  (a) simpler random structure, (b) centre numeric predictors,
+  (c) a different optimizer: `control = glmerControl(optimizer = "bobyqa")`
+
+### 3.4 Exercise (20 min)
+
+> **Task.** Using the dataset you have:
+>
+> 1. Fit a logistic MEM with your binary outcome, one fixed predictor,
+>    and one random intercept
+> 2. Report the odds ratio for your predictor with its 95% CI
+> 3. Produce a predicted-probability plot with `sjPlot::plot_model()`
+> 4. Save the plot
+>
+> **Stretch:** add a second fixed predictor and compare the two models
+> with `anova()` — does the second predictor justify its complexity?
+
+---
+
+## 14:15–14:30 · Break (15 min)
+
+---
+
+## 14:30–15:30 · §4. Conditional inference trees (60 min)
+
+**Aim.** Every student fits a conditional inference tree, interprets
+the plot, and produces a publication-quality version with `ggparty`.
+
+**Reading / reference.** Book Ch 8, CIT subsection.
+
+::: {.callout-note}
+## This is a subsection of Ch 8, not a separate chapter
+
+As agreed: CITs sit at the end of Ch 8 as a follow-up to the regression
+material. The teaching framing: "we've done regression. Here's a
+non-parametric alternative that's good at finding interactions."
+:::
+
+### 4.1 Intro (15 min)
+
+Key points:
+
+- **The problem CITs solve.** Regression tells you direction and
+  magnitude (coefficient + CI). It is weaker at detecting complex
+  interactions. If you suspect a three-way interaction between Age,
+  Gender, and Status, a regression model requires you to specify
+  it; a tree finds it.
+- **How CITs work.** The algorithm splits your data into
+  increasingly homogeneous subgroups. At each node, it asks: is
+  any predictor significantly associated with the outcome? If yes,
+  split on the strongest one. If no, stop.
+- **CITs vs regression — complementary, not competitors.**
+  Regression gives direction, magnitude, significance for specific
+  predictors. CITs give a visual summary of how predictors interact.
+  Use both.
+- **CITs vs CARTs** (older-style decision trees). CITs use significance
+  tests to decide when to stop splitting — more principled, less
+  prone to overfitting.
+- **What CITs don't give you.** Direction (which category is more
+  likely) is readable from the leaf-node bar charts but not
+  quantified. Effect sizes are visual. For publication, pair with
+  a regression model.
+
+### 4.2 Students try (10 min)
+
+> Load the LADAL discourse-*like* dataset:
+>
+> ```r
+> library(partykit)
+> library(dplyr)
+> library(here)
+>
+> citdata <- read.delim(here::here("data", "treedata.txt"),
+>                       header = TRUE, sep = "\t") |>
+>   dplyr::mutate_if(is.character, factor)
+>
+> head(citdata)
+> str(citdata)
+> ```
+>
+> Fit the simplest possible CIT:
+>
+> ```r
+> set.seed(111)
+> ct1 <- ctree(LikeUser ~ Age + Gender + Status, data = citdata)
+> plot(ct1)
+> ```
+>
+> Can you read the plot? What's at the top (root)? What do the leaf
+> bars show?
+
+### 4.3 Demo (20 min)
+
+```{r demo-4-3, eval=FALSE}
+library(partykit)
+library(ggparty)
+library(ggplot2)
+
+# Basic fit
+set.seed(111)
+ct1 <- ctree(LikeUser ~ Age + Gender + Status, data = citdata)
+plot(ct1)
+
+# What's in the tree?
+nodeids(ct1)                     # all nodes
+nodeids(ct1, terminal = TRUE)    # leaf nodes
+
+# Extract p-values at internal nodes
+pvals <- unlist(nodeapply(ct1, ids = nodeids(ct1),
+                          FUN = function(n) info_node(n)$p.value))
+pvals[!is.na(pvals)]
+
+# Predicted classes and probabilities
+predict(ct1, type = "response") |> head()
+predict(ct1, type = "prob") |> head()
+
+# Publication-quality version with ggparty
+ggparty(ct1) +
+  geom_edge() +
+  geom_edge_label() +
+  geom_node_label(
+    line_list = list(
+      aes(label = splitvar),
+      aes(label = paste0("N=", nodesize, ", p=",
+                         format.pval(info_node(node)$p.value, digits = 2))),
+      size = 10
+    ),
+    ids = "inner"
+  ) +
+  geom_node_label(
+    aes(label = paste0("Node ", id, "\nN=", nodesize)),
+    ids = "terminal"
+  ) +
+  geom_node_plot(
+    gglist = list(
+      geom_bar(aes(x = "", fill = LikeUser),
+               position = position_fill(), color = "black"),
+      theme_minimal(),
+      scale_fill_manual(values = c("gray50", "gray80"), guide = "none"),
+      scale_y_continuous(breaks = c(0, 1)),
+      xlab(""),
+      ylab("Probability")
+    ),
+    shared_axis_labels = TRUE
+  ) +
+  labs(title = "CIT: discourse 'like' usage",
+       subtitle = "Predictors: Age, Gender, Status")
+```
+
+Talking points:
+
+- The root node is the strongest-associated predictor (lowest p-value
+  at that stage of splitting). In this data, likely Age
+- Leaf bars show the distribution of the outcome in that subgroup —
+  taller bar = predicted class
+- `ggparty` is substantially nicer than `plot()` for publication but
+  takes more code — the version above is a reasonable template
+- `set.seed()` matters: CITs can be sensitive to tie-breaking in
+  permutation tests. Always set a seed for reproducibility.
+
+### 4.4 Exercise (15 min)
+
+> **Task.** Using `citdata`:
+>
+> 1. Fit a CIT with all three predictors
+> 2. Produce a `ggparty` version with proper labels
+> 3. Save the plot to `figures/`
+> 4. Write 2–3 sentences interpreting the tree in plain English — what
+>    does it tell you about who uses discourse *like*?
+> 5. Commit the plot and the interpretation
+>
+> **Stretch:** try `alpha = 0.01` in `ctree_control()` — how does the
+> stricter threshold change the tree?
+
+---
+
+## 15:30–16:30 · Prüfungsleistung Q&A + Day 4 preview (60 min)
+
+Not a formal teaching slot — a working block for students to think
+about their final submission.
+
+**Structure suggestion:**
+
+### 15:30–15:50 · Day 4 preview (20 min)
+
+- Day 4 is about publishing: Quarto documents → HTML, PDF, GitHub Pages
+- End-of-Day-4 goal: every student has a public website serving their
+  own Quarto document
+- Why this matters: the Prüfungsleistung for most tracks IS a
+  public GitHub repo with a rendered Quarto document. Day 4 teaches
+  you how to produce it.
+- Reminder of the two tracks:
+  - Hausarbeit (P 12.2) — term paper 15–20 pages with R-analysed data
+  - Quarto document (all other Studiengänge) — reproducible document
+    on GitHub Pages
+
+### 15:50–16:30 · Prüfungsleistung Q&A (40 min)
+
+Open floor. Likely questions to prepare for:
+
+- "What counts as a method from the seminar?" — any of: dplyr-based
+  cleaning, ggplot2 visualisation, concordancing, frequency analysis,
+  collocation, keyword analysis, mixed-effects, CIT. Pick one, apply
+  it to a worked example.
+- "Can I use my own data?" — yes, strongly encouraged
+- "What data if I don't have any?" — point at Project Gutenberg,
+  ICE corpora if licensed, the course data
+- "How long should it be?" — refer to the README page counts (8–12
+  for WP 33.1, 5–8 for others; 15–20 for Hausarbeit)
+- "What if my Quarto doesn't render?" — Day 4 covers this; bring
+  specific errors to Day 4 for debugging
+- "When do I need to decide on a topic?" — soon, but you have until
+  31 March 2027 to submit
+- "Can I collaborate with another student?" — depends on your
+  Prüfungsordnung; verify with your Prüfungsamt (standard disclaimer)
+
+End the day explicitly: "See you tomorrow for Day 4 — bring your
+laptop and your questions."
+
+---
+
+## Appendix A — Risk register for Day 3
+
+| # | Risk | Likelihood | Mitigation |
+|---|---|---|---|
+| 1 | Students forgot everything over Christmas | Very high | §1 refresher designed for this |
+| 2 | §2 "random slopes" conceptually hard | High | Lean on whiteboard diagram, not formulas |
+| 3 | `boundary (singular) fit` warnings | High | Pre-plan: tell students "that's fine, drop the random slope" |
+| 4 | Convergence failures in §3 | High | Have `bobyqa` optimizer example ready |
+| 5 | `lmd.rda` column names don't match my placeholders | Certain unless pre-checked | Pre-session: adjust §3 code to real columns |
+| 6 | `ggparty` labelling fails | Medium | Fall back to `plot(ct1)` — ugly but works |
+| 7 | Q&A section runs long on individual issues | Medium | 40 min is tight; don't go past 16:30 |
+
+## Appendix B — If you fall behind
+
+If §2 (linear MEM) runs past 12:30:
+
+- Cut §2.4 Exercise to steps 1–3 only (no diagnostics, no tab_model)
+- Keep §3 at 75 min but simplify to one predictor
+- Keep §4 (CIT) at 60 min — it's the Day 3 payoff
+
+If you're behind at the start of §4:
+
+- Cut §4 Intro to 10 min, Try to 5 min
+- Skip the `ggparty` demo, use `plot()` only
+- Keep Exercise 4.4 to 10 min
+
+If you're behind at 15:30:
+
+- Shorten Prüfungsleistung Q&A to 30 min
+- Day 4 preview to 10 min
+
+## Appendix C — Data files assumed in `data/`
+
+For Day 3 you need:
+
+- `lmd.rda` (or your chosen linguistic logistic MEM dataset) — swap
+  column names in §3 to match
+- `treedata.txt` (LADAL CIT example — Irish English discourse *like*)
+
+`sleepstudy` is built into the `lme4` package — no file needed.
+
+## Appendix D — Content gaps to close before Day 3
+
+- [ ] Adaptation pass on Ch 8 (mixed-effects models) — strip LADAL boilerplate, namespace heading IDs, fix data paths
+- [ ] Draft CIT subsection at end of Ch 8 (~200–300 lines from LADAL `tree_models` tutorial, CIT portion only)
+- [ ] Verify `sleepstudy` demo runs end-to-end on your laptop
+- [ ] Verify `treedata.txt` is in `data/` and loads
+- [ ] Decide: `lmd.rda` or alternative for logistic MEM; update §3 demo/exercise code to match actual column names
+- [ ] Prepare one or two "likely-questions" cheatsheet notes for the Prüfungsleistung Q&A block
