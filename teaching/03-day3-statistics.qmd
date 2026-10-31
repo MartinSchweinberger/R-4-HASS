@@ -152,7 +152,7 @@ coefficient estimate, SE, p-value, R² at the bottom.
 Build intuition — plot the model, add a second predictor, show how
 coefficients change:
 
-```{r demo-1-3, eval=FALSE}
+```{r demo-1-3, eval=TRUE}
 library(ggplot2)
 library(broom)
 
@@ -293,7 +293,7 @@ thing that distinguishes `lmer` from `lm` output.
 
 Build up to a model with random intercepts AND slopes:
 
-```{r demo-2-3, eval=FALSE}
+```{r demo-2-3, eval=TRUE}
 library(lme4)
 library(lmerTest)
 library(ggplot2)
@@ -454,7 +454,7 @@ Key points:
 
 ### 3.3 Demo (25 min)
 
-```{r demo-3-3, eval=FALSE}
+```{r demo-3-3, eval=TRUE}
 library(lme4)
 library(lmerTest)
 library(sjPlot)
@@ -584,7 +584,7 @@ Key points:
 
 ### 4.3 Demo (20 min)
 
-```{r demo-4-3, eval=FALSE}
+```{r demo-4-3, eval=TRUE}
 library(partykit)
 library(ggparty)
 library(ggplot2)

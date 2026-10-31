@@ -54,6 +54,7 @@ Pre-session checklist (10 min before 09:00):
 - [ ] A pinned browser tab on <https://github.com/MartinSchweinberger/R-4-HASS> and one on <https://ladal.edu.au/>
 - [ ] Pre-prepared bits/notes for the inevitable "I don't have R installed" / "my Git says command not found" cases
 - [ ] Flipchart or whiteboard for the few diagrams (project vs working directory; local vs remote repo)
+- [ ] **Verify on your laptop** that `pvd.rda` loads cleanly and that the column names below (`Date`, `Genre`, `Text`, `Prepositions`, `Region`, `GenreRedux`, `DateRedux`) match what `glimpse(pdat)` shows
 
 ::: {.callout-warning}
 ## Student install state — assume partial compliance
@@ -82,7 +83,7 @@ this day will run.
   Quarto-document route)
 - The daily rhythm: short intro, you try, I demo, exercises; two breaks + lunch
 - End-of-day goal: every student leaves with a working R project, a
-  public GitHub repo, imported real linguistic data, and a saved plot
+  public GitHub repo, real linguistic data loaded and cleaned, and a saved plot
 
 **Do not cover:**
 
@@ -171,7 +172,7 @@ Talking points while typing (not after):
 ### 1.4 Exercise (15 min)
 
 > **Task.** Add three more folders to your `R-4-HASS` project: `data/`,
-> `figures/`, and `output/`. In your `day1.R`, write code that uses
+> `images/`, and `output/`. In your `day1.R`, write code that uses
 > `here::here()` to print the full path to each of these folders.
 > Save the script.
 >
@@ -361,9 +362,9 @@ Catch-up corner remains available. Resist eating with just one student
 
 ## 12:55–14:10 · §3. Data in R — types and import (75 min)
 
-**Aim.** Every student imports CSV, TSV, and Excel files from the USB
-data into their project and can describe what came in with `str()`,
-`glimpse()`, `summary()`.
+**Aim.** Every student imports CSV and Excel files, understands how to
+handle delimiter mismatches, and ends the section with the day's main
+linguistic dataset (`pdat`, from `pvd.rda`) loaded and inspected.
 
 **Reading / reference.** Book Ch 2 (`02-data_loading.qmd`).
 
@@ -373,7 +374,7 @@ Key points:
 
 - **Vectors** are the basic R object: `c(1, 2, 3)`, `c("a", "b", "c")`.
 - **Factors** are vectors where each value is one of a set of levels.
-  Useful for categorical variables (gender, register, speaker).
+  Useful for categorical variables (Genre, Region, Period).
 - **Data frames** are tables where each column is a vector of the same
   length. **Tibbles** are the tidyverse version: better print output
   and fewer surprises.
@@ -382,6 +383,13 @@ Key points:
   `.rda` / `.RData` are R's own format — fastest to read, R-only.
 - `readr::read_csv()` reads much faster than base R's `read.csv()`,
   and returns a tibble.
+- **Important:** file extensions can lie. We'll see one example today
+  where a file called `.txt` is actually comma-separated. Always
+  inspect a file before trusting what the extension claims.
+- The dataset for the rest of today is **pvd.rda** — the Penn Parsed
+  Corpora of Historical English preposition data. English texts from
+  1500–1913, with their genre, region, and relative preposition
+  frequency. We'll use it for every exercise this afternoon.
 
 Draw on the whiteboard: a tibble = rows (observations) × columns
 (variables). Keep it there.
@@ -406,10 +414,10 @@ Prompt on screen:
 > **B. Inspect it:**
 >
 > ```r
-> str(speakers)        # structure
-> dplyr::glimpse(speakers)  # tidyverse glimpse
-> summary(speakers)    # five-number summary + factor counts
-> head(speakers, 3)    # top 3 rows
+> str(speakers)              # structure
+> dplyr::glimpse(speakers)   # tidyverse glimpse
+> summary(speakers)          # five-number summary + factor counts
+> head(speakers, 3)          # top 3 rows
 > ```
 >
 > **C. One question:** what does `speakers$register` give you back?
@@ -417,58 +425,114 @@ Prompt on screen:
 
 ### 3.3 Demo (25 min)
 
-Move the data from USB into `data/` first (show them):
+Move the data from USB into `data/` first (show them visually in Finder/
+Explorer, then back to RStudio).
 
-```{r demo-3-3, eval=TRUE}
+```{r demo-3-3-import, eval=TRUE}
 # Where should the data be?
 here::here("data")
 
-# Load the main test files
-testdat_csv  <- readr::read_csv(here::here("data", "testdat.csv"))
-testdat_tsv  <- readr::read_tsv(here::here("data", "testdat.txt"))
-testdat_xlsx <- readxl::read_excel(here::here("data", "testdat.xlsx"))
-
-# Compare them — they should look similar if the files were created in parallel
+# CSV import — the lingua franca
+testdat_csv <- readr::read_csv(here::here("data", "testdat.csv"))
 dplyr::glimpse(testdat_csv)
-dplyr::glimpse(testdat_tsv)
+# Two numeric columns, Variable1 and Variable2. Minimal — this file
+# exists to show the import mechanics, not for analysis.
+
+# Excel import
+testdat_xlsx <- readxl::read_excel(here::here("data", "testdat.xlsx"))
 dplyr::glimpse(testdat_xlsx)
 
-# Inspect in more detail
-summary(testdat_csv)
+# A warning about file extensions
+# The file testdat.txt looks like it should be tab-separated.
+# Let's see what happens if we trust the extension:
+testdat_tsv_wrong <- readr::read_tsv(here::here("data", "testdat.txt"))
+dplyr::glimpse(testdat_tsv_wrong)
+# One column named "Variable1,Variable2". The file is actually
+# comma-separated despite the .txt extension.
 
-# What if the encoding is wrong?
-# You see "Mßller" instead of "Müller"? Try specifying UTF-8:
-testdat_csv2 <- readr::read_csv(
-  here::here("data", "testdat.csv"),
-  locale = readr::locale(encoding = "UTF-8")
+# The correct way: use read_delim and specify the delimiter explicitly
+testdat_txt <- readr::read_delim(
+  here::here("data", "testdat.txt"),
+  delim = ","
 )
+dplyr::glimpse(testdat_txt)
+# Now both variables parse correctly.
 
-# Save a processed version back out
-readr::write_csv(testdat_csv, here::here("output", "testdat_clean.csv"))
+# Lesson: inspect first, trust later.
 ```
 
-Talking points:
+Talking points for the import block:
 
 - `read_csv()` tells you what it did — read the specification output;
   don't ignore it
 - Use `here::here()` consistently; never `read_csv("data/testdat.csv")`
-- Encoding problems are the single most common import issue in
-  humanities data — if the text looks garbled, it's an encoding issue
-  nine times out of ten
-- `.rda` files are loaded with `readRDS()` (single object) or `load()`
-  (names appear in environment); show which the LADAL files use
+- Extensions are a convention, not a contract. Open the file in a
+  text editor if you're not sure what's inside.
+
+Now load the real data for today — the Penn historical corpus:
+
+```{r demo-3-3-pvd, eval=TRUE}
+# Load the main dataset for the rest of today
+pdat <- base::readRDS(here::here("data", "pvd.rda"))
+
+# What are we dealing with?
+dplyr::glimpse(pdat)
+# Date         <int>  — year the text was written (1500s–1913)
+# Genre        <chr>  — detailed genre label
+# Text         <chr>  — individual text name
+# Prepositions <dbl>  — relative frequency of prepositions
+# Region       <chr>  — regional origin
+# GenreRedux   <chr>  — collapsed genre categories (fewer levels)
+# DateRedux    <chr>  — bucketed period (1500-1599, 1600-1699, ...)
+
+summary(pdat)
+
+# Factorise the character columns — most tidyverse functions handle
+# characters fine, but factors are explicit about levels and sometimes
+# needed for modelling and plotting
+pdat <- pdat |>
+  dplyr::mutate(across(
+    c(Genre, Text, Region, GenreRedux, DateRedux),
+    factor
+  ))
+
+# Check the result
+dplyr::glimpse(pdat)
+levels(pdat$GenreRedux)
+levels(pdat$DateRedux)
+```
+
+Talking points for the pvd block:
+
+- `.rda` files are R-native — `readRDS()` for a single object,
+  `load()` when the file holds multiple named objects
+- `across()` applies the same transformation to several columns at
+  once — more concise than one `mutate(col = factor(col))` line per
+  column
+- `Prepositions` is a relative frequency, not a raw count. Point this
+  out so students don't get confused seeing values around 0.1 rather
+  than hundreds.
 
 ### 3.4 Exercise (15 min)
 
-> **Task.**
+> **Task.** Answer these questions about `pdat` using the inspection
+> functions you've seen:
 >
-> 1. Import `testdat2.csv` into R.
-> 2. Use `glimpse()` to describe its structure.
-> 3. Save it as an Excel file in your `output/` folder using
->    `writexl::write_xlsx()` (install `writexl` first if needed).
-> 4. Open the Excel file to verify it looks right.
+> 1. How many rows and columns are in the dataset?
+> 2. What is the range of years covered (earliest to latest)?
+> 3. How many distinct values of `GenreRedux` are there, and what are they?
+> 4. What is the mean preposition frequency across all texts?
+> 5. Save a subset containing only rows where `Date > 1800` to
+>    `output/pdat_19c.csv` using `readr::write_csv()`.
 >
-> **Reflect.** What was the easiest format to work with, and why?
+> Add each answer as a comment in your `day1.R`. Commit.
+
+Common slips to watch for:
+
+- Confusing `Date` (year, numeric) with `DateRedux` (period bucket, factor)
+- Students using `pdat$Genre` when they meant `pdat$GenreRedux`
+- `write_csv()` without `here::here("output", ...)` — file lands in
+  project root instead of `output/`
 
 ---
 
@@ -481,7 +545,8 @@ Catch-up corner for anyone still fighting Git.
 ## 14:25–15:25 · §4. Data manipulation with `dplyr` (60 min)
 
 **Aim.** Every student uses `filter()`, `select()`, `mutate()`, `arrange()`,
-`group_by()` + `summarise()` on a real dataset to answer a question.
+`group_by()` + `summarise()` on `pdat` to answer research-style questions
+about preposition frequency across genre and period.
 
 **Reading / reference.** Book Ch 5 (`05-tables.qmd`).
 
@@ -503,67 +568,78 @@ Key points:
 
 ### 4.2 Students try (15 min)
 
-Prompt (dataset here is the one they imported in §3; adjust to your
-provided data):
+Prompt:
 
-> Using `testdat_csv` (or whichever one you prefer):
+> Using the `pdat` object you loaded in §3:
 >
 > ```r
-> # Keep only rows where some column meets a condition
-> testdat_csv |>
->   dplyr::filter(SomeVariable == "SomeValue")
+> # Keep only texts from the 19th century onward
+> pdat |>
+>   dplyr::filter(Date >= 1800)
 >
-> # Keep only certain columns
-> testdat_csv |>
->   dplyr::select(SomeVariable, AnotherVariable)
+> # Keep only three columns of interest
+> pdat |>
+>   dplyr::select(Date, GenreRedux, Prepositions)
 >
-> # Try one on your own: filter + select combined
+> # Combine the two: 19th-century texts, three columns
+> pdat |>
+>   dplyr::filter(Date >= 1800) |>
+>   dplyr::select(Date, GenreRedux, Prepositions)
 > ```
->
-> Replace `SomeVariable` and `SomeValue` with real column names and
-> values from your data. Use `glimpse()` to remind yourself what's there.
 
 ### 4.3 Demo (20 min)
 
-Build up a pipeline, line by line, explaining each verb:
+Build up a pipeline, line by line:
 
 ```{r demo-4-3, eval=TRUE}
 # Starting from the raw tibble
-testdat_csv |>
+pdat |>
   dplyr::glimpse()
 
-# Filter: just one subset
-testdat_csv |>
-  dplyr::filter(Age > 30)
+# filter: just one period
+pdat |>
+  dplyr::filter(DateRedux == "1800-1913")
 
-# Add filter + select + arrange
-testdat_csv |>
-  dplyr::filter(Age > 30) |>
-  dplyr::select(Speaker, Age, Register) |>
-  dplyr::arrange(dplyr::desc(Age))
+# filter + select + arrange
+pdat |>
+  dplyr::filter(Date >= 1800) |>
+  dplyr::select(Date, GenreRedux, Prepositions) |>
+  dplyr::arrange(dplyr::desc(Prepositions))
 
-# mutate — add a derived column
-testdat_csv |>
+# mutate — add a derived column (century from Date)
+pdat |>
   dplyr::mutate(
-    age_group = dplyr::case_when(
-      Age < 30 ~ "young",
-      Age < 60 ~ "middle",
-      TRUE     ~ "older"
+    century = dplyr::case_when(
+      Date < 1600 ~ "16th",
+      Date < 1700 ~ "17th",
+      Date < 1800 ~ "18th",
+      TRUE        ~ "19th"
     )
-  )
+  ) |>
+  dplyr::select(Date, century, GenreRedux, Prepositions) |>
+  head(10)
 
 # group_by + summarise — the classic group analysis
-testdat_csv |>
-  dplyr::group_by(Register) |>
+pdat |>
+  dplyr::group_by(GenreRedux) |>
   dplyr::summarise(
-    n       = dplyr::n(),
-    mean_age = mean(Age, na.rm = TRUE),
-    .groups = "drop"
-  )
-```
+    n            = dplyr::n(),
+    mean_prep    = mean(Prepositions, na.rm = TRUE),
+    median_prep  = median(Prepositions, na.rm = TRUE),
+    .groups      = "drop"
+  ) |>
+  dplyr::arrange(dplyr::desc(mean_prep))
 
-(Note: `Age`, `Speaker`, `Register` are placeholders — swap for your
-dataset's actual column names.)
+# A richer summary: by genre AND period
+pdat |>
+  dplyr::group_by(GenreRedux, DateRedux) |>
+  dplyr::summarise(
+    n            = dplyr::n(),
+    mean_prep    = mean(Prepositions, na.rm = TRUE),
+    .groups      = "drop"
+  ) |>
+  dplyr::arrange(GenreRedux, DateRedux)
+```
 
 Talking points:
 
@@ -574,27 +650,33 @@ Talking points:
 - `.groups = "drop"` silences a benign warning — explain once, move on.
 - `dplyr::` prefix is for teaching clarity; in practice, students will
   write `filter()` after `library(dplyr)`.
+- Point out the research pattern here: `group_by` + `summarise` is how
+  you quickly see "does preposition use differ by genre or over time?"
+  — the answer becomes visible in the output.
 
 ### 4.4 Exercise (15 min)
 
-> **Task.** Answer these three questions about the dataset using `dplyr`:
+> **Task.** Answer these three questions using `dplyr`:
 >
-> 1. How many observations are in each register?
-> 2. What is the mean of some numeric variable, broken down by group?
-> 3. Which 5 rows have the highest value on some variable?
+> 1. How many texts are in each `DateRedux` period? Which period is
+>    best represented?
+> 2. What is the mean `Prepositions` value by `Region`? Which region
+>    has the highest mean preposition frequency?
+> 3. Which 5 individual texts have the highest preposition frequency?
+>    Return their `Text`, `Date`, `Genre`, and `Prepositions`.
 >
 > Write each as a single `|>` pipeline. Save each in `day1.R` with a
 > comment above explaining what it does.
-
-(Rephrase these to match the actual columns of the dataset students
-have.)
+>
+> **Stretch:** compute the mean preposition frequency by `GenreRedux`
+> within each `DateRedux` period. Is there a visible trend?
 
 ---
 
 ## 15:25–16:15 · §5. First `ggplot2` (50 min)
 
-**Aim.** Every student creates a bar chart and a scatter plot with
-`ggplot2`, customises labels, and saves one plot to `figures/` with
+**Aim.** Every student creates a bar chart and a scatter plot using
+`pdat`, customises labels, and saves one plot to `images/` with
 `ggsave()`.
 
 **Reading / reference.** Book Ch 6 (`06-data_viz_intro.qmd`).
@@ -621,21 +703,19 @@ Key points:
 
 ### 5.2 Students try (10 min)
 
-> Make a basic bar chart of the counts of some categorical variable:
+> Make a basic bar chart of the counts in each genre category:
 >
 > ```r
-> ggplot(data = testdat_csv, aes(x = Register)) +
+> ggplot(data = pdat, aes(x = GenreRedux)) +
 >   geom_bar()
 > ```
 >
-> Then try a scatter plot of two numeric variables:
+> Then try a scatter plot of year against preposition frequency:
 >
 > ```r
-> ggplot(data = testdat_csv, aes(x = Age, y = Tokens)) +
+> ggplot(data = pdat, aes(x = Date, y = Prepositions)) +
 >   geom_point()
 > ```
->
-> Adjust column names to match your data.
 
 ### 5.3 Demo (15 min)
 
@@ -643,38 +723,38 @@ Build up a publication-ready plot:
 
 ```{r demo-5-3, eval=TRUE}
 # Start simple
-p <- ggplot(data = testdat_csv, aes(x = Age, y = Tokens))
+p <- ggplot(data = pdat, aes(x = Date, y = Prepositions))
 p
 
 # Add a geom
 p + geom_point()
 
-# Colour by group
-p + geom_point(aes(colour = Register))
+# Colour by period
+p + geom_point(aes(colour = DateRedux))
 
-# Add a smoother
+# Add a smoother — the historical trend
 p +
-  geom_point(aes(colour = Register)) +
-  geom_smooth(method = "lm", se = FALSE)
+  geom_point(aes(colour = DateRedux), alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, colour = "black")
 
-# Labels and theme
+# Labels and theme — publication-ready
 p +
-  geom_point(aes(colour = Register), size = 2) +
-  geom_smooth(method = "lm", se = FALSE) +
+  geom_point(aes(colour = DateRedux), size = 2, alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, colour = "black") +
   labs(
-    title    = "Tokens by speaker age",
-    subtitle = "Linear fit by register",
-    x        = "Speaker age (years)",
-    y        = "Tokens produced",
-    colour   = "Register"
+    title    = "Preposition frequency in English texts, 1500–1913",
+    subtitle = "Each point is one text; line is a linear trend",
+    x        = "Year written",
+    y        = "Relative frequency of prepositions",
+    colour   = "Period"
   ) +
   theme_bw()
 
 # Save it
 ggsave(
-  filename = here::here("figures", "tokens-by-age.png"),
-  width    = 7,
-  height   = 4.5,
+  filename = here::here("images", "prepositions-by-year.png"),
+  width    = 8,
+  height   = 5,
   dpi      = 300
 )
 ```
@@ -683,6 +763,8 @@ Talking points:
 
 - Build the plot in layers; print after each addition
 - `theme_bw()` + explicit axis labels = 90% of publication quality
+- `alpha = 0.6` on points helps when they overlap — show the effect by
+  running with and without
 - Save as PNG for most purposes; PDF if going into LaTeX
 - Default `ggsave` dimensions are too big for most needs; always set
   `width` and `height`
@@ -691,11 +773,24 @@ Talking points:
 
 > **Task.**
 >
-> 1. Make a boxplot of a numeric variable by a categorical variable.
-> 2. Customise with `labs()` — give it a proper title, axis labels, caption.
+> 1. Make a **boxplot** of `Prepositions` by `GenreRedux`:
+>
+>    ```r
+>    ggplot(pdat, aes(x = GenreRedux, y = Prepositions)) +
+>      geom_boxplot()
+>    ```
+>
+> 2. Customise with `labs()` — proper title, axis labels, caption
+>    (e.g. "Data: Penn Parsed Corpora of Historical English").
 > 3. Change the theme to `theme_minimal()` or `theme_classic()`.
-> 4. Save to `figures/` as a PNG, 7 × 4 inches, 300 dpi.
-> 5. Commit and push the figure to GitHub (practice the full cycle).
+> 4. Rotate the x-axis labels if genre names overlap:
+>    `theme(axis.text.x = element_text(angle = 45, hjust = 1))`
+> 5. Save to `images/` as a PNG, 7 × 5 inches, 300 dpi.
+> 6. Commit and push the figure to GitHub (practice the full cycle).
+>
+> **Stretch:** facet the plot by `DateRedux` so you see genre
+> differences within each historical period:
+> `+ facet_wrap(~ DateRedux)`
 
 ---
 
@@ -731,8 +826,9 @@ Encourage questions. Flag your email with "LMU" prefix convention.
 | 3 | §2 overruns, pushing §3 into lunch | Medium | Cut §2 exercise to 15 min if §2.3 ran long |
 | 4 | USB data distribution is slow | Medium | Hand out at Break 1, not during §3 |
 | 5 | OneDrive/corporate laptop lockdown | Low–Medium | Have alternative install path for Git ready |
-| 6 | Encoding issues breaking imports | Medium | Explicit UTF-8 locale in demo code |
+| 6 | `pvd.rda` loads but column types surprise | Low | Pre-session: verify `glimpse(pdat)` matches the comments in §3.3 demo |
 | 7 | ggplot2 `+` vs `|>` confusion | High | Call this out explicitly in §5.1 |
+| 8 | `testdat.txt` file-extension demo trips students who don't know what a text editor is | Medium | Have Notepad/TextEdit ready to open and show them |
 
 ## Appendix B — If you fall behind
 
@@ -749,15 +845,50 @@ If §2 is still running at 12:30:
 - Skip to §3; those with repos online can commit as they go, others
   can commit at end of Day 2
 
+If §3 overruns and you reach the end at 14:20:
+
+- Cut the `across()` factorisation demo in §3.3; just note that factors
+  are needed for some downstream work
+- Keep Exercise 3.4 — loading `pdat` and inspecting it is prerequisite
+  for §§4–5
+
 ## Appendix C — Data files assumed in `data/`
 
-For Day 1 you need (copy from LADAL `data_loading` tutorial folder,
-listed in R-4-HASS README §1):
+For Day 1 you need these files in students' `data/` folders (copied
+from USB sticks at Break 1):
 
-- `testdat.csv`, `testdat2.csv` — small demo CSV
-- `testdat.txt` — TSV version
-- `testdat.xlsx` — Excel version
+**Minimal import demo files** (LADAL `data_loading` tutorial source):
 
-For §4 and §5 you may wish to swap in a richer linguistic dataset — the
-`pvd.rda` corpus used by Ch 6 is a good candidate once students have
-`load()`ed it. Check before Day 1 that these files are on the USB sticks.
+- `testdat.csv` — toy CSV, 10 rows × 2 numeric columns (`Variable1`, `Variable2`)
+- `testdat.xlsx` — same data in Excel
+- `testdat.txt` — **misnamed** — actually comma-separated, used in §3.3
+  to teach "inspect your data, don't trust extensions"
+
+**The primary linguistic dataset for Day 1** (LADAL `introviz` / `dviz`
+tutorial source):
+
+- `pvd.rda` — Penn Parsed Corpora of Historical English preposition
+  data. Loads as `pdat`. Columns:
+    - `Date` (integer, year 1500–1913)
+    - `Genre` (character, detailed genre)
+    - `Text` (character, individual text name)
+    - `Prepositions` (double, relative frequency)
+    - `Region` (character, regional origin)
+    - `GenreRedux` (character, collapsed genre)
+    - `DateRedux` (character, period bucket: 1500-1599, 1600-1699, 1700-1799, 1800-1913)
+
+Source URL for `pvd.rda`:
+<https://slcladal.github.io/data/pvd.rda>
+
+**Pre-session verification:** on your own laptop, run:
+
+```r
+pdat <- base::readRDS(here::here("data", "pvd.rda"))
+dplyr::glimpse(pdat)
+summary(pdat$Date)
+levels(factor(pdat$GenreRedux))
+```
+
+Confirm the column names match the demo code in §§3–5. If anything is
+different (column renamed, factor levels relabelled), update the demo
+code before class rather than ad-libbing during.

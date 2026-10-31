@@ -18,12 +18,6 @@ This chapter focuses on **practical implementation**: how to apply selected text
 
 The methods covered — concordancing, word frequency analysis, collocation analysis, and keyword analysis — represent the core quantitative techniques of corpus-based text analysis. They are foundational: most more advanced analyses (topic modelling, stylometry, sentiment analysis) build upon or assume familiarity with these basic tools.
 
-::: {.callout-warning}
-## TODO: prerequisite content gap
-
-The original source material for this chapter is "Part 2" of a two-part LADAL series; "Part 1" (concepts and theoretical foundations of text analysis) is **not currently part of this book**. Consider adding a short conceptual-foundations section before diving into implementation, or folding a condensed version into this chapter's introduction.
-:::
-
 ::: {.callout-note}
 ## Prerequisites
 
@@ -33,13 +27,110 @@ This chapter assumes familiarity with the material in @sec-string-processing-int
 ::: {.callout-tip}
 ## What This Chapter Covers
 
-1. **Setup** — packages, data, and the quanteda workflow
-2. **Concordancing** — KWIC searches, regex patterns, phrase searches
-3. **Word Frequency Analysis** — frequency lists, stopwords, visualisation, dispersion
-4. **Collocation Analysis** — co-occurrence matrices, association measures, network plots
-5. **Keyword Analysis** — comparing corpora, keyness metrics, interpretation
-6. **Quick Reference** — essential functions and workflow summary
+1. **Concepts** — what text analytics is, core methods, research-design decisions
+2. **Setup** — packages, data, and the quanteda workflow
+3. **Concordancing** — KWIC searches, regex patterns, phrase searches
+4. **Word Frequency Analysis** — frequency lists, stopwords, visualisation, dispersion
+5. **Collocation Analysis** — co-occurrence matrices, association measures, network plots
+6. **Keyword Analysis** — comparing corpora, keyness metrics, interpretation
+7. **Quick Reference** — essential functions and workflow summary
 :::
+
+
+# What is Text Analytics? {#sec-textanalysis-concepts}
+
+::: {.callout-note}
+## Section Overview
+
+**What you'll learn:** What text analytics is as a research methodology, how it relates to close reading and corpus linguistics, the core families of methods and when each is appropriate, and the main research-design decisions you make before writing any code
+:::
+
+Before fitting the first `kwic()` call or counting a single word, it is worth taking twenty minutes to think about what text analytics actually *is* — what questions it can answer, what it treats as data, and how it fits into humanities research alongside more familiar interpretive methods.
+
+## What is Text Analytics? {-}
+
+**Text analytics** (equivalently: text analysis, text mining, distant reading) refers to the computer-based extraction, processing, and analysis of texts to uncover patterns, relationships, and trends that would be difficult or impossible to detect by close reading alone [@bernard1998text]. Where close reading proceeds by careful human interpretation of individual texts, text analytics applies computational and statistical methods to text treated **as data**: as sequences of characters, tokens, documents, and co-occurrence structures that can be counted, compared, and modelled.
+
+The core shift is conceptual: a text, computationally, is a structured object. A novel is a sequence of chapters; each chapter is a sequence of sentences; each sentence is a sequence of tokens; each token is a string that can be compared to every other string. Once a text is represented this way, methods from corpus linguistics, computational linguistics, NLP, and statistics become applicable.
+
+Text analytics does not replace close reading. The two are complementary. Close reading remains the appropriate method for questions about the specific meaning of a particular passage, the voice of a narrator, or the rhetorical structure of an argument. Text analytics is useful when the research question concerns patterns at a scale no human reader can cover: vocabulary across hundreds of texts, change in word usage across centuries, differences in style between genres, or the characteristic co-occurrence of words in a specialised corpus. In practice, most published work combines both — using text analytics to identify patterns worth looking at, then close reading to interpret what those patterns mean in context.
+
+::: {.callout-tip}
+## Text analysis vs. text analytics vs. text mining vs. distant reading
+
+These terms are often used interchangeably, with minor shadings:
+
+- **Text analysis** sometimes connotes the broader category, encompassing both qualitative and quantitative approaches
+- **Text analytics** often emphasises the quantitative and computational
+- **Text mining** often emphasises data-driven discovery with less human supervision
+- **Distant reading** [@moretti2013] is a literary-studies term that contrasts explicitly with close reading, emphasising the analysis of large text collections
+
+In this chapter and the course more generally, we treat them as synonyms. The method is what matters, not the label.
+:::
+
+## Core Methods {-}
+
+Text analytics is a toolbox, not a single method. This chapter focuses on the four methods that are foundational for corpus linguistics and that most subsequent methods build on:
+
+| Method | What it does | When to use it |
+|--------|--------------|----------------|
+| **Concordancing** | Shows a target word with its surrounding context (KWIC) | At the start of any analysis of a specific word or phrase |
+| **Frequency analysis** | Counts how often each word appears | Vocabulary profiling; identifying dominant themes or style markers |
+| **Collocation analysis** | Identifies words that co-occur more than chance | Studying phraseology, lexical associations, semantic prosody |
+| **Keyword analysis** | Finds words over-represented in one corpus vs. another | Characterising what makes a text or corpus distinctive |
+
+More advanced methods — **topic modelling** (what themes does a corpus contain?), **sentiment analysis** (what emotional tone does the text express?), **network analysis** (how are entities related?), **word embeddings and transformer-based NLP** (how are words positioned in a semantic space?) — generally build on or assume familiarity with the four core methods. If you work through this chapter, you have a foundation for everything that follows.
+
+Not every method is appropriate for every question. A good rule of thumb: start simple. Concordancing and frequency analysis reveal most of what matters in most corpora. Only reach for topic modelling or embeddings when the simpler methods leave the question genuinely unanswered.
+
+## Research-Design Decisions Before the Code {-}
+
+Text analytics is not just "run some code on some text". Before writing any R, three design questions determine whether your analysis will be meaningful.
+
+### What is a document? {-}
+
+Most quantitative methods treat a corpus as a collection of **documents**. The method computes something either over the whole corpus or by comparing documents to one another. What counts as a document is a research decision:
+
+- For stylometric or authorship questions, each document might be one novel
+- For narrative analysis, each document might be one chapter of a novel
+- For sociolinguistic analysis, each document might be one speaker's contribution to a conversation
+- For historical analysis, each document might be one year's output of a newspaper
+
+The decision shapes everything downstream. The same text split into 50 chapter-documents produces completely different frequency and keyword patterns than when treated as one document.
+
+### What corpus is appropriate? {-}
+
+Text analytics inherits a central concept from corpus linguistics: **the corpus**. A corpus is a principled collection of texts that stands as evidence for the population you want to generalise about. Three considerations:
+
+- **Representativeness.** If you want to say something about contemporary British English, your corpus needs to represent contemporary British English — not just happen to contain some. Convenience samples (whatever you could download) are often not representative.
+- **Comparability.** If you are comparing two corpora, they should be comparable in dimensions other than the one you are testing. Comparing a 19th-century novel against a 21st-century tweet corpus will tell you less about genre than about historical change.
+- **Documentation.** Record what is in your corpus, where it came from, how it was selected, and what the licensing conditions are. A corpus without documentation is not reusable, and reusability is central to reproducible research.
+
+### What granularity of analysis? {-}
+
+The same text can be analysed at many different levels: as characters, as morphemes, as word types, as word tokens, as POS-tagged sequences, as dependency parses, as embeddings. Deeper annotations produce richer analyses but take more preparation. For most of what this chapter covers, token-level analysis after punctuation and number removal is sufficient. Where you need deeper structure, @sec-textanalysis-collocations (collocations) and dedicated POS-tagging workflows become relevant.
+
+## The `quanteda` Workflow in Preview {-}
+
+The practical heart of this chapter is the `quanteda` package [@benoit2018quanteda], which provides a consistent framework for the methods above. The workflow is built around three core objects:
+
+| Object | Created by | Contains | Used for |
+|--------|------------|----------|----------|
+| **corpus** | `corpus()` | Document collection with metadata | Storage, subsetting |
+| **tokens** | `tokens()` | Tokenised text (list of character vectors) | Concordancing, collocations, n-grams |
+| **dfm** | `dfm()` | Document-Feature Matrix (documents × word frequencies) | Frequency analysis, keywords, topic modelling |
+
+Everything in this chapter builds on these three. Learn the shape of the workflow once — text → corpus → tokens → dfm — and most of corpus-linguistic analysis in R becomes accessible with minor variations.
+
+Section @sec-textanalysis-setup shows how to build these three objects from Lewis Carroll's *Alice's Adventures in Wonderland*. From there, concordancing, frequency, collocation, and keyword analysis each add one layer of transformation to the dfm or operate directly on the tokens.
+
+## Reproducibility and Transparency {-}
+
+A final conceptual point before the code. Text analytics gets a lot of its scientific value from being **reproducible**: given the same corpus and the same code, anyone can rerun your analysis and get the same results. This is why we work in R scripts and Quarto documents rather than clicking through a GUI, and why we commit code to GitHub rather than emailing results around.
+
+The methods in this chapter are all mechanically reproducible. The design decisions above (what counts as a document, which corpus, what granularity) are not — they rely on judgement. Document those decisions explicitly in your Methods section. A reader who disagrees with your choices should be able to re-run your analysis under different choices and see what changes.
+
+---
 
 # Setup and Data {#sec-textanalysis-setup}  
   
@@ -1225,5 +1316,8 @@ kw_result   <- quanteda.textstats::textstat_keyness(
 ::: {.callout-note}
 ## Source and Attribution
 
-This chapter adapts material from the LADAL tutorial *Introduction to Text Analysis: Practical Implementation in R* by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar.
+This chapter adapts material from two LADAL tutorials by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar:
+
+- @sec-textanalysis-concepts (What is Text Analytics?) adapts selected content from *Introduction to Text Analysis: Concepts and Foundations* (https://ladal.edu.au/tutorials/introta/introta.html)
+- The remainder of the chapter (@sec-textanalysis-setup through @sec-textanalysis-reference) adapts *Introduction to Text Analysis: Practical Implementation in R* (https://ladal.edu.au/tutorials/textanalysis/textanalysis.html)
 :::

@@ -13,10 +13,10 @@ This chapter introduces mixed-effects models in R.^[Sincere thanks to Stefan Tho
 
 This chapter is aimed at intermediate and advanced users of R. The goal is not to provide an exhaustive theoretical treatment but to show how to implement the most commonly used mixed-effects model types, perform appropriate diagnostics, and report results clearly and reproducibly.
 
-::: {.callout-warning}
-## TODO: prerequisite content gap
+::: {.callout-note}
+## Prerequisites
 
-This chapter presumes familiarity with regression modelling (OLS assumptions, fixed-effects linear/logistic/ordinal regression) that is **not currently covered by any other chapter in this book**. Either add a regression-fundamentals chapter before this one, or add a short refresher section at the start of this chapter — otherwise participants without a prior stats background will struggle from the first model onward.
+This chapter presumes familiarity with regression modelling (OLS assumptions, fixed-effects linear/logistic regression). These prerequisites are covered in @sec-stats-intro (Chapter 7). If you have not worked through that chapter, do so before continuing — otherwise the model output and diagnostics in this chapter will be hard to follow.
 :::
 
 ::: {.callout-note}
@@ -56,6 +56,8 @@ This chapter expects the following files in the project's `data/` folder (copy t
 # Run once — comment out after installation
 install.packages("Boruta")
 install.packages("car")
+install.packages("ggparty")
+install.packages("partykit")
 install.packages("emmeans")
 install.packages("effects")
 install.packages("flextable")
@@ -103,7 +105,9 @@ library(MASS)
 library(mclogit)
 library(MuMIn)
 library(nlme)
+library(ggparty)
 library(ordinal)
+library(partykit)
 library(report)
 library(rms)
 library(robustbase)
@@ -1264,6 +1268,260 @@ The difference between conditional R² (.15) and marginal R² (.13) is only .02,
 
 </details>
 :::
+
+---
+
+
+---
+
+# Conditional Inference Trees {#sec-mixedmodel-cit}
+
+::: {.callout-note}
+## Section Overview
+
+**What you will learn:** Why conditional inference trees are useful alongside regression; how to fit a CIT with `partykit::ctree()`; how to read and interpret the plot; how to produce a publication-quality version with `ggparty`; and when CITs are the right choice and when they are not
+:::
+
+## Why Trees Alongside Mixed-Effects Models? {-}
+
+The mixed-effects logistic regression above (@sec-mixedmodel-blmm) quantified the direction, magnitude, and significance of each predictor's effect on the probability of speech-unit-final discourse *like*. That is the inferential workhorse of corpus linguistics: it tells you *how much* a predictor matters, with uncertainty quantified.
+
+Mixed-effects regression is less good at detecting high-order interactions. If you suspect that Age interacts with Gender interacts with ConversationType in some complex non-additive way, you have to specify every interaction term explicitly — and interaction coefficients get unwieldy fast.
+
+**Conditional inference trees** (CITs) [@hothorn2006unbiased] complement regression. Trees find interactions automatically by recursively partitioning the data into subgroups that differ in the outcome. The output is a tree-shaped diagram that is often easier to show in a presentation than a regression table.
+
+For most research questions you want both: regression (including mixed-effects) for inference about specific predictors, and a CIT for exploration and visualisation of interactions. This section fits a CIT on exactly the same data as the mixed-effects logistic model above, so the two methods can be compared directly.
+
+::: {.callout-note}
+## Scope of this section
+
+This section introduces CITs at an application level. The LADAL [Tree-Based Models in R](https://ladal.edu.au/tutorials/tree_models/tree_models.html){target="_blank"} tutorial covers CITs in depth and extends to Random Forests and Boruta variable selection — recommended if you plan to use tree-based methods extensively.
+:::
+
+## CITs vs. Older Decision Trees {-}
+
+Older-style decision trees (Classification and Regression Trees, or CARTs) have a known weakness: **variable selection bias**. Predictors with more possible split points — numeric variables, or factors with many levels — are artificially favoured, because more candidate splits give a higher chance of finding a "good" split by accident, even when the predictor has no real relationship with the outcome.
+
+Conditional inference trees fix this with a two-stage procedure at each node:
+
+1. **Is any predictor significantly associated with the outcome?** A permutation test is run for each predictor. If no predictor reaches significance at the chosen threshold (default α = .05), the node becomes a leaf — no further splitting occurs.
+2. **Which predictor to split on?** Among significant predictors, the one with the strongest association (smallest adjusted p-value) is selected. The split point is chosen to maximise the test statistic.
+
+The practical consequence: only predictors with real statistical evidence appear in the tree, and the selection is not biased by the number of possible splits.
+
+## Preparing the Data {-}
+
+We reuse `mblrdata` — the dataset of speech-unit-final discourse *like* in Irish English that was used in the mixed-effects logistic regression above. The outcome is `SUFlike` (0 or 1); predictors are Age, Gender, ConversationType, and Priming.
+
+The `ctree()` function expects a **factor** as its outcome for classification tasks. In the previous section `SUFlike` was treated as a numeric 0/1 for `glmer()` — which is correct for a binomial GLMM. For `ctree()`, we convert it to a factor:
+
+```{r cit_prep, message=FALSE, warning=FALSE}
+citdata <- mblrdata |>
+  dplyr::mutate(SUFlike = as.factor(SUFlike))
+
+str(citdata)
+```
+
+## Fitting a CIT {-}
+
+The function is `partykit::ctree()`. The formula syntax matches `lm()` and `lmer()`:
+
+```{r cit_fit, message=FALSE, warning=FALSE}
+set.seed(111)
+cit1 <- ctree(SUFlike ~ Age + Gender + ConversationType + Priming,
+              data = citdata)
+```
+
+The `set.seed()` call matters: CIT splits can depend on tie-breaking in the permutation tests. Setting a seed makes the result reproducible.
+
+Plot the result:
+
+```{r cit_plot, message=FALSE, warning=FALSE, fig.width=10, fig.height=6}
+plot(cit1)
+```
+
+## Reading the Output {-}
+
+The CIT plot encodes several layers of information:
+
+- **Internal node boxes** show the splitting variable and the p-value of the test that justified the split. Lower p-values indicate stronger evidence that the split distinguishes the outcome.
+- **Edge labels** show the values of the splitting variable that route observations down each branch.
+- **Leaf node bar charts** show the distribution of the outcome in each final subgroup. The taller bar is the predicted class; bar heights are predicted probabilities.
+
+To read the tree for a given observation:
+
+1. Start at the root node. Note the splitting variable and its p-value.
+2. Follow the branch matching your observation's value on that variable.
+3. At each internal node, repeat.
+4. At the leaf, the dominant bar is the predicted class.
+
+The p-values along the path tell you how reliable each split is: p < .001 is very reliable; p close to .05 is marginal.
+
+## Programmatic Access to CIT Information {-}
+
+Rather than reading everything from the plot, you can extract tree information for reporting in your Quarto document:
+
+```{r cit_access, message=FALSE, warning=FALSE}
+# Which nodes are present?
+all_nodes      <- nodeids(cit1)
+terminal_nodes <- nodeids(cit1, terminal = TRUE)
+internal_nodes <- setdiff(all_nodes, terminal_nodes)
+
+cat("Total nodes:    ", length(all_nodes), "\n")
+cat("Internal nodes: ", length(internal_nodes), "\n")
+cat("Leaf nodes:     ", length(terminal_nodes), "\n")
+
+# p-values at internal nodes
+pvals <- unlist(nodeapply(
+  cit1,
+  ids = all_nodes,
+  FUN = function(n) info_node(n)$p.value
+))
+
+# Significant splits only
+pvals[!is.na(pvals) & pvals < .05]
+
+# Predicted classes for each observation
+head(predict(cit1, type = "response"))
+
+# Predicted probabilities
+head(predict(cit1, type = "prob"))
+```
+
+Pulling values from the fitted object into prose is more reproducible than retyping them from the plot. If the data changes, the numbers update automatically on re-render.
+
+## Adjusting the Significance Threshold {-}
+
+The default α = .05 can be changed with `ctree_control()`. A stricter threshold produces a simpler (more pruned) tree; a more liberal one produces a bushier tree.
+
+```{r cit_alpha, message=FALSE, warning=FALSE, fig.width=10, fig.height=6}
+cit_strict <- ctree(
+  SUFlike ~ Age + Gender + ConversationType + Priming,
+  data = citdata,
+  control = ctree_control(alpha = 0.01)
+)
+
+plot(cit_strict)
+```
+
+::: {.callout-warning}
+## Set the threshold before fitting
+
+Choose α **before** you fit the tree. Post-hoc tightening of α after seeing the first tree is a form of researcher-degrees-of-freedom that inflates Type I error. If you want to be conservative, pick α = .01 up front and report that choice in your methods.
+:::
+
+## Publication-Quality CIT with `ggparty` {-}
+
+The `plot()` default is adequate for exploration but ugly for publication. The `ggparty` package lets you build publication-quality CIT figures using `ggplot2` syntax.
+
+```{r cit_ggparty, message=FALSE, warning=FALSE, fig.width=11, fig.height=7}
+# refit for a clean object
+set.seed(111)
+cit1 <- ctree(SUFlike ~ Age + Gender + ConversationType + Priming,
+              data = citdata)
+
+# extract p-values for node labelling
+pvals <- unlist(nodeapply(
+  cit1,
+  ids = nodeids(cit1),
+  FUN = function(n) info_node(n)$p.value
+))
+
+ggparty(cit1) +
+  geom_edge() +
+  geom_edge_label() +
+  geom_node_label(
+    line_list = list(
+      aes(label = splitvar),
+      aes(label = paste0(
+        "N = ", nodesize,
+        ", p ",
+        ifelse(pvals < .001, "< .001",
+               paste0("= ", round(pvals, 3)))
+      )),
+      size = 10
+    ),
+    line_gpar = list(list(size = 13), list(size = 10)),
+    ids = "inner"
+  ) +
+  geom_node_label(
+    aes(label = paste0("Node ", id, "\nN = ", nodesize)),
+    ids = "terminal",
+    nudge_y = -0.01
+  ) +
+  geom_node_plot(
+    gglist = list(
+      geom_bar(aes(x = "", fill = SUFlike),
+               position = position_fill(),
+               color = "black"),
+      theme_minimal(),
+      scale_fill_manual(values = c("gray50", "gray80"),
+                        guide = "none",
+                        name = "SUFlike"),
+      scale_y_continuous(breaks = c(0, 1)),
+      xlab(""),
+      ylab("Probability")
+    ),
+    shared_axis_labels = TRUE
+  ) +
+  labs(
+    title = "Conditional inference tree: speech-unit-final discourse like",
+    subtitle = "Predictors: Age, Gender, ConversationType, Priming"
+  )
+```
+
+`ggparty` syntax is more verbose than `plot()`, but the result is substantially nicer and lets you control fonts, colours, and layout to match your document's style.
+
+## Comparing with the Mixed-Effects Logistic Model {-}
+
+Both the mixed-effects logistic model from @sec-mixedmodel-blmm and the CIT above were fit to the same data. They answer slightly different questions:
+
+- The **mixed-effects logistic model** quantifies each predictor's effect on log-odds of `SUFlike`, with standard errors and p-values that account for repeated observations within speaker (via the random intercept). It is the appropriate tool for inferential statements like "Priming significantly increases the probability of SUFlike use".
+- The **CIT** shows how the predictors combine to partition the data into subgroups. It reveals interactions visually and gives you a tree-shaped diagram readers can grasp without statistical training.
+
+Where the two methods agree — the same predictor appears in the CIT and is significant in the regression — your conclusions are strongly supported. Where they disagree, that's informative: the CIT may be detecting an interaction the regression doesn't include, or the regression may be adjusting for grouping structure the CIT ignores.
+
+## Limitations of Single Trees {-}
+
+CITs are interpretable and principled, but they have real limitations:
+
+- **Single trees overfit.** A single CIT tends to fit the training data more faithfully than it generalises to new data. The standard remedy is to build an ensemble of trees — a **Random Forest** [@breiman2001rf]. Random Forests reduce variance substantially but lose the single interpretable tree plot.
+- **No direction or magnitude.** The tree tells you which predictors matter and how they interact, but not the direction or magnitude of each effect in the way a regression coefficient does. For that, you need regression.
+- **Factor level limits.** CITs cannot handle factors with more than ~53 levels. This is a problem for Speaker or Item as predictors — but those should be random effects in a mixed-effects model anyway, not fixed predictors in a tree.
+- **Strong main effects can mask interactions.** When predictors have strong main effects, trees sometimes fail to detect interactions that are present. If your theoretical interest is a specific interaction, test it in a regression model rather than relying on the tree to find it.
+- **No random-effects structure.** CITs treat all observations as independent. For grouped data (observations within speakers) you still need a mixed-effects model for valid inference; the CIT is an exploratory supplement, not a replacement.
+
+## Reporting CIT Results {-}
+
+A minimal CIT reporting template:
+
+> To complement the mixed-effects logistic regression, a conditional inference tree was fit [@hothorn2006unbiased] using `partykit::ctree()` [R package partykit v1.2]. All four fixed predictors (Age, Gender, ConversationType, Priming) were included as candidate split variables. The significance threshold was set to α = .05 before fitting. The tree is shown in [Figure X]. The root split was on [variable] (p [=/<] [value]), with [brief description of what the tree revealed]. Node and leaf sizes are given in the figure.
+
+Report:
+
+- the function and package used, with a citation
+- which predictors were candidate splits
+- the α threshold (and that it was fixed before fitting)
+- the structure of the tree in prose (root variable, interactions revealed)
+- the sample sizes at each leaf
+
+## ✎ Check Your Understanding — CIT {-}
+
+**A conditional inference tree is fit on data with four predictors. The tree has three internal nodes with p-values of .002, .041, and .038. A colleague suggests dropping the node with p = .041 because it is "barely significant". Is this advice correct?**
+
+a) Yes — p close to .05 is marginal and should be excluded to be conservative\
+b) No — the CIT algorithm already uses the significance threshold as its stopping criterion, so p = .041 means the split was justified at the pre-specified α; post-hoc exclusion based on inspecting the tree inflates Type I error\
+c) Yes — p-values at CIT nodes reflect Gini impurity, so lower is always better\
+d) No — p-values above .01 should always be reported but not acted upon
+
+<details>
+<summary>**Answer**</summary>
+
+**b) The threshold must be set before fitting, not adjusted after inspecting the tree**
+
+The CIT algorithm only creates a split if the association reaches the pre-specified α. A p-value of .041 < .05 means the split is statistically justified under the chosen criterion. Removing it post-hoc inflates Type I error, because the researcher is implicitly re-fitting the tree with a stricter threshold chosen after seeing the data. If a conservative tree is wanted, set `ctree_control(alpha = 0.01)` *before* fitting. Option (c) is wrong because CITs use permutation tests, not Gini impurity (that's the CART criterion).
+
+</details>
 
 ---
 
