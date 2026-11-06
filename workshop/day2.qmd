@@ -1,0 +1,849 @@
+---
+title: "Day 2 — Text analytics"
+subtitle: "R-4-HASS Workshop · LMU Blockseminar"
+date: "2026-12-19"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-tools: true
+    code-copy: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+Welcome back. Today is about text as data. You'll learn to clean strings, write regular expressions, and use the `quanteda` framework to do the core quantitative moves of corpus linguistics — concordancing, frequency analysis, collocation, and network visualisation.
+
+By the end of the day you'll have:
+
+- Cleaned a messy transcript using `stringr`
+- Extracted patterns from text using regular expressions
+- Built a `quanteda` corpus, tokens, and document-feature matrix from *Alice in Wonderland*
+- Produced a KWIC concordance, a frequency plot, and a collocation network
+
+## Before we start
+
+You need the following files in your `data/` folder (from the USB sticks):
+
+- `alice.rda` — Lewis Carroll's *Alice's Adventures in Wonderland*
+- `darwin.rda`, `melville.rda`, `orwell.rda` — comparison texts for the stretch exercises
+
+You also need these packages installed (the pre-course email covered this):
+
+```{r install-day2, eval=FALSE}
+install.packages(c(
+  "quanteda", "quanteda.textstats", "quanteda.textplots",
+  "tidytext", "tokenizers", "stringr"
+))
+```
+
+Load everything we need for today:
+
+```{r load-day2}
+library(quanteda)
+library(quanteda.textstats)
+library(quanteda.textplots)
+library(stringr)
+library(dplyr)
+library(ggplot2)
+library(tokenizers)
+library(here)
+```
+
+---
+
+## §1. String processing
+
+The first 65 minutes. The goal is that you can clean, split, replace, and extract strings using `stringr`.
+
+### What strings are
+
+A **string** is a sequence of characters: `"hello"`, `"Blockseminar"`, `"A wee girl of her age, like"`. In R, you use double quotes by convention.
+
+Strings are not numbers. `"5" + "3"` is an error. If you want to add numbers represented as strings, convert first with `as.numeric()`.
+
+Base R has string functions (`paste`, `nchar`, `strsplit`, `gsub`), but `stringr` is more consistent: every function starts with `str_`, every function takes the string as its first argument.
+
+### The core functions
+
+Start with a single string:
+
+```{r str-single}
+greeting <- "Welcome to the Blockseminar"
+str_length(greeting)
+str_to_lower(greeting)
+str_to_upper(greeting)
+```
+
+Now a vector of strings — all `stringr` functions are **vectorised**:
+
+```{r str-vector}
+speakers <- c("John Smith", "jane DOE", " Alice Zhang ", "Mohammed-Ali Khan")
+str_length(speakers)
+str_to_title(speakers)
+str_trim(speakers)
+```
+
+Chain operations with the pipe:
+
+```{r str-pipe}
+speakers |>
+  str_trim() |>
+  str_to_title()
+```
+
+### Cleaning a realistic sample
+
+A fake transcript line to clean:
+
+```{r str-messy}
+line <- "  SP01: And then she was, like, 'oh no!' You know?  "
+
+# Remove surrounding whitespace
+line |> str_trim()
+
+# Lowercase
+line |> str_trim() |> str_to_lower()
+
+# Split a sentence into words
+line |>
+  str_trim() |>
+  str_split(" ") |>
+  unlist()
+```
+
+### Detecting and extracting
+
+Does a string contain something?
+
+```{r str-detect}
+speakers <- c("John Smith", "Jane Doe", "Alice Zhang", "Mohammed-Ali Khan")
+str_detect(speakers, "Smith")
+str_detect(speakers, "-")
+```
+
+Pull out what matches:
+
+```{r str-extract}
+emails <- c(
+  "contact m.schweinberger@uq.edu.au please",
+  "or j.smith@lmu.de for admin",
+  "no email here"
+)
+str_extract(emails, "[a-z.]+@[a-z.]+")
+```
+
+That last pattern is a regex — we'll meet those properly in the next section.
+
+### Exercise 1.1 — clean a transcript
+
+Fill in the gaps to clean this fake transcript into a tidy tibble with a `speaker` and `utterance` column.
+
+```{r ex-1-1, eval=FALSE}
+transcript <- c(
+  "  SP01: Hello, how are you today?  ",
+  "SP02: Oh fine, fine. And you?",
+  "  sp01: can't complain really  ",
+  "SP03: Did you see the news?",
+  "SP02: Which news?   "
+)
+
+# Trim whitespace and uppercase the speaker tag
+cleaned <- transcript |>
+  str_trim() |>
+  str_to_upper() |>
+  ___
+
+# Split into speaker and utterance on the colon-space separator
+# Result: a tibble with columns `speaker` and `utterance`
+split_pairs <- str_split_fixed(cleaned, ___, n = 2)
+
+tidy_transcript <- tibble::tibble(
+  speaker   = ___,
+  utterance = ___
+)
+
+tidy_transcript
+```
+
+See **Solution 1.1** at the bottom.
+
+---
+
+## §2. Regular expressions
+
+This is the hardest section of the workshop. Give yourself permission not to master it in 85 minutes. You'll leave able to recognise regex patterns and write simple ones; full fluency comes with practice.
+
+### What regex is
+
+A **regular expression** (regex) is a pattern that describes a set of strings. `"the"` matches the literal string "the". `"\\d+"` matches any sequence of one or more digits.
+
+The building blocks:
+
+- **Character classes:** `[abc]` matches a, b, or c. `[a-z]` any lowercase. `[^a-z]` NOT lowercase.
+- **Shorthand classes:** `\\d` digit, `\\w` word character, `\\s` whitespace. Uppercase negates: `\\D`, `\\W`, `\\S`.
+- **Quantifiers:** `*` zero or more, `+` one or more, `?` zero or one, `{n}` exactly n, `{n,m}` between n and m.
+- **Anchors:** `^` start of string, `$` end of string, `\\b` word boundary.
+- **Groups:** `(...)` captures. `(a|b)` matches a or b.
+
+In R, you write regex as a string, so **backslashes are doubled**: `\\d` in R = `\d` in regex docs. This confuses everyone initially.
+
+### Build intuition — start simple
+
+```{r regex-basics}
+words <- c("cat", "cats", "dog", "doggy", "123", "hello42", "hi!")
+
+str_detect(words, "cat")           # literal match
+str_detect(words, "^cat")          # starts with "cat"
+str_detect(words, "cat$")          # ends with "cat"
+str_detect(words, "\\d")           # contains a digit
+str_detect(words, "\\d+")          # contains one or more digits
+str_detect(words, "^\\d+$")        # IS entirely digits
+str_detect(words, "[aeiou]")       # contains any vowel
+str_detect(words, "^[aeiou]")      # starts with a vowel
+str_detect(words, "y$")            # ends with "y"
+str_detect(words, "s$|y$")         # ends with "s" OR "y"
+```
+
+Say out loud to yourself what each pattern matches before you run it. That's how regex intuition develops.
+
+### Extract and replace
+
+```{r regex-extract}
+text <- "Please contact me at john.smith@uq.edu.au or j.doe@lmu.de.
+We received 42 enquiries last week and 17 the week before."
+
+# Extract first match
+str_extract(text, "\\d+")
+
+# Extract all matches (returns a list)
+str_extract_all(text, "\\d+") |> unlist()
+
+# Email addresses
+str_extract_all(text, "[a-z.]+@[a-z.]+\\.[a-z]+") |> unlist()
+
+# Replace: anonymise emails
+str_replace_all(text, "[a-z.]+@[a-z.]+\\.[a-z]+", "[EMAIL]")
+
+# Count
+str_count(text, "\\d+")
+```
+
+### A tip: use regex101.com
+
+Paste any text and any pattern at <https://regex101.com/> and watch it highlight matches in real time. Use the ECMAScript flavour — close enough to R's for teaching. This is faster than reading documentation.
+
+### Exercise 2.1 — extract patterns from a sample
+
+Fill in the gaps with the right regex pattern.
+
+```{r ex-2-1, eval=FALSE}
+sample <- c(
+  "The meeting is on 2026-12-19 at 09:00.",
+  "Email m.schweinberger@uq.edu.au before 2026-11-30.",
+  "Call +49-89-2180-5555 or +61-7-3365-1111.",
+  "Our paper (Smith et al., 2023) argues the opposite.",
+  "In 1994, Chomsky wrote that linguistics..."
+)
+
+# 1. Extract all dates in YYYY-MM-DD format
+str_extract_all(sample, "___") |> unlist()
+
+# 2. Extract all four-digit years (anywhere in the text)
+str_extract_all(sample, "___") |> unlist()
+
+# 3. Extract all phone numbers (digits with optional + and - separators)
+str_extract_all(sample, "___") |> unlist()
+
+# 4. Replace all email addresses with "[REDACTED]"
+str_replace_all(sample, "___", "[REDACTED]")
+```
+
+See **Solution 2.1** at the bottom.
+
+---
+
+## §3. The `quanteda` workflow
+
+Forty minutes. You'll load *Alice in Wonderland* and build the three objects that everything downstream uses.
+
+### What text analytics is, briefly
+
+Text analytics treats text as data — sequences of tokens, documents, and co-occurrence structures that can be counted, compared, and modelled. Where close reading proceeds by careful interpretation of individual texts, text analytics applies computational methods to patterns at a scale no human reader can cover.
+
+Core methods (what the next three sections cover):
+
+- **Concordancing** — shows a target word with its surrounding context
+- **Frequency analysis** — counts how often each word appears
+- **Collocation analysis** — identifies words that co-occur more than chance
+
+These build on three `quanteda` objects:
+
+- `corpus()` — the document collection with metadata
+- `tokens()` — the tokenised text (list of character vectors)
+- `dfm()` — document-feature matrix (documents × word frequencies)
+
+Learn the shape of this workflow once and most of corpus-linguistic analysis in R is accessible.
+
+### Load Alice
+
+```{r load-alice}
+alice_raw <- readRDS(here::here("data", "alice.rda"))
+length(alice_raw)
+head(alice_raw, 5)
+```
+
+`alice_raw` is a character vector, one element per line of the original text.
+
+### Build the three objects
+
+Collapse into one string, then build the corpus:
+
+```{r build-corpus}
+alice_corpus <- corpus(paste(alice_raw, collapse = " "))
+alice_corpus
+```
+
+Tokenise — remove punctuation and numbers:
+
+```{r build-tokens}
+alice_tokens <- tokens(
+  alice_corpus,
+  remove_punct   = TRUE,
+  remove_numbers = TRUE
+)
+
+head(alice_tokens[[1]], 20)
+```
+
+Build the document-feature matrix:
+
+```{r build-dfm}
+alice_dfm <- dfm(alice_tokens)
+alice_dfm
+```
+
+### Split into chapters
+
+A single document isn't very useful for comparison. Split Alice into chapters:
+
+```{r split-chapters}
+alice_chapters <- paste(alice_raw, collapse = " ") |>
+  stringr::str_replace_all("(CHAPTER [XVI]{1,7}\\.{0,1}) ", "|||\\1 ") |>
+  tolower() |>
+  stringr::str_split("\\|\\|\\|") |>
+  unlist()
+
+alice_chapters <- alice_chapters[nchar(stringr::str_trim(alice_chapters)) > 0]
+length(alice_chapters)
+```
+
+Notice that this uses regex — `[XVI]{1,7}` matches Roman numerals. You just used what you learned in §2 in a real analysis.
+
+Rebuild the corpus with chapters as separate documents:
+
+```{r chapter-corpus}
+alice_corpus_ch <- corpus(alice_chapters)
+ndoc(alice_corpus_ch)
+```
+
+### No exercise
+
+Section 3 is scaffolding — the exercises come in the next three sections, which all use these objects.
+
+---
+
+## §4. Concordancing / KWIC
+
+One hour. You'll produce a KWIC concordance, apply regex patterns, and sort to see patterns in context.
+
+### What KWIC is
+
+**KWIC (Key Word In Context)** displays a target word with its left and right context. Before computing frequency or collocation, you should *look* at your target in context. Many patterns are visible to the eye but hidden by aggregate statistics.
+
+### A simple concordance
+
+```{r kwic-simple}
+kwic_alice <- kwic(alice_tokens, pattern = "alice", window = 5)
+nrow(kwic_alice)
+head(kwic_alice)
+```
+
+### Regex patterns
+
+Use `valuetype = "regex"` to turn on the full regex grammar you learned in §2:
+
+```{r kwic-regex}
+kwic_walk <- kwic(
+  alice_tokens,
+  pattern = "walk.*",
+  valuetype = "regex",
+  window = 5
+)
+unique(kwic_walk$keyword)
+```
+
+Without `valuetype = "regex"`, the pattern is interpreted as a "glob" (uses `*` and `?` wildcards), which is often enough for simple searches.
+
+### Phrase search
+
+```{r kwic-phrase}
+kwic_pooralice <- kwic(
+  alice_tokens,
+  pattern = phrase("poor alice"),
+  window = 6
+)
+head(kwic_pooralice)
+```
+
+### Sorting a concordance
+
+Sorting by one position (L1, R1, R2…) reveals patterns the human eye catches but frequency misses. What follows "said" in Alice?
+
+```{r kwic-sort}
+kwic_said <- kwic(alice_tokens, pattern = "said", window = 4) |>
+  as.data.frame() |>
+  dplyr::mutate(R1 = stringr::word(post, 1)) |>
+  dplyr::arrange(R1)
+
+# Most common words following "said"
+kwic_said |>
+  dplyr::count(R1, sort = TRUE) |>
+  head(10)
+```
+
+The pattern tells you something about dialogue attribution: who said what to whom.
+
+### Exercise 4.1 — concordance a target word
+
+Pick a content word of your choice in Alice (something interesting: `queen`, `rabbit`, `tea`, `like`, `white`, `thought`). Fill in the gaps to produce a sorted concordance with its most common right-hand neighbours.
+
+```{r ex-4-1, eval=FALSE}
+my_target <- "___"
+
+# Produce the KWIC concordance
+kwic_mine <- kwic(alice_tokens, pattern = ___, window = 5)
+nrow(kwic_mine)
+
+# Sort by the first word to the right
+sorted <- kwic_mine |>
+  as.data.frame() |>
+  dplyr::mutate(R1 = stringr::word(post, 1)) |>
+  dplyr::arrange(___)
+
+# Top 5 words following your target
+sorted |>
+  dplyr::count(___, sort = TRUE) |>
+  head(___)
+```
+
+See **Solution 4.1** at the bottom.
+
+---
+
+## §5. Word frequency
+
+Forty-five minutes. You'll build a frequency table, handle stopwords, and visualise the result.
+
+### Zipf's law
+
+A tiny number of words account for a huge share of all tokens. Function words (`the`, `and`, `of`) dominate every English text regardless of topic.
+
+```{r freq-all}
+freq_all <- textstat_frequency(alice_dfm) |>
+  as.data.frame()
+
+head(freq_all, 15)
+```
+
+The top is function words. If your research question is about content, remove them.
+
+### Removing stopwords
+
+```{r freq-nostop}
+alice_dfm_nostop <- alice_tokens |>
+  tokens_remove(stopwords("english")) |>
+  dfm()
+
+freq_nostop <- textstat_frequency(alice_dfm_nostop) |>
+  as.data.frame()
+
+head(freq_nostop, 15)
+```
+
+Now you see content: alice, said, little, queen, time. The characters and themes of the novel.
+
+### A caveat about stopwords
+
+Stopword removal is appropriate when the research question is about **content**. For stylistic analysis, authorship attribution, or discourse analysis, function words are the signal, not the noise. Don't remove them automatically — think first.
+
+### Visualise the top words
+
+```{r freq-plot}
+freq_nostop |>
+  head(15) |>
+  ggplot(aes(x = reorder(feature, frequency), y = frequency)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "15 most frequent content words in Alice",
+    x     = NULL,
+    y     = "Frequency"
+  ) +
+  theme_bw()
+```
+
+### Dispersion: where in the text does this word appear?
+
+For many humanities questions, the distribution of a word across sections matters more than its total count. Let's see how `queen` is distributed across chapters:
+
+```{r freq-dispersion}
+dispersion <- data.frame(
+  chapter     = seq_along(alice_chapters),
+  n_queen     = stringr::str_count(alice_chapters, "\\bqueen\\b"),
+  n_words     = stringr::str_count(alice_chapters, "\\S+")
+) |>
+  dplyr::mutate(queen_per1k = n_queen / n_words * 1000) |>
+  dplyr::filter(n_words > 50)
+
+ggplot(dispersion, aes(x = chapter, y = queen_per1k)) +
+  geom_line(colour = "tomato") +
+  geom_point(colour = "tomato", size = 2) +
+  labs(
+    title = "Dispersion of 'queen' across Alice's chapters",
+    x     = "Chapter",
+    y     = "Frequency per 1,000 words"
+  ) +
+  theme_bw()
+```
+
+The Queen of Hearts dominates certain chapters. Pure frequency hides this; dispersion reveals it.
+
+### Exercise 5.1 — dispersion of your own word
+
+Fill in the gaps with a word of your choice (something content-ful, with enough occurrences to plot — try `rabbit`, `cat`, `king`, `white`, `tea`).
+
+```{r ex-5-1, eval=FALSE}
+my_word <- "___"
+
+dispersion_mine <- data.frame(
+  chapter   = seq_along(alice_chapters),
+  n_mine    = stringr::str_count(alice_chapters, paste0("\\b", my_word, "\\b")),
+  n_words   = stringr::str_count(alice_chapters, "\\S+")
+) |>
+  dplyr::mutate(per1k = ___ / n_words * 1000) |>
+  dplyr::filter(n_words > 50)
+
+plot_disp <- ggplot(dispersion_mine, aes(x = chapter, y = per1k)) +
+  geom_line(colour = "darkgreen") +
+  geom_point(colour = "darkgreen", size = 2) +
+  labs(
+    title = paste0("Dispersion of '", my_word, "' across Alice's chapters"),
+    x     = "Chapter",
+    y     = "Frequency per 1,000 words"
+  ) +
+  theme_bw()
+
+plot_disp
+
+# Save the plot
+dir.create(here::here("figures"), showWarnings = FALSE)
+ggsave(
+  plot     = plot_disp,
+  filename = here::here("figures", paste0("dispersion-", my_word, ".png")),
+  width    = 7,
+  height   = 4.5,
+  dpi      = 300
+)
+```
+
+See **Solution 5.1** at the bottom.
+
+---
+
+## §6. Collocation and network graphs
+
+The last 40 minutes. You'll extract words that co-occur with a target and visualise the semantic neighbourhood.
+
+### What collocation is
+
+**Collocation** means words that co-occur more than chance. *Strong coffee* is a collocation; *powerful coffee* is not. Native speakers know which pairs work; collocation statistics let you detect them in a corpus.
+
+### Build sentence-level data
+
+Collocation needs a span — we'll use sentence boundaries:
+
+```{r collocs-sentences}
+alice_sentences <- paste(alice_raw, collapse = " ") |>
+  tokenize_sentences() |>
+  unlist() |>
+  stringr::str_replace_all("[^[:alnum:] ]", " ") |>
+  stringr::str_squish() |>
+  tolower()
+
+alice_sentences <- alice_sentences[nchar(alice_sentences) > 5]
+
+length(alice_sentences)
+head(alice_sentences, 3)
+```
+
+### Feature co-occurrence matrix
+
+```{r collocs-fcm}
+alice_fcm <- alice_sentences |>
+  tokens() |>
+  dfm() |>
+  fcm(tri = FALSE)
+```
+
+### Top collocates of a target word
+
+```{r collocs-top}
+# Extract alice's row from the FCM as a named numeric vector
+# (each element is the co-occurrence count with "alice" for that word)
+alice_row_vec <- as.matrix(alice_fcm["alice", ])[1, ]
+
+# Build a tibble: word + co-occurrence count; drop self; top 20
+top_colls <- tibble::tibble(
+  word = names(alice_row_vec),
+  cooc = as.numeric(alice_row_vec)
+) |>
+  dplyr::filter(word != "alice") |>
+  dplyr::arrange(dplyr::desc(cooc)) |>
+  head(20)
+
+top_colls
+```
+
+The semantic neighbourhood of "alice": actions she takes (said, thought, went), characters she meets (queen, king, cat), her description (poor, little).
+
+### Visualise as a network
+
+```{r collocs-network}
+# Restrict the fcm to alice + its top collocates
+coll_fcm <- alice_sentences |>
+  tokens() |>
+  dfm() |>
+  dfm_select(pattern = c("alice", top_colls$word)) |>
+  fcm(tri = FALSE)
+
+textplot_network(coll_fcm, min_freq = 0.5, edge_alpha = 0.5)
+```
+
+### Exercise 6.1 — network for your own target
+
+Pick a different target word in Alice and build its collocation network.
+
+```{r ex-6-1, eval=FALSE}
+target <- "___"
+
+# Extract your target's row from the FCM as a named numeric vector
+target_row_vec <- as.matrix(alice_fcm[___, ])[1, ]
+
+# Top 20 collocates (excluding the target itself)
+my_top <- tibble::tibble(
+  word = names(target_row_vec),
+  cooc = as.numeric(target_row_vec)
+) |>
+  dplyr::filter(word != ___) |>
+  dplyr::arrange(dplyr::desc(___)) |>
+  head(20)
+
+my_top
+
+# Build the FCM for your target + collocates
+my_fcm <- alice_sentences |>
+  tokens() |>
+  dfm() |>
+  dfm_select(pattern = c(target, my_top$word)) |>
+  fcm(tri = FALSE)
+
+textplot_network(my_fcm, min_freq = 0.5, edge_alpha = 0.5)
+```
+
+See **Solution 6.1** at the bottom.
+
+---
+
+## What you built today
+
+- Cleaned a transcript with `stringr`
+- Extracted structured information with regex
+- Loaded Alice, built a `quanteda` corpus, tokens, and dfm
+- Produced a KWIC concordance and sorted it to reveal patterns
+- Built a frequency list and dispersion plot
+- Visualised collocation as a network
+
+That's a corpus linguistics pipeline. The methods generalise directly to your own data.
+
+## What's coming on Day 3
+
+Three weeks from now: statistics and modelling. We'll cover the essentials of mixed-effects regression (linear and logistic) and conditional inference trees. The focus is application — fitting, interpreting, and reporting, not mathematical formalism.
+
+If you want to prep over Christmas, skim Chapter 7 (statistics) of the course book. Otherwise, rest well. See you on 8 January.
+
+---
+
+# Solutions
+
+## Solution 1.1 — clean a transcript
+
+```{r sol-1-1}
+transcript <- c(
+  "  SP01: Hello, how are you today?  ",
+  "SP02: Oh fine, fine. And you?",
+  "  sp01: can't complain really  ",
+  "SP03: Did you see the news?",
+  "SP02: Which news?   "
+)
+
+# Trim and uppercase
+cleaned <- transcript |>
+  str_trim() |>
+  str_replace_all("^(sp)(\\d+)", "SP\\2")
+
+# Alternative: use str_to_upper on the speaker tag only via replace
+cleaned <- transcript |>
+  str_trim() |>
+  str_replace("^(sp\\d+):", function(x) str_to_upper(x))
+
+# Simplest approach: just uppercase the whole string tag by regex replace
+cleaned <- transcript |>
+  str_trim() |>
+  str_replace_all("^(sp)(\\d+)", "SP\\2")
+
+# Split on ": "
+split_pairs <- str_split_fixed(cleaned, ": ", n = 2)
+
+tidy_transcript <- tibble::tibble(
+  speaker   = split_pairs[, 1],
+  utterance = split_pairs[, 2]
+)
+
+tidy_transcript
+```
+
+**What to look for:** Four rows, each with a `SP0N` speaker tag (all upper case) and the matching utterance. The `sp01` entry in row 3 should now be `SP01`. ; the already-uppercase tags pass through the replacement unchanged because `^(sp)(\\d+)` is case-sensitive by default.
+
+## Solution 2.1 — extract patterns
+
+```{r sol-2-1}
+sample <- c(
+  "The meeting is on 2026-12-19 at 09:00.",
+  "Email m.schweinberger@uq.edu.au before 2026-11-30.",
+  "Call +49-89-2180-5555 or +61-7-3365-1111.",
+  "Our paper (Smith et al., 2023) argues the opposite.",
+  "In 1994, Chomsky wrote that linguistics..."
+)
+
+# 1. Dates in YYYY-MM-DD
+str_extract_all(sample, "\\d{4}-\\d{2}-\\d{2}") |> unlist()
+
+# 2. Four-digit years
+str_extract_all(sample, "\\b\\d{4}\\b") |> unlist()
+
+# 3. Phone numbers
+str_extract_all(sample, "\\+\\d{1,3}-\\d{1,3}-\\d{3,4}-\\d{3,4}") |> unlist()
+
+# 4. Replace emails
+str_replace_all(sample, "[a-z.]+@[a-z.]+\\.[a-z]+", "[REDACTED]")
+```
+
+**What to look for:** The date pattern catches both dates. The year pattern catches 2023 and 1994 but also the date-embedded years — that's fine since `\\b` word boundaries make the extraction correct. The phone pattern matches both numbers. Emails disappear in the replace output.
+
+## Solution 4.1 — concordance
+
+```{r sol-4-1}
+my_target <- "queen"
+
+kwic_mine <- kwic(alice_tokens, pattern = my_target, window = 5)
+nrow(kwic_mine)
+
+sorted <- kwic_mine |>
+  as.data.frame() |>
+  dplyr::mutate(R1 = stringr::word(post, 1)) |>
+  dplyr::arrange(R1)
+
+sorted |>
+  dplyr::count(R1, sort = TRUE) |>
+  head(5)
+```
+
+**What to look for:** The count tells you how many times your word appears. The sorted table lets you see patterns in what follows it. For "queen", you'd expect to see words like "said", "of" (as in "Queen of Hearts"), and action verbs — reflecting the character's dialogue-heavy and dynamic role in the book.
+
+## Solution 5.1 — dispersion of a word
+
+```{r sol-5-1}
+my_word <- "rabbit"
+
+dispersion_mine <- data.frame(
+  chapter   = seq_along(alice_chapters),
+  n_mine    = stringr::str_count(alice_chapters, paste0("\\b", my_word, "\\b")),
+  n_words   = stringr::str_count(alice_chapters, "\\S+")
+) |>
+  dplyr::mutate(per1k = n_mine / n_words * 1000) |>
+  dplyr::filter(n_words > 50)
+
+plot_disp <- ggplot(dispersion_mine, aes(x = chapter, y = per1k)) +
+  geom_line(colour = "darkgreen") +
+  geom_point(colour = "darkgreen", size = 2) +
+  labs(
+    title = paste0("Dispersion of '", my_word, "' across Alice's chapters"),
+    x     = "Chapter",
+    y     = "Frequency per 1,000 words"
+  ) +
+  theme_bw()
+
+plot_disp
+
+dir.create(here::here("figures"), showWarnings = FALSE)
+ggsave(
+  plot     = plot_disp,
+  filename = here::here("figures", paste0("dispersion-", my_word, ".png")),
+  width    = 7,
+  height   = 4.5,
+  dpi      = 300
+)
+```
+
+**What to look for:** Peaks in the plot show chapters where the word is concentrated. For "rabbit", you'd expect strong peaks in the early chapters (down the rabbit hole) and perhaps around the Rabbit's house episode. This is more diagnostic than total frequency.
+
+## Solution 6.1 — collocation network
+
+```{r sol-6-1}
+target <- "rabbit"
+
+# Extract the row from the FCM as a named vector
+target_row_vec <- as.matrix(alice_fcm[target, ])[1, ]
+
+# Build the top 20 collocates
+my_top <- tibble::tibble(
+  word = names(target_row_vec),
+  cooc = as.numeric(target_row_vec)
+) |>
+  dplyr::filter(word != target) |>
+  dplyr::arrange(dplyr::desc(cooc)) |>
+  head(20)
+
+my_top
+
+my_fcm <- alice_sentences |>
+  tokens() |>
+  dfm() |>
+  dfm_select(pattern = c(target, my_top$word)) |>
+  fcm(tri = FALSE)
+
+textplot_network(my_fcm, min_freq = 0.5, edge_alpha = 0.5)
+```
+
+**What to look for:** The network should show "rabbit" connected to its semantic neighbours. For "rabbit", you'd expect to see "white", "little", "house", "hole", "mr", and action verbs — the lexical environment of the White Rabbit character.
+
+The `filter(word != target)` line drops the target word from its own collocate list — otherwise the strongest self-co-occurrence would always dominate. Change the value of `target` at the top and the rest of the pipeline follows automatically.
+
+---
+
+## Where next
+
+Day 3 is three weeks away — 08 January 2027. Bring your laptop, your GitHub repo, and (if you had time) a look at Chapter 7 of the book.

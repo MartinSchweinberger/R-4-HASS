@@ -1,0 +1,616 @@
+---
+title: "Day 4 — Reproducible publishing"
+subtitle: "R-4-HASS Workshop · LMU Blockseminar"
+date: "2027-01-09"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-tools: true
+    code-copy: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+Welcome to the final day. The arc of today: by lunch you'll have written your own Quarto document. By mid-afternoon it'll render. By end of day it'll be online at a public URL.
+
+That URL is the Prüfungsleistung template for most tracks. The content of your submission is your own research; the technical infrastructure is what you build today.
+
+::: {.callout-note}
+## A note on today's workbook
+
+This workbook is itself a Quarto document. You're reading it to learn how to make one of your own. For clarity, I'll refer to:
+
+- **this workbook** — the file you're reading now (`day4.qmd` in `workshop/`)
+- **your document** — the new Quarto document you'll build today (`index.qmd` in your project root)
+
+They're different files. Don't edit this workbook — edit your own document.
+:::
+
+## Before we start
+
+You need the following files on your laptop in the R-4-HASS project:
+
+- Your existing `R-4-HASS` project from Day 1, with Git set up
+- `alice.rda` in your `data/` folder (from Day 2; we'll reuse it)
+- A working Quarto installation (`quarto --version` in the Terminal should return a version number)
+
+Packages used today:
+
+```{r install-day4, eval=FALSE}
+install.packages(c("tidyverse", "here", "quanteda",
+                   "quanteda.textstats", "flextable"))
+```
+
+Load:
+
+```{r load-day4}
+library(dplyr)
+library(ggplot2)
+library(flextable)
+library(here)
+library(quanteda)
+library(quanteda.textstats)
+```
+
+---
+
+## §1. Quarto basics
+
+Sixty minutes. The goal is to have a working Quarto project with `_quarto.yml` and an `index.qmd` that renders to HTML.
+
+### What Quarto is
+
+**Quarto** is the next-generation R Markdown. It takes a `.qmd` file (narrative + code) and renders it to HTML, PDF, Word, EPUB, or a website.
+
+Two levels of Quarto setup:
+
+- **A Quarto document** — one `.qmd` file. Good for a single report.
+- **A Quarto project** — a folder with a `_quarto.yml` config + one or more `.qmd` files. Needed for websites, books, or when you want control over output location.
+
+You'll build a Quarto project today, because you're making a website.
+
+### The `.qmd` file structure
+
+A `.qmd` file has three parts:
+
+1. **YAML header** (title, author, format options) — between `---` lines at the top
+2. **Markdown narrative** (headings, text, lists)
+3. **Code chunks** (R code that runs when you render)
+
+### Create your Quarto project
+
+In your `R-4-HASS` project folder, create a new file called `_quarto.yml`. **This is YOUR project file, not this workbook.** Paste in:
+
+```{yaml}
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: "My R-4-HASS Portfolio"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+```
+
+Save it in the **project root** of R-4-HASS (not in `scripts/`, not in `data/`).
+
+Now create a new Quarto document:
+
+- **File → New File → Quarto Document**
+- Title: "Alice in Wonderland — a corpus analysis"
+- Save as **`index.qmd`** in the project root
+
+Delete the template content below the YAML and add a one-sentence intro.
+
+### Render for the first time
+
+Click the **Render** button (the blue arrow at the top of the editor). First render takes 10-20 seconds. A preview should open.
+
+### Try a full example
+
+Replace the content of your `index.qmd` with this scaffold:
+
+```{markdown}
+---
+title: "Alice in Wonderland: a corpus analysis"
+author: "Your Name"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+---
+
+# Introduction
+
+Lewis Carroll's *Alice's Adventures in Wonderland* (1865) is a classic of
+children's literature. In this document I apply simple corpus-analytic
+methods to the text.
+
+# Methods
+
+```{r setup}
+#| message: false
+#| warning: false
+
+library(quanteda)
+library(quanteda.textstats)
+library(dplyr)
+library(ggplot2)
+library(here)
+
+alice_raw <- readRDS(here::here("data", "alice.rda"))
+```
+
+The text was split into chapters, tokenised, and English stopwords were
+removed before frequency analysis.
+
+```{r prepare}
+alice_corpus <- corpus(paste(alice_raw, collapse = " "))
+alice_tokens <- tokens(alice_corpus,
+                       remove_punct   = TRUE,
+                       remove_numbers = TRUE) |>
+  tokens_remove(stopwords("english"))
+alice_dfm <- dfm(alice_tokens)
+```
+
+# Results
+
+The top 15 content words in Alice are shown in @fig-freq.
+
+```{r}
+#| label: fig-freq
+#| fig-cap: "Fifteen most frequent content words in Alice."
+#| echo: false
+
+freq <- textstat_frequency(alice_dfm) |>
+  as.data.frame() |>
+  head(15)
+
+ggplot(freq, aes(x = reorder(feature, frequency), y = frequency)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(x = NULL, y = "Frequency") +
+  theme_bw()
+```
+
+# Discussion
+
+The predominance of character names (*alice*, *queen*, *king*) and
+dialogue markers (*said*, *thought*) reflects the novel's narrative
+style.
+```
+
+Render again. You should see a formatted HTML page with your intro, methods code, a figure with a caption, and a short discussion.
+
+### The chunk-option syntax
+
+The `#|` syntax inside a code chunk sets options:
+
+- `#| label: fig-freq` — gives the chunk a name, used for cross-references
+- `#| fig-cap: "..."` — caption for the figure
+- `#| echo: false` — hide the code, show only the output
+- `#| message: false` / `#| warning: false` — suppress package load noise
+
+### Exercise 1.1 — personalise your document
+
+Change the YAML header and content so the document feels like yours.
+
+The exercise work happens in **your `index.qmd`**, not in this workbook. Here's a prompt to work through:
+
+```{r ex-1-1, eval=FALSE}
+# Not executable code — these are things to do in your index.qmd:
+
+# 1. Change the title in YAML to something relevant to you
+# 2. Set author: to your actual name
+# 3. Write a 2-3 sentence Introduction section
+# 4. Keep the Methods and Results code chunks
+# 5. Write a 2-3 sentence Discussion in your own words
+# 6. Render and check it looks right
+```
+
+See **Solution 1.1** at the bottom.
+
+---
+
+## §2. Writing an analytical document
+
+Seventy-five minutes. The goal is a complete short analytical document with figures, tables, cross-references, and citations.
+
+### Structure of an analytical document
+
+Minimal structure that works for any Prüfungsleistung submission:
+
+- **Introduction** — 1–2 paragraphs stating the question
+- **Methods** — 1 paragraph + code chunks
+- **Results** — 1–2 figures + 1 table with code
+- **Discussion** — 1 paragraph of interpretation
+
+### Add a table with flextable
+
+Append this to your document's Results section:
+
+```{markdown}
+## A table of top content words
+
+As shown in @tbl-top10, three names dominate the vocabulary of Alice.
+
+```{r}
+#| label: tbl-top10
+#| tbl-cap: "Top 10 content words in Alice."
+#| echo: false
+
+freq |>
+  head(10) |>
+  dplyr::select(feature, frequency, rank) |>
+  flextable::flextable() |>
+  flextable::set_table_properties(width = .5, layout = "autofit") |>
+  flextable::theme_zebra()
+```
+```
+
+Render. The table should appear with a caption and be cross-referenceable.
+
+### Cross-references in prose
+
+Use `@fig-NAME`, `@tbl-NAME`, `@sec-NAME` to reference labelled elements. Quarto fills in the number automatically:
+
+```{markdown}
+As @tbl-top10 shows, *alice* and *said* dominate.
+@fig-freq visualises the same distribution.
+```
+
+### Callouts
+
+Add a styled note box:
+
+```{markdown}
+::: {.callout-note}
+Note that stopwords have been removed; function words like *the* and
+*and* would otherwise dominate the top of the list.
+:::
+```
+
+Variants: `callout-tip`, `callout-warning`, `callout-important`, `callout-caution`.
+
+### Citations (optional)
+
+If you want proper citations, create a `references.bib` file in your project root and add it to the YAML:
+
+```{yaml}
+bibliography: references.bib
+```
+
+Then cite in prose with `@key`:
+
+```{markdown}
+The analysis follows standard corpus-linguistic practice [@baker2006].
+```
+
+### Exercise 2.1 — flesh out your document
+
+```{r ex-2-1, eval=FALSE}
+# Not executable code — things to do in your index.qmd:
+
+# 1. Add at least one figure with a cross-reference
+# 2. Add at least one table with a cross-reference
+# 3. Add a callout box (any type)
+# 4. Write 2-3 sentences of Discussion that reference the figure or table
+# 5. Render. Verify everything appears with its numbers and captions.
+```
+
+See **Solution 2.1** at the bottom.
+
+---
+
+## §3. Rendering and output formats
+
+Fifty minutes. The goal is to render your document to HTML (reliable) and understand how to render to PDF (optional, fragile).
+
+### Where the rendered output goes
+
+Because of `output-dir: docs` in your `_quarto.yml`, Quarto puts rendered files in `docs/`, not in the project root. Check your Files pane after rendering — `docs/` should contain `index.html` and a `site_libs/` folder with CSS and JavaScript.
+
+### Render from the Terminal
+
+```{bash, eval=FALSE}
+# In the Terminal tab:
+quarto render                       # render whole project
+quarto render index.qmd             # render one file
+quarto render index.qmd --to html   # explicit format
+```
+
+### Add a PDF format
+
+In your `index.qmd` YAML, add:
+
+```{yaml}
+format:
+  html:
+    theme: cosmo
+    toc: true
+  pdf:
+    documentclass: article
+```
+
+Then render to PDF:
+
+```{bash, eval=FALSE}
+quarto render index.qmd --to pdf
+```
+
+PDF rendering needs LaTeX. If you get LaTeX errors, install `tinytex`:
+
+```{r install-tinytex, eval=FALSE}
+install.packages("tinytex")
+tinytex::install_tinytex()
+```
+
+Then retry.
+
+### For the Prüfungsleistung
+
+HTML is almost certainly what you want. It's what GitHub Pages serves, renders interactive content, and never fails to build. PDF is nice for printing and for traditionalist readers but is slower and more fragile.
+
+### Exercise 3.1 — render to multiple formats
+
+```{r ex-3-1, eval=FALSE}
+# Not executable code — things to do with your document:
+
+# 1. Render to HTML (should work)
+# 2. Open docs/index.html in a browser — looks right?
+# 3. Try rendering to PDF via Terminal
+# 4. If PDF fails: install tinytex and try again, or skip PDF
+# 5. Add code-fold: true to the YAML html block and render again
+#    (Students see what this does when the HTML opens)
+```
+
+See **Solution 3.1** at the bottom.
+
+---
+
+## §4. Publishing to GitHub Pages
+
+Ninety minutes. This is the day's payoff. By end of §4 you have a public URL at `https://YOUR_USERNAME.github.io/R-4-HASS/`.
+
+### What we're doing conceptually
+
+**GitHub Pages** is a free static hosting service built into GitHub. Push HTML to a configured folder; GitHub serves it as a website.
+
+Two things need to happen:
+
+1. The rendered HTML lives in `docs/` (you did this in §3)
+2. GitHub Pages is enabled in the repo settings, pointing at `docs/` on the `main` branch
+
+Plus one extra file: `.nojekyll`. An empty file that tells GitHub "don't process these files with Jekyll" (its default static-site generator, which breaks Quarto output).
+
+### Create `.nojekyll`
+
+In RStudio's Terminal:
+
+```{bash, eval=FALSE}
+touch .nojekyll
+```
+
+On Windows, if `touch` doesn't work: File → New File → Text File, save as `.nojekyll` with nothing in it.
+
+### Check `.gitignore`
+
+Open `.gitignore` in your project root. If `docs/` or `/docs/` is listed, delete that line and save. GitHub Pages can't serve what isn't in the repo.
+
+### Commit everything
+
+In RStudio's Git tab:
+
+1. Tick `_quarto.yml`, `index.qmd`, `.nojekyll`, `.gitignore`, and the whole `docs/` folder
+2. Commit message: "Set up Quarto site for publishing"
+3. Push
+
+Verify on GitHub that your repo now shows `docs/` with `index.html` inside.
+
+### Enable GitHub Pages
+
+In your browser, go to your repo settings:
+
+1. Go to `https://github.com/YOUR_USERNAME/R-4-HASS`
+2. Click **Settings** (top right of the repo)
+3. In the left sidebar, click **Pages**
+4. Under "Build and deployment":
+   - **Source:** *Deploy from a branch*
+   - **Branch:** `main`
+   - **Folder:** `/docs`
+5. Click **Save**
+
+### Wait
+
+GitHub takes 1–3 minutes to build for the first time. The Pages settings page will show a URL and a status.
+
+### Visit your site
+
+Your URL is:
+
+`https://YOUR_USERNAME.github.io/R-4-HASS/`
+
+If you see a 404: wait another minute. If still 404 after 5 minutes: refresh the Settings → Pages page and check the status.
+
+### Make a change and re-publish
+
+Edit `index.qmd` (fix a typo, improve a sentence). Render. Commit. Push. Refresh your live URL after a minute — the change should appear.
+
+That's the full publishing cycle. You'll do this dozens of times during the Prüfungsleistung work.
+
+### Exercise 4.1 — get live
+
+```{r ex-4-1, eval=FALSE}
+# Not executable code — things to do with your repo:
+
+# 1. Verify .nojekyll exists
+# 2. Verify docs/index.html exists
+# 3. Verify everything is pushed to GitHub
+# 4. Enable Pages (per steps above)
+# 5. Wait for your URL to go live
+# 6. When live, make a small edit, re-render, re-push
+# 7. Verify the edit appears on the live URL within 1 minute
+```
+
+See **Solution 4.1** at the bottom.
+
+---
+
+## §5. Making it yours
+
+Forty-five minutes. The goal is to personalise your site with a theme, custom titles, and (optionally) a favicon. It should feel like YOURS, not like a template.
+
+### Quarto themes
+
+Quarto ships with 25+ built-in Bootstrap themes. Change one YAML line, re-render, new look. The browsable list: <https://quarto.org/docs/output-formats/html-themes.html>.
+
+In your `_quarto.yml`, under `format: html:`, try changing `theme`:
+
+```{yaml}
+format:
+  html:
+    theme: cosmo        # replace with: cerulean, journal, flatly,
+                        # litera, lumen, lux, sandstone, simplex,
+                        # yeti, cosmo, united, pulse, sketchy
+    toc: true
+```
+
+### Add dark mode
+
+```{yaml}
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    toc: true
+```
+
+A theme toggle appears in the top-right of your rendered page.
+
+### Code folding
+
+Readers who don't care about code can hide it; readers who do can expand it:
+
+```{yaml}
+format:
+  html:
+    code-fold: true
+    code-tools: true
+```
+
+### Favicon
+
+In your project root, place a `favicon.png` (32×32 or 64×64 pixels). Add to `_quarto.yml`:
+
+```{yaml}
+website:
+  title: "My R-4-HASS Portfolio"
+  favicon: favicon.png
+```
+
+A free favicon generator: <https://favicon.io/>.
+
+### Exercise 5.1 — personalise your site
+
+```{r ex-5-1, eval=FALSE}
+# Not executable code — things to do in your _quarto.yml:
+
+# 1. Pick a theme from the Quarto themes gallery
+# 2. (Optional) Add a dark theme
+# 3. Add code-fold: true so code starts hidden
+# 4. Change the site title to something that reflects your interests
+# 5. (Optional) Add a favicon
+# 6. Render, commit, push
+# 7. Refresh your live URL — admire
+```
+
+See **Solution 5.1** at the bottom.
+
+---
+
+## What you built today
+
+Across four days:
+
+- Day 1: Project setup, Git, data wrangling, visualisation
+- Day 2: Text analytics — strings, regex, quanteda
+- Day 3: Statistical modelling — mixed-effects and conditional inference trees
+- Day 4: Quarto and GitHub Pages — a live, public, reproducible document
+
+That's a complete reproducible research toolchain. You will not retain all of it. You WILL retain more than you think, and when you need something back, the book and these workbooks are here.
+
+## The Prüfungsleistung
+
+The deadline is **31 March 2027**. The document you built today is the shell. Over the next three months, you fill it with your own data and analysis.
+
+My advice: start soon. Commit often. When stuck, email with `LMU` at the start of the subject line.
+
+## Farewell
+
+Thank you for four days of attention and effort. I'm looking forward to seeing what you build. See you on GitHub.
+
+---
+
+# Solutions
+
+## Solution 1.1 — personalised document
+
+The solution is your own `index.qmd` with your name, your title, and your writing. There's no single correct answer. What to check:
+
+- **YAML renders without errors.** If you get a parse error, check for tab characters — YAML needs 2-space indentation, no tabs.
+- **Title appears at the top of the rendered HTML.** If it doesn't, the YAML header isn't being read.
+- **Code chunks execute.** If a chunk errors out on render, the whole render fails. Debug by running the chunk interactively first.
+
+## Solution 2.1 — document with figures, tables, callouts
+
+The solution is your own filled-out `index.qmd`. What to check:
+
+- **Figure appears with a number and caption.** If the number is missing, the chunk label probably doesn't start with `fig-`. Must be `label: fig-SOMETHING`.
+- **Table appears with a number and caption.** Same — label must start with `tbl-`.
+- **Cross-references in prose work.** `@fig-freq` should render as "Figure 1" or similar. If it renders literally as "@fig-freq", the label is misspelled or missing.
+- **Callout appears as a styled box.** If it appears as plain text with `:::` around it, the syntax is wrong.
+
+## Solution 3.1 — rendering formats
+
+The solution is successful renders on your laptop. What to check:
+
+- **HTML render works.** `docs/index.html` exists after render.
+- **PDF render may or may not work.** If it does, you have `tinytex` installed and working. If it doesn't, HTML-only is fine for the Prüfungsleistung.
+- **`code-fold: true` collapses code chunks** behind a "Code" expand button in the rendered HTML.
+
+## Solution 4.1 — publish
+
+The solution is a working public URL. What to check:
+
+- **The URL `https://YOUR_USERNAME.github.io/R-4-HASS/` loads your document.**
+- **It is styled** (CSS loaded). If the page is plain unstyled HTML, `.nojekyll` is missing.
+- **Figures appear.** If figures are broken, `docs/index_files/` wasn't pushed to the repo.
+- **Changes propagate within a minute of pushing.** Re-renders after the first are fast.
+
+## Solution 5.1 — personalise
+
+The solution is your own themed site. What to check:
+
+- **Theme has visibly changed.** If it hasn't, the YAML change wasn't saved, or you haven't re-rendered, or you haven't pushed.
+- **Code-fold works.** Code chunks in the rendered HTML should have a "Code" button that expands them.
+- **Favicon (if added) appears in the browser tab.** May need a hard-refresh to see.
+
+---
+
+## Where next
+
+Your Prüfungsleistung deadline: **31 March 2027**. The next time I hear from you will probably be your submission or a question en route to it. Both are welcome.
+
+Goodbye, and good luck.

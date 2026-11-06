@@ -1,0 +1,48 @@
+---
+title: "R-4-HASS Workshop"
+subtitle: "Quantitative and Reproducible Research with R in the Humanities"
+author: "Martin Schweinberger"
+---
+
+Welcome. These four workbooks are the primary documents you'll use during the Blockseminar. Each day has its own workbook — a Quarto document you read, follow, and type alongside on your own laptop.
+
+The workbooks are a **companion** to the course book (linked at the top right). The book goes deeper on every topic; the workbooks keep you moving through the workshop with just enough explanation to understand what you're doing and why.
+
+## The four days
+
+| Day   | Date         | Workbook                 | Focus                                            |
+|-------|--------------|--------------------------|--------------------------------------------------|
+| Day 1 | Fri 18 Dec   | [Day 1](day1.qmd)        | Foundations — RStudio, Git, data, `dplyr`, `ggplot2` |
+| Day 2 | Sat 19 Dec   | [Day 2](day2.qmd)        | Text analytics                                    |
+| Day 3 | Fri 8 Jan    | [Day 3](day3.qmd)        | Statistics and modelling                          |
+| Day 4 | Sat 9 Jan    | [Day 4](day4.qmd)        | Reproducible publishing                           |
+
+## How the workbooks work
+
+Each workbook has:
+
+- **A short intro** — what today is about and what you'll have built by the end
+- **Numbered sections** (§1, §2, …) — each with a narrative walkthrough and executable code
+- **Exercises at the end of each section** — starter code with gaps for you to fill in
+- **A solutions section at the end** — complete worked solutions, numbered to match the exercises
+
+The exercises are marked `eval: false` so the workbook renders cleanly even if you haven't filled in the gaps yet. When you complete an exercise, change the chunk option to `eval: true` and re-render to see your output.
+
+## Rendering the workbook
+
+To render a workbook yourself:
+
+1. Make sure you have the required packages installed (see each day's setup section)
+2. Make sure the required data files are in your project's `data/` folder
+3. Open the `.qmd` file in RStudio
+4. Click the **Render** button at the top of the editor
+
+The rendered HTML sits next to the source file. You can open it in a browser, or just use RStudio's preview pane.
+
+## If you get stuck
+
+- **During the Blockseminar:** raise your hand
+- **Between sessions:** email the instructor with `LMU` at the start of the subject line
+- **Where to look first:** the relevant chapter in the course book, then Stack Overflow
+
+Good luck. You've got this.

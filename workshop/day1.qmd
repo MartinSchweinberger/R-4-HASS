@@ -1,0 +1,749 @@
+---
+title: "Day 1 — Foundations"
+subtitle: "R-4-HASS Workshop · LMU Blockseminar"
+date: "2026-12-18"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-tools: true
+    code-copy: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+Welcome to Day 1. We're going to spend today setting up your working environment, getting you onto GitHub, and giving you your first hands-on experience of a full data analysis workflow in R. By the end of the day you'll have:
+
+- A working R project called `R-4-HASS` with a sensible folder structure
+- A public GitHub repository connected to your local project
+- A historical linguistic dataset loaded, cleaned, and summarised
+- A publication-ready figure saved to disk and pushed to GitHub
+
+That's four hours of hands-on work in roughly six hours of workshop time. The pace is brisk but manageable — if you get stuck, raise your hand.
+
+## What you need before we start
+
+The pre-course email asked you to install R, RStudio, Quarto, Git, and to create a GitHub account. If you haven't, do that first — flag it now if you're behind. We also need some data files on your laptop. The USB sticks going round contain:
+
+- `testdat.xlsx`, `testdat.rda`, `testdat.txt` — small files for practising data import
+- `pvd.rda` — the main linguistic dataset we'll work with today
+
+Keep these handy; you'll copy them into your project in §3.
+
+---
+
+## §1. RStudio, projects, packages
+
+The first 60 minutes. The goal is that you can navigate RStudio, understand what an R project is, and have the core tidyverse packages loaded and working.
+
+### RStudio in 90 seconds
+
+RStudio is the dashboard; R is the engine. The window you see has four panes:
+
+- **Top-left:** the script editor, where you write code
+- **Bottom-left:** the console, where code runs and output appears
+- **Top-right:** the Environment pane, showing objects you've created
+- **Bottom-right:** Files, Plots, Help, Packages
+
+You'll spend most of your time in the script editor and the console.
+
+### Create your project
+
+An **R project** is a self-contained working directory. One project per piece of work. The `.Rproj` file sets the working directory automatically, so you never need `setwd()`.
+
+In RStudio:
+
+1. **File → New Project → New Directory**
+2. Choose **New Project** as the project type
+3. Name it `R-4-HASS`
+4. Save it somewhere memorable — your `Documents` folder is fine
+5. Click **Create Project**
+
+You should now see `R-4-HASS.Rproj` in the Files pane and your window title should read `R-4-HASS - RStudio`.
+
+### Add folders and a script
+
+In the Files pane, click **New Folder** and create three folders: `scripts`, `data`, and `figures`. Then: **File → New File → R Script**, save as `scripts/day1.R`.
+
+Type this on the first line:
+
+```r
+1 + 1
+```
+
+Place your cursor on that line and press **Ctrl/Cmd + Enter** to run it. The console should print `[1] 2`.
+
+### Load the core packages
+
+The pre-course email asked you to install four packages: `tidyverse`, `here`, `readxl`, `flextable`. If you haven't, run this now (then comment it out — you only install once per machine):
+
+```{r install-core, eval=FALSE}
+install.packages(c("tidyverse", "here", "readxl", "flextable"))
+```
+
+Now load them. Add this to your `day1.R` script:
+
+```{r load-core}
+library(tidyverse)   # dplyr, ggplot2, readr, tidyr, stringr, forcats, purrr, tibble
+library(here)        # robust file paths
+library(readxl)      # Excel files
+library(flextable)   # nice tables for reports
+```
+
+The `tidyverse` package is a bundle — one call loads eight packages at once. You'll use all of them today.
+
+### Check where you are
+
+`here::here()` tells you where your project root is. This is the key to writing scripts that work on anyone's machine:
+
+```{r here-check}
+here::here()
+here::here("scripts")
+here::here("data")
+```
+
+The `::` syntax means "this function from this package". It's explicit and useful when two packages have the same function name.
+
+### Exercise 1.1 — folder paths
+
+Confirm that your project has the three folders you just created, and that `here::here()` resolves to their full paths.
+
+```{r ex-1-1, eval=FALSE}
+# Print the full paths to data/, figures/, and scripts/
+# Fill in the ___ with the folder name as a string
+
+here::here("___")
+here::here("___")
+here::here("___")
+```
+
+See **Solution 1.1** at the bottom of this workbook.
+
+---
+
+## §2. Git & GitHub
+
+Now the trickiest section of Day 1. We're going to connect your local R project to a public GitHub repository. By the end of this section you'll have pushed your project to GitHub and made a second commit from RStudio.
+
+### What's happening conceptually
+
+**Git** is a tool on your laptop that tracks changes to files. **GitHub** is a website that stores Git repositories online. They're not the same thing — Git works without GitHub, and GitHub without Git is just file storage.
+
+A **commit** is a snapshot of your project at a point in time, with a message explaining what changed. A **push** sends your commits to GitHub. A **pull** brings down other people's commits.
+
+Authentication uses a **Personal Access Token (PAT)** instead of your password. PATs are more secure and are shown to you only once — write it down somewhere until Git stores it for you.
+
+### Verify Git works
+
+Open the Terminal tab in RStudio (**Tools → Terminal → New Terminal**) and type:
+
+```bash
+git --version
+```
+
+You should see something like `git version 2.43.0`. If you see `command not found`, Git isn't installed properly — raise your hand.
+
+### Tell Git who you are
+
+In the Terminal:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your-email@example.com"
+```
+
+Use the email address you used to sign up for GitHub.
+
+### Create an empty GitHub repository
+
+In your browser:
+
+1. Go to [github.com](https://github.com/) and sign in
+2. Click **New** (green button, top-left)
+3. Repository name: `R-4-HASS`
+4. **Public**
+5. **Do not** add a README, .gitignore, or license — we have one locally
+6. Click **Create repository**
+
+Keep that page open — we'll copy the URL from it in a moment.
+
+### Generate a Personal Access Token
+
+Still in your browser:
+
+1. Click your profile picture → **Settings**
+2. Scroll down the sidebar → **Developer settings**
+3. **Personal access tokens** → **Tokens (classic)**
+4. **Generate new token** → **Generate new token (classic)**
+5. Note: `R-4-HASS laptop`
+6. Expiration: 90 days
+7. Scopes: tick **repo** (the whole top block)
+8. **Generate token**
+9. **Copy the token immediately — it's shown only once**. Paste it into a text file as a backup.
+
+### Push your project
+
+Back in RStudio's Terminal, inside your `R-4-HASS` project folder:
+
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/R-4-HASS.git
+git push -u origin main
+```
+
+Replace `YOUR_USERNAME` with your actual GitHub username.
+
+When prompted:
+
+- **Username:** your GitHub username
+- **Password:** paste the PAT (NOT your GitHub login password)
+
+Your OS credential manager will store the PAT. You should only need to paste it once.
+
+Refresh the GitHub repository page in your browser. Your files should be there.
+
+### Exercise 2.1 — make a change and push
+
+This exercise doesn't have a code solution — you work through it with the Git tab in RStudio. The steps:
+
+1. Open `scripts/day1.R` in RStudio
+2. Add a comment at the top: `# Day 1 — my first commit from RStudio`
+3. Save the file
+4. Click the **Git** tab in the top-right pane
+
+If there's no Git tab: **Tools → Project Options → Git/SVN**, set version control to Git, restart RStudio.
+
+5. Tick the box next to `day1.R` under "Staged"
+6. Click **Commit**. In the message box: `Add header comment`. Click **Commit** again.
+7. Click **Push** (green up arrow)
+8. Refresh your GitHub repo page in the browser — the change should be visible
+
+That's the full Git cycle. You'll repeat it dozens of times during the course and the Prüfungsleistung.
+
+---
+
+## §3. Data in R — types and import
+
+After lunch. The goal is to get real linguistic data into R and understand its structure.
+
+### Data types in R
+
+R has a few basic data types you'll see constantly:
+
+- **Vectors** — sequences of values: `c(1, 2, 3)` or `c("a", "b", "c")`
+- **Factors** — vectors where each value is one of a set of levels. Useful for categorical variables (Genre, Region, Period)
+- **Data frames** — tables where each column is a vector of the same length
+- **Tibbles** — the tidyverse version of data frames. Better print output, fewer surprises
+
+A tibble is what you'll usually work with.
+
+### Build a tibble by hand
+
+Try this in your script:
+
+```{r demo-tibble}
+speakers <- tibble::tibble(
+  speaker  = c("S01", "S02", "S03", "S04", "S05"),
+  age      = c(23, 45, 67, 34, 29),
+  register = c("spoken", "written", "spoken", "spoken", "written"),
+  tokens   = c(1203, 847, 2104, 1567, 923)
+)
+
+speakers
+```
+
+Four inspection functions you'll use constantly:
+
+```{r demo-inspect}
+str(speakers)
+dplyr::glimpse(speakers)
+summary(speakers)
+head(speakers, 3)
+```
+
+What happens if you type `speakers$register`? Try it. That's how you grab one column of a tibble.
+
+### Import data from files
+
+Copy the `testdat.xlsx`, `testdat.rda`, `testdat.txt`, and `pvd.rda` files from the USB stick into your `data/` folder.
+
+Start with Excel — common in humanities research:
+
+```{r import-xlsx}
+testdat_xlsx <- readxl::read_excel(here::here("data", "testdat.xlsx"))
+dplyr::glimpse(testdat_xlsx)
+```
+
+Two columns, `Variable1` and `Variable2`. Minimal data — this file exists to demonstrate the import mechanics.
+
+Now R's native binary format:
+
+```{r import-rda}
+testdat_rda <- base::readRDS(here::here("data", "testdat.rda"))
+dplyr::glimpse(testdat_rda)
+```
+
+`.rda` is R's own format — fastest to read, but R-only. You'll use this for intermediate data you save and come back to in R.
+
+### Always inspect text files first
+
+For text files, you need to know the delimiter before you can import them correctly. Check the raw content first:
+
+```{r inspect-txt}
+readLines(here::here("data", "testdat.txt"), n = 3)
+```
+
+Based on what you see — tabs, commas, semicolons — pick the appropriate reader. For tab-separated:
+
+```{r import-txt}
+testdat_txt <- readr::read_tsv(here::here("data", "testdat.txt"))
+dplyr::glimpse(testdat_txt)
+```
+
+If the delimiter is something else, use `read_delim()` with an explicit `delim` argument — for example:
+
+```{r import-delim-example, eval=FALSE}
+# For a semicolon-separated file:
+readr::read_delim(here::here("data", "some_file.txt"), delim = ";")
+```
+
+Lesson: inspect first, trust later. File extensions are a convention, not a contract.
+
+### Load the real data
+
+Now the main dataset for the rest of today — `pvd.rda`, the Penn Parsed Corpora of Historical English preposition data:
+
+```{r load-pvd}
+pdat <- base::readRDS(here::here("data", "pvd.rda"))
+dplyr::glimpse(pdat)
+```
+
+What you have:
+
+- `Date` — the year the text was written (1500s–1913)
+- `Genre` — detailed genre label
+- `Text` — individual text name
+- `Prepositions` — relative frequency of prepositions
+- `Region` — regional origin
+- `GenreRedux` — collapsed genre categories
+- `DateRedux` — bucketed period (1500-1599, 1600-1699, 1700-1799, 1800-1913)
+
+`Prepositions` is a relative frequency, not a raw count. Values will be small (around 0.1–0.2), not in the hundreds.
+
+### Factorise the categorical columns
+
+Factors make R more explicit about which values are allowed and in what order. Convert the character columns in one go:
+
+```{r factorise}
+pdat <- pdat |>
+  dplyr::mutate(across(
+    c(Genre, Text, Region, GenreRedux, DateRedux),
+    factor
+  ))
+
+dplyr::glimpse(pdat)
+levels(pdat$GenreRedux)
+levels(pdat$DateRedux)
+```
+
+`across()` applies the same transformation to several columns at once. Much shorter than repeating `mutate(Genre = factor(Genre))` for every column.
+
+### Exercise 3.1 — inspect pdat
+
+Fill in the gaps to answer five questions about `pdat`.
+
+```{r ex-3-1, eval=FALSE}
+# 1. How many rows and columns?
+dim(___)
+
+# 2. What is the range of years covered?
+range(pdat$___)
+
+# 3. How many distinct values of GenreRedux are there, and what are they?
+levels(pdat$___)
+
+# 4. What is the mean preposition frequency across all texts?
+mean(pdat$___, na.rm = TRUE)
+
+# 5. Save a subset of just the 19th-century texts to output/pdat_19c.csv
+dir.create(here::here("output"), showWarnings = FALSE)
+
+pdat |>
+  dplyr::filter(___ > 1800) |>
+  readr::write_csv(here::here("output", "pdat_19c.csv"))
+```
+
+See **Solution 3.1** at the bottom.
+
+---
+
+## §4. Data manipulation with `dplyr`
+
+One hour. The goal is that you can use the five core `dplyr` verbs to answer research-style questions about `pdat`.
+
+### The five verbs (and `group_by`)
+
+`dplyr` is built around five verbs that cover most data wrangling:
+
+- `filter()` — keep rows that match a condition
+- `select()` — keep columns you want
+- `mutate()` — add or change columns
+- `arrange()` — sort rows
+- `summarise()` — collapse rows into summary statistics
+
+Plus one modifier: `group_by()` makes `summarise()` work per group rather than over the whole table.
+
+Chain operations with the pipe `|>`. Read it as "then".
+
+### Try the verbs individually
+
+Keep only 19th-century texts:
+
+```{r demo-filter}
+pdat |>
+  dplyr::filter(Date >= 1800) |>
+  head()
+```
+
+Keep only three columns:
+
+```{r demo-select}
+pdat |>
+  dplyr::select(Date, GenreRedux, Prepositions) |>
+  head()
+```
+
+Both at once:
+
+```{r demo-pipe}
+pdat |>
+  dplyr::filter(Date >= 1800) |>
+  dplyr::select(Date, GenreRedux, Prepositions) |>
+  dplyr::arrange(dplyr::desc(Prepositions)) |>
+  head()
+```
+
+Add a derived column with `mutate()`:
+
+```{r demo-mutate}
+pdat |>
+  dplyr::mutate(
+    century = dplyr::case_when(
+      Date < 1600 ~ "16th",
+      Date < 1700 ~ "17th",
+      Date < 1800 ~ "18th",
+      TRUE        ~ "19th"
+    )
+  ) |>
+  dplyr::select(Date, century, GenreRedux, Prepositions) |>
+  head()
+```
+
+### The group analysis pattern
+
+This is the pattern you'll use most often — `group_by() + summarise()` answers "how does this variable differ across groups?":
+
+```{r demo-group}
+pdat |>
+  dplyr::group_by(GenreRedux) |>
+  dplyr::summarise(
+    n            = dplyr::n(),
+    mean_prep    = mean(Prepositions, na.rm = TRUE),
+    median_prep  = median(Prepositions, na.rm = TRUE),
+    .groups      = "drop"
+  ) |>
+  dplyr::arrange(dplyr::desc(mean_prep))
+```
+
+Grouping by two variables gives you a cross-tabulation:
+
+```{r demo-group-two}
+pdat |>
+  dplyr::group_by(GenreRedux, DateRedux) |>
+  dplyr::summarise(
+    n         = dplyr::n(),
+    mean_prep = mean(Prepositions, na.rm = TRUE),
+    .groups   = "drop"
+  ) |>
+  dplyr::arrange(GenreRedux, DateRedux)
+```
+
+You've just quantified how preposition use varies by genre and period. That's a corpus linguistic analysis in five lines.
+
+### Exercise 4.1 — three analytical questions
+
+Fill in the gaps to answer three research-style questions.
+
+```{r ex-4-1, eval=FALSE}
+# 1. How many texts are in each DateRedux period?
+pdat |>
+  dplyr::group_by(___) |>
+  dplyr::summarise(n = dplyr::n(), .groups = "drop") |>
+  dplyr::arrange(dplyr::desc(___))
+
+# 2. What is the mean Prepositions value by Region?
+pdat |>
+  dplyr::group_by(___) |>
+  dplyr::summarise(
+    mean_prep = mean(___, na.rm = TRUE),
+    .groups   = "drop"
+  ) |>
+  dplyr::arrange(dplyr::desc(___))
+
+# 3. Which 5 individual texts have the highest preposition frequency?
+pdat |>
+  dplyr::arrange(dplyr::desc(___)) |>
+  dplyr::select(Text, Date, Genre, Prepositions) |>
+  head(___)
+```
+
+See **Solution 4.1** at the bottom.
+
+---
+
+## §5. First `ggplot2`
+
+The last 50 minutes. The goal is a publication-ready figure saved to disk and pushed to GitHub.
+
+### The grammar of graphics
+
+Every `ggplot2` plot is built from the same template:
+
+```r
+ggplot(data = <DATA>, aes(x = <X>, y = <Y>, colour = <GROUP>)) +
+  geom_<TYPE>() +
+  labs(title = "...", x = "...", y = "...") +
+  theme_bw()
+```
+
+Layers are added with `+`, **not** `|>`. Everyone trips over this once.
+
+### A bar chart and a scatter plot
+
+Counts in each genre category:
+
+```{r plot-bar}
+ggplot(data = pdat, aes(x = GenreRedux)) +
+  geom_bar() +
+  theme_bw()
+```
+
+Preposition frequency over time:
+
+```{r plot-scatter-basic}
+ggplot(data = pdat, aes(x = Date, y = Prepositions)) +
+  geom_point() +
+  theme_bw()
+```
+
+### Build up a publication-ready plot
+
+Start with the base and add layers one at a time:
+
+```{r plot-progressive}
+p <- ggplot(data = pdat, aes(x = Date, y = Prepositions))
+
+# Points, coloured by period
+p +
+  geom_point(aes(colour = DateRedux), alpha = 0.6) +
+  theme_bw()
+```
+
+Add a linear smoother showing the historical trend:
+
+```{r plot-with-smooth}
+p +
+  geom_point(aes(colour = DateRedux), alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, colour = "black") +
+  theme_bw()
+```
+
+Full publication-ready version with labels:
+
+```{r plot-full}
+publication_plot <- p +
+  geom_point(aes(colour = DateRedux), size = 2, alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, colour = "black") +
+  labs(
+    title    = "Preposition frequency in English texts, 1500–1913",
+    subtitle = "Each point is one text; line is a linear trend",
+    x        = "Year written",
+    y        = "Relative frequency of prepositions",
+    colour   = "Period"
+  ) +
+  theme_bw()
+
+publication_plot
+```
+
+### Save the plot
+
+```{r save-plot}
+dir.create(here::here("figures"), showWarnings = FALSE)
+
+ggsave(
+  plot     = publication_plot,
+  filename = here::here("figures", "prepositions-by-year.png"),
+  width    = 8,
+  height   = 5,
+  dpi      = 300
+)
+```
+
+`ggsave()` figures out the format from the file extension. PNG is sensible for most purposes; PDF if you're going into LaTeX. Always set `width` and `height` — the defaults are too big for most uses.
+
+Now commit and push the figure to GitHub (Git tab → stage `figures/prepositions-by-year.png` → commit → push).
+
+### Exercise 5.1 — your own boxplot
+
+Fill in the gaps to make a boxplot of preposition frequency by genre, with a custom theme and a saved output.
+
+```{r ex-5-1, eval=FALSE}
+boxplot <- ggplot(pdat, aes(x = ___, y = ___)) +
+  geom_boxplot() +
+  labs(
+    title   = "___",
+    x       = "___",
+    y       = "___",
+    caption = "Data: Penn Parsed Corpora of Historical English"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+boxplot
+
+ggsave(
+  plot     = boxplot,
+  filename = here::here("figures", "___.png"),
+  width    = 7,
+  height   = 5,
+  dpi      = 300
+)
+```
+
+See **Solution 5.1** at the bottom.
+
+---
+
+## What you built today
+
+Take stock:
+
+- A working R project with a clean folder structure
+- A public GitHub repository, with at least one push cycle completed
+- A dataset of 1500–1913 English texts loaded, cleaned, and summarised
+- At least one publication-ready figure saved to disk and (probably) pushed to GitHub
+
+That's the full day-one R workflow. From here, every day builds on these foundations.
+
+## What's coming on Day 2
+
+Tomorrow is text analytics: strings, regular expressions, concordancing, frequency analysis, collocation, and network graphs. You'll be working with Alice in Wonderland and a few comparison texts. The workflow pattern is identical to today — read in, clean, analyse, visualise — but the methods are specific to text as data.
+
+If you want to prep, read Chapter 9 of the book. Otherwise, rest. We'll see you tomorrow.
+
+---
+
+# Solutions
+
+Numbered to match the exercises above. Full working code with brief commentary.
+
+## Solution 1.1 — folder paths
+
+```{r sol-1-1}
+here::here("data")
+here::here("figures")
+here::here("scripts")
+```
+
+**What to look for:** each path should include your full project directory ending in `/R-4-HASS/data` (etc.). If `here::here()` returns a path that's NOT inside your project, you've opened the wrong `.Rproj` file or you're not in a project.
+
+## Solution 3.1 — inspect pdat
+
+```{r sol-3-1}
+# 1. Rows and columns
+dim(pdat)
+
+# 2. Range of years
+range(pdat$Date)
+
+# 3. GenreRedux levels
+levels(pdat$GenreRedux)
+
+# 4. Mean preposition frequency
+mean(pdat$Prepositions, na.rm = TRUE)
+
+# 5. Save 19th-century subset
+dir.create(here::here("output"), showWarnings = FALSE)
+
+pdat |>
+  dplyr::filter(Date > 1800) |>
+  readr::write_csv(here::here("output", "pdat_19c.csv"))
+```
+
+**What to look for:** `dim()` gives rows × columns. `range()` of `Date` gives the earliest and latest years. The mean `Prepositions` value should be small (a relative frequency). The CSV file should now exist in your `output/` folder.
+
+## Solution 4.1 — three analytical questions
+
+```{r sol-4-1}
+# 1. Texts per period
+pdat |>
+  dplyr::group_by(DateRedux) |>
+  dplyr::summarise(n = dplyr::n(), .groups = "drop") |>
+  dplyr::arrange(dplyr::desc(n))
+
+# 2. Mean preposition frequency by region
+pdat |>
+  dplyr::group_by(Region) |>
+  dplyr::summarise(
+    mean_prep = mean(Prepositions, na.rm = TRUE),
+    .groups   = "drop"
+  ) |>
+  dplyr::arrange(dplyr::desc(mean_prep))
+
+# 3. Top 5 texts by preposition frequency
+pdat |>
+  dplyr::arrange(dplyr::desc(Prepositions)) |>
+  dplyr::select(Text, Date, Genre, Prepositions) |>
+  head(5)
+```
+
+**What to look for:** The first pipeline tells you which period is best represented. The second ranks regions by preposition usage. The third names specific texts — compare them to your intuitions about which genres use many prepositions.
+
+## Solution 5.1 — boxplot
+
+```{r sol-5-1}
+boxplot <- ggplot(pdat, aes(x = GenreRedux, y = Prepositions)) +
+  geom_boxplot() +
+  labs(
+    title   = "Preposition frequency by genre, 1500–1913",
+    x       = "Genre (collapsed categories)",
+    y       = "Relative frequency of prepositions",
+    caption = "Data: Penn Parsed Corpora of Historical English"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+boxplot
+
+ggsave(
+  plot     = boxplot,
+  filename = here::here("figures", "prepositions-by-genre.png"),
+  width    = 7,
+  height   = 5,
+  dpi      = 300
+)
+```
+
+**What to look for:** Each box summarises the preposition frequency distribution for one genre. Compare medians and spreads across genres. Which genre has the widest spread? Which is highest overall? Does the pattern match what you'd expect given what you know about the genres?
+
+---
+
+## Where next
+
+Day 2 starts at 09:00 tomorrow with text analytics. Bring your laptop, your GitHub login, and any questions from today.

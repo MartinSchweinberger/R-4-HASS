@@ -1,0 +1,657 @@
+---
+title: "Day 3 — Statistics and modelling"
+subtitle: "R-4-HASS Workshop · LMU Blockseminar"
+date: "2027-01-08"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-tools: true
+    code-copy: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+Welcome back. Three weeks is a long time between sessions, so expect today to feel rusty for the first hour. That's normal. The refresher section (§1) is designed for exactly that.
+
+Today's focus is the two statistical methods that are standard in modern corpus linguistics and sociolinguistics:
+
+- **Mixed-effects regression** — the inferential workhorse when your data is grouped (observations within speakers, within texts, within items)
+- **Conditional inference trees** — a complementary method for exploring interactions and visualising subgroup patterns
+
+By the end of the day you'll have:
+
+- Fit a linear mixed-effects model and interpreted its output
+- Fit a logistic mixed-effects model with random intercepts
+- Fit a conditional inference tree and produced a publication-quality version
+
+Honest framing: you will not master mixed-effects models in one day. You WILL leave able to fit, interpret, and report one. That's enough to use them in your Prüfungsleistung.
+
+## Before we start
+
+Packages needed today:
+
+```{r install-day3, eval=FALSE}
+install.packages(c(
+  "lme4", "lmerTest", "performance", "MuMIn", "sjPlot",
+  "partykit", "ggparty", "broom"
+))
+```
+
+Load everything:
+
+```{r load-day3}
+library(lme4)
+library(lmerTest)
+library(performance)
+library(sjPlot)
+library(partykit)
+library(ggparty)
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(here)
+```
+
+Data files needed in your `data/` folder:
+
+- `mbd.rda` — speech-unit-final discourse *like* in Irish English (loads as `mblrdata`)
+
+We'll also use `sleepstudy` for the linear mixed-effects example — that one is built into the `lme4` package, no download needed.
+
+---
+
+## §1. Refresher — statistics and regression concepts
+
+Fifty minutes. The goal is that you can read an `lm()` output confidently before we move to mixed-effects models.
+
+### What a regression tells you
+
+A regression model describes how one variable (the **outcome**) depends on one or more others (**predictors**). Linear regression predicts a continuous outcome; logistic regression predicts a binary one.
+
+For a simple linear regression `lm(y ~ x)`:
+
+- **Intercept** = predicted y when x = 0
+- **Slope of x** = change in y per unit change in x
+- **Standard error** = uncertainty around the coefficient
+- **p-value** = probability of seeing a coefficient this large if the true coefficient were zero
+- **R²** = proportion of variance in y explained by the model
+
+### Try it with a built-in dataset
+
+```{r refresh-mtcars}
+m1 <- lm(mpg ~ wt, data = mtcars)
+summary(m1)
+```
+
+Read the output:
+
+- The `wt` coefficient is around -5.3 — "each 1000-lb increase in weight is associated with 5.3 fewer miles per gallon"
+- The p-value is tiny — strong evidence against "no relationship"
+- Multiple R² is around 0.75 — weight explains three-quarters of the variance in mpg
+
+### Tidy outputs
+
+`broom` gives you the coefficient table as a tibble, which is easier to use programmatically:
+
+```{r refresh-broom}
+broom::tidy(m1)
+broom::glance(m1)
+```
+
+### Visualise
+
+```{r refresh-plot}
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Weight (1000 lbs)", y = "Miles per gallon",
+       title = "mpg ~ wt") +
+  theme_bw()
+```
+
+### Multiple predictors
+
+Add a second predictor:
+
+```{r refresh-multi}
+m2 <- lm(mpg ~ wt + hp, data = mtcars)
+summary(m2)
+```
+
+The `wt` coefficient changed from the single-predictor model. That's because each coefficient is "the effect of this predictor **holding others constant**". Controlling for `hp`, the apparent effect of `wt` is smaller.
+
+### No exercise — this is a refresher
+
+Move on when you can read the `summary()` output without having to look things up.
+
+---
+
+## §2. Linear mixed-effects models
+
+105 minutes. The goal is to fit a linear mixed-effects model, understand random intercepts and random slopes, and interpret the output.
+
+### Why mixed-effects
+
+Most real data is grouped. Subjects produce multiple tokens. Speakers come from multiple corpora. Students belong to multiple schools. Fitting a plain `lm()` on grouped data violates **independence of observations** — a fundamental assumption.
+
+The mixed-effects solution: treat the grouping variable (Subject, Speaker, Item) as a **random effect**. You estimate the variability among groups, not each group's intercept individually. Fewer parameters, more generalisable results.
+
+- **Random intercepts** — each group gets its own baseline. All groups share the same slope.
+- **Random slopes** — each group gets its own baseline AND its own slope for a predictor.
+
+### The sleepstudy dataset
+
+`sleepstudy` is the canonical teaching example: 18 subjects, 10 days of sleep deprivation per subject, reaction time as the outcome.
+
+```{r sleep-inspect}
+head(sleepstudy)
+summary(sleepstudy)
+```
+
+### What goes wrong if you ignore grouping
+
+```{r sleep-wrong}
+m_wrong <- lm(Reaction ~ Days, data = sleepstudy)
+summary(m_wrong)
+```
+
+The Days coefficient tells you reaction time slows by ~10ms per day. But this ignores that each subject has their own baseline and might slow down at a different rate. The standard errors are also wrong — all observations within a subject are correlated.
+
+### Random intercept model
+
+```{r sleep-intercept}
+m1 <- lmer(Reaction ~ Days + (1 | Subject), data = sleepstudy)
+summary(m1)
+```
+
+Read the output top to bottom:
+
+- **Random effects** block: `sd(Intercept) = 37.1` — the standard deviation of subject intercepts. Subjects differ by about 37ms in their baseline reaction time.
+- **Residual** sd: 30.9 — the within-subject variability
+- **Fixed effects** block: the `Days` coefficient is ~10.47ms per day
+
+The `(1 | Subject)` syntax means "random intercept for Subject". The `1` is the intercept; the `|` separates random effects from grouping variable.
+
+### Random intercept AND random slope
+
+Allow each subject to have their own rate of slowing:
+
+```{r sleep-slope}
+m2 <- lmer(Reaction ~ Days + (1 + Days | Subject), data = sleepstudy)
+summary(m2)
+```
+
+The Random effects block now has two variances AND a correlation between intercepts and slopes. The `Days` coefficient is similar, but we've captured the fact that subjects differ in both WHERE they start and HOW FAST they slow down.
+
+### Compare the two models
+
+```{r sleep-compare}
+anova(m1, m2)
+AIC(m1, m2)
+```
+
+The likelihood ratio test and the AIC both prefer the random-slopes model (lower AIC). The additional variance component is justified.
+
+### Visualise individual subject slopes
+
+```{r sleep-viz}
+ggplot(sleepstudy, aes(x = Days, y = Reaction, group = Subject)) +
+  geom_point(alpha = 0.3) +
+  geom_line(stat = "smooth", method = "lm", se = FALSE,
+            alpha = 0.4, colour = "steelblue") +
+  geom_smooth(aes(group = 1), method = "lm",
+              se = FALSE, colour = "red", linewidth = 1.2) +
+  labs(
+    title = "Individual subject slopes (blue) vs population slope (red)",
+    x     = "Days of sleep deprivation",
+    y     = "Reaction time (ms)"
+  ) +
+  theme_bw()
+```
+
+Each blue line is one subject. The red line is the population average. The spread of blue lines shows the subject variability captured by the random slopes.
+
+### Diagnostics in one line
+
+```{r sleep-diagnostics}
+#| fig-width: 9
+#| fig-height: 7
+
+performance::check_model(
+  m2,
+  check = c("qq", "homogeneity", "linearity", "reqq")
+)
+```
+
+This gives you residual plots, normality checks, collinearity, and influential-observation checks in one call.
+
+### Publication-ready model summary
+
+```{r sleep-tabmodel}
+sjPlot::tab_model(m2)
+```
+
+### Marginal and conditional R²
+
+```{r sleep-r2}
+performance::r2(m2)
+```
+
+- **Marginal R²** — variance explained by fixed effects alone
+- **Conditional R²** — variance explained by fixed + random effects
+
+### Exercise 2.1 — fit, compare, interpret
+
+Fill in the gaps to replicate the random-intercept vs random-slope analysis.
+
+```{r ex-2-1, eval=FALSE}
+# 1. Random intercept only
+my_m1 <- lmer(Reaction ~ ___ + (1 | ___), data = sleepstudy)
+
+# 2. Random intercept AND slope for Days
+my_m2 <- lmer(Reaction ~ Days + (1 + ___ | Subject), data = sleepstudy)
+
+# 3. Compare
+anova(___, ___)
+
+# 4. Diagnostic plots for the winning model
+performance::check_model(___)
+
+# 5. Publication-ready summary
+sjPlot::tab_model(___)
+```
+
+See **Solution 2.1** at the bottom.
+
+---
+
+## §3. Logistic mixed-effects models
+
+Seventy-five minutes. The goal is to fit a logistic mixed-effects model and interpret the output in odds ratios.
+
+### When to go logistic
+
+Your outcome is binary: present/absent, used/not-used, correct/incorrect. A linear model is wrong for binary outcomes — predictions can fall outside [0, 1] and residuals are not normal.
+
+**Logistic regression** models the LOG-ODDS of the outcome. `glmer()` with `family = binomial` fits the mixed version.
+
+### Loading the data
+
+The dataset is 2,000 observations of speech-unit-final discourse *like* in Irish English:
+
+```{r load-mblr}
+mblrdata <- readRDS(here::here("data", "mbd.rda"))
+glimpse(mblrdata)
+```
+
+What you have:
+
+- `ID` — speaker ID (grouping variable)
+- `Age` — speaker age (categorical)
+- `Gender` — speaker gender
+- `ConversationType` — mixed-gender or same-gender conversation
+- `Priming` — whether a preceding *like* was present
+- `SUFlike` — the outcome: 1 = like appears, 0 = does not
+
+### Fit a simple logistic MEM
+
+```{r log-fit}
+m_log <- glmer(
+  SUFlike ~ Priming + (1 | ID),
+  data   = mblrdata,
+  family = binomial
+)
+
+summary(m_log)
+```
+
+### Why log-odds are confusing — exponentiate
+
+The coefficient for `PrimingPrime` is in log-odds space. That's not intuitive. Exponentiate to get odds ratios:
+
+```{r log-odds}
+exp(fixef(m_log))
+```
+
+An odds ratio of ~3.0 for priming means: "when the preceding context has a like, the odds of SUFlike are roughly 3× higher than when it doesn't."
+
+### Publication-ready summary
+
+```{r log-tab}
+sjPlot::tab_model(m_log)
+```
+
+### Visualise predicted probabilities
+
+Log-odds are abstract. Predicted probabilities are concrete:
+
+```{r log-plot}
+sjPlot::plot_model(m_log, type = "pred", terms = "Priming")
+```
+
+### Add a second predictor
+
+```{r log-fit2}
+m_log2 <- glmer(
+  SUFlike ~ Priming + Gender + (1 | ID),
+  data   = mblrdata,
+  family = binomial
+)
+
+summary(m_log2)
+sjPlot::tab_model(m_log2)
+```
+
+### Convergence warnings
+
+Logistic MEMs are fragile. You may see warnings like `boundary (singular) fit` or `Model failed to converge`. Standard remedies:
+
+1. Simplify the random effects structure (drop random slopes, keep only intercepts)
+2. Centre numeric predictors
+3. Switch optimisers: `control = glmerControl(optimizer = "bobyqa")`
+
+### Exercise 3.1 — fit and interpret
+
+Fill in the gaps to fit a model with two predictors and extract odds ratios.
+
+```{r ex-3-1, eval=FALSE}
+# Fit a logistic MEM with Priming + ConversationType + random intercept for ID
+my_log <- glmer(
+  SUFlike ~ ___ + ___ + (1 | ___),
+  data   = mblrdata,
+  family = ___
+)
+
+summary(my_log)
+
+# Extract odds ratios
+exp(fixef(___))
+
+# Produce a publication-ready table
+sjPlot::tab_model(___)
+
+# Visualise the predicted probabilities for ConversationType
+sjPlot::plot_model(___, type = "pred", terms = ___)
+```
+
+See **Solution 3.1** at the bottom.
+
+---
+
+## §4. Conditional inference trees
+
+Sixty minutes. The goal is to fit a CIT, interpret the plot, and produce a publication-quality version.
+
+### What CITs add to regression
+
+Mixed-effects regression quantifies direction and magnitude. CITs find and visualise interactions. They complement regression; they do not replace it.
+
+**Conditional inference trees** use permutation tests at each internal node to decide whether to split and on which variable. Only predictors with real statistical evidence appear in the tree. Default significance threshold: α = .05.
+
+### Fit a CIT on the same data
+
+Since CITs do classification on a factor, we convert `SUFlike` to a factor first:
+
+```{r cit-prep}
+citdata <- mblrdata |>
+  dplyr::mutate(
+    dplyr::across(where(is.character), as.factor),
+    SUFlike = as.factor(SUFlike)
+  )
+
+str(citdata)
+```
+
+Fit:
+
+```{r cit-fit}
+set.seed(111)
+cit1 <- ctree(SUFlike ~ Age + Gender + ConversationType + Priming,
+              data = citdata)
+```
+
+The `set.seed()` call makes the result reproducible — CITs can be sensitive to tie-breaking in the permutation tests.
+
+### Plot the basic tree
+
+```{r cit-plot, fig.width=10, fig.height=6}
+plot(cit1)
+```
+
+### Reading the plot
+
+- **Internal nodes** show the splitting variable and a p-value
+- **Edge labels** show the values that route observations down each branch
+- **Leaf nodes** show the outcome distribution in that subgroup as a bar chart
+- The taller bar at a leaf is the predicted class
+
+### Programmatic access
+
+For reporting in your Quarto document, pull values from the fitted object rather than retyping from the plot:
+
+```{r cit-access}
+all_nodes <- nodeids(cit1)
+terminal_nodes <- nodeids(cit1, terminal = TRUE)
+
+cat("Total nodes:    ", length(all_nodes), "\n")
+cat("Leaf nodes:     ", length(terminal_nodes), "\n")
+
+# p-values at internal nodes
+pvals <- unlist(nodeapply(
+  cit1,
+  ids = all_nodes,
+  FUN = function(n) info_node(n)$p.value
+))
+
+pvals[!is.na(pvals) & pvals < .05]
+```
+
+### Adjusting the significance threshold
+
+A stricter α produces a simpler tree:
+
+```{r cit-strict, fig.width=10, fig.height=6}
+cit_strict <- ctree(
+  SUFlike ~ Age + Gender + ConversationType + Priming,
+  data    = citdata,
+  control = ctree_control(alpha = 0.01)
+)
+
+plot(cit_strict)
+```
+
+**Important:** set α before fitting, not after seeing the tree. Post-hoc α tightening is a researcher-degrees-of-freedom problem.
+
+### Publication-quality version with ggparty
+
+```{r cit-ggparty, fig.width=11, fig.height=7}
+set.seed(111)
+cit1 <- ctree(SUFlike ~ Age + Gender + ConversationType + Priming,
+              data = citdata)
+
+pvals <- unlist(nodeapply(
+  cit1,
+  ids = nodeids(cit1),
+  FUN = function(n) info_node(n)$p.value
+))
+
+ggparty(cit1) +
+  geom_edge() +
+  geom_edge_label() +
+  geom_node_label(
+    line_list = list(
+      aes(label = splitvar),
+      aes(label = paste0(
+        "N = ", nodesize,
+        ", p ",
+        ifelse(pvals < .001, "< .001",
+               paste0("= ", round(pvals, 3)))
+      ))
+    ),
+    line_gpar = list(list(size = 13), list(size = 10)),
+    ids = "inner"
+  ) +
+  geom_node_label(
+    aes(label = paste0("Node ", id, "\nN = ", nodesize)),
+    ids = "terminal",
+    nudge_y = -0.01
+  ) +
+  geom_node_plot(
+    gglist = list(
+      geom_bar(aes(x = "", fill = SUFlike),
+               position = position_fill(),
+               color = "black"),
+      theme_minimal(),
+      scale_fill_manual(values = c("gray50", "gray80"),
+                        guide = "none"),
+      scale_y_continuous(breaks = c(0, 1)),
+      xlab(""),
+      ylab("Probability")
+    ),
+    shared_axis_labels = TRUE
+  ) +
+  labs(
+    title    = "Conditional inference tree: SUFlike",
+    subtitle = "Predictors: Age, Gender, ConversationType, Priming"
+  )
+```
+
+### Exercise 4.1 — fit and visualise a CIT
+
+Fill in the gaps.
+
+```{r ex-4-1, eval=FALSE}
+# Fit a CIT with all four predictors
+set.seed(111)
+my_cit <- ctree(
+  SUFlike ~ ___ + ___ + ___ + ___,
+  data = citdata
+)
+
+# Basic plot
+plot(___)
+
+# Extract significant p-values
+pvals <- unlist(nodeapply(
+  ___,
+  ids = nodeids(my_cit),
+  FUN = function(n) info_node(n)$p.value
+))
+pvals[!is.na(pvals) & pvals < .05]
+
+# Save the basic plot as a PNG
+dir.create(here::here("figures"), showWarnings = FALSE)
+png(here::here("figures", "my_cit.png"),
+    width = 10, height = 6, units = "in", res = 300)
+plot(___)
+dev.off()
+```
+
+See **Solution 4.1** at the bottom.
+
+---
+
+## What you built today
+
+- A refresher in the regression basics — coefficients, p-values, R²
+- A linear mixed-effects model, fit, compared, and diagnosed
+- A logistic mixed-effects model with odds ratios and predicted-probability plots
+- A conditional inference tree with interpretable interactions and a publication-quality version
+
+That's modern inferential statistics for corpus linguistics. These are the methods that will do the work in most of your Prüfungsleistungen.
+
+## What's coming on Day 4
+
+Tomorrow is the payoff day: Quarto documents and GitHub Pages. By end of day you'll have a public website serving your own Quarto document — the template for your final submission.
+
+If you want to prep, read Chapter 10 of the book. Otherwise, rest. See you tomorrow.
+
+---
+
+# Solutions
+
+## Solution 2.1 — linear MEM
+
+```{r sol-2-1}
+#| fig-width: 9
+#| fig-height: 7
+# Random intercept only
+my_m1 <- lmer(Reaction ~ Days + (1 | Subject), data = sleepstudy)
+
+# Random intercept AND slope
+my_m2 <- lmer(Reaction ~ Days + (1 + Days | Subject), data = sleepstudy)
+
+# Compare
+anova(my_m1, my_m2)
+
+# Diagnostics on the winning model
+# (subset of checks — the full panel needs a very large Plots window)
+performance::check_model(
+  my_m2,
+  check = c("qq", "homogeneity", "linearity", "reqq")
+)
+
+# Publication-ready summary
+sjPlot::tab_model(my_m2)
+```
+
+**What to look for:** `anova(my_m1, my_m2)` returns a likelihood ratio test; the p-value is tiny, so the random-slopes model is preferred. The `check_model()` output shows residuals looking reasonable, normality holding, no collinearity (only one predictor). The `tab_model()` output is the format you'd put into a Methods/Results section of your Prüfungsleistung.
+
+## Solution 3.1 — logistic MEM
+
+```{r sol-3-1}
+my_log <- glmer(
+  SUFlike ~ Priming + ConversationType + (1 | ID),
+  data   = mblrdata,
+  family = binomial
+)
+
+summary(my_log)
+
+# Odds ratios
+exp(fixef(my_log))
+
+# Publication table
+sjPlot::tab_model(my_log)
+
+# Predicted probabilities for ConversationType
+sjPlot::plot_model(my_log, type = "pred", terms = "ConversationType")
+```
+
+**What to look for:** The odds ratios tell you how the odds of SUFlike change for each predictor level. Priming's odds ratio should be well above 1 — strong effect. ConversationType's odds ratio tells you whether same-gender vs mixed-gender conversations affect SUFlike use. The plot makes this concrete: predicted probability on the y-axis is easier to interpret than log-odds.
+
+## Solution 4.1 — CIT
+
+```{r sol-4-1, fig.width=10, fig.height=6}
+set.seed(111)
+my_cit <- ctree(
+  SUFlike ~ Age + Gender + ConversationType + Priming,
+  data = citdata
+)
+
+plot(my_cit)
+
+pvals <- unlist(nodeapply(
+  my_cit,
+  ids = nodeids(my_cit),
+  FUN = function(n) info_node(n)$p.value
+))
+pvals[!is.na(pvals) & pvals < .05]
+
+dir.create(here::here("figures"), showWarnings = FALSE)
+png(here::here("figures", "my_cit.png"),
+    width = 10, height = 6, units = "in", res = 300)
+plot(my_cit)
+dev.off()
+```
+
+**What to look for:** The tree shows which predictors differentiated SUFlike usage significantly. The root node is the most important predictor (smallest adjusted p-value). The leaf bar charts show the SUFlike probability in each subgroup. Compare the tree's picture to your logistic MEM's coefficients — do they tell the same story?
+
+---
+
+## Where next
+
+Day 4 at 09:00 tomorrow. Bring laptop, GitHub login, and curiosity about what your published research site will look like.
