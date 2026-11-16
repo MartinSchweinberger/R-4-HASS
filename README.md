@@ -188,21 +188,33 @@ Public datasets referenced in the book (e.g. Alice in Wonderland via
 
 ## Assessment (Prüfungsleistung)
 
-| Studiengang / Modul                              | What you submit                                                                                                                                                                                                      |
-|--------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Hauptseminar P 12.2** (Lehramt Gymnasium)      | **Hausarbeit** — a term paper (ca. 15–20 pages) on an English linguistics or closely related topic, using textual data analysed in R. Standard structure: introduction, background, data & methods, results, discussion. Submission of your analysis code alongside the paper is encouraged. |
-| **Masterseminar WP 33.1**                        | **Reproducible Quarto document** via public GitHub repository. Present one method from the seminar on a worked example. Scope: ca. 8–12 pages rendered HTML.                                                        |
-| **GGSP and all other Studiengänge**              | Reproducible Quarto document (as above). Scope: ca. 5–8 pages rendered HTML.                                                                                                                                       |
+The specific Prüfungsleistung depends on the module under which you
+have registered this seminar (e.g. P 12.2, WP 33.1, WP 18.1, GGSP).
+
+I am finalising the per-module details with the Studierendenange-
+legenheiten office. You will receive the binding specification by
+email before the first session on 18 December.
+
+Confirmed so far:
+
+- **Hauptseminar P 12.2** (Lehramt Gymnasium): Hausarbeit on an
+  English linguistics or related topic, with textual data analysed
+  in R. Length: 34,000–51,000 characters (pure text, excluding TOC,
+  bibliography, and whitespace), per the current PStO.
+- **Masterseminar WP 18.1** (MA English Studies): Dokumentation in
+  the form of a reproducible Quarto document, delivered as a public
+  GitHub repository with rendered HTML. Length: 22,500–30,000
+  characters per the current PStO.
+
+Other modules (WP 33.1, WP 32.1, WP 7.1, WP 2.1, WP ANG 2.1, GGSP):
+confirmation pending. Expected form is a reproducible Quarto
+document with rendered HTML, but the length and exact format will
+be specified per module once confirmed.
 
 **Submission deadline:** 31 March 2027 for all tracks.
 
 > ⚠ **Verify independently with your Prüfungsamt.** Prüfungsordnungen
 > vary; the overview above is a guide, not a binding commitment.
-
-The technical skills needed for the Quarto document route (Quarto,
-Git, GitHub, GitHub Pages) are covered during the seminar — especially
-Day 4.
-
 ---
 
 ## How this repository is organised
