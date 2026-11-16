@@ -55,7 +55,26 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 <script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
@@ -327,7 +346,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header><section id="sec-tables-intro" class="level1" data-number="6"><h1 data-number="6">
 <span class="header-section-number">6</span> Introduction</h1>
 <p>This chapter shows how to work with tables and how to process and manipulate tabular data in R. Tables are one of the most fundamental data structures in quantitative research: almost every dataset you will encounter — corpus metadata, survey responses, frequency counts, experimental results — arrives in tabular form. Knowing how to inspect, reshape, filter, summarise, join, and clean tables efficiently is therefore one of the most important practical skills in R.</p>
-<p>The chapter uses the tidyverse family of packages throughout, particularly <code>dplyr</code> and <code>tidyr</code>. These packages provide a consistent, readable grammar for data manipulation that has become the standard in modern R programming. A highly recommended companion resource is <span class="citation" data-cites="wickham2016r">(<a href="#ref-wickham2016r" role="doc-biblioref"><strong>wickham2016r?</strong></a>)</span> (freely available at <a href="https://r4ds.hadley.nz/">r4ds.hadley.nz</a>), which covers these tools in much greater depth.</p>
+<p>The chapter uses the tidyverse family of packages throughout, particularly <code>dplyr</code> and <code>tidyr</code>. These packages provide a consistent, readable grammar for data manipulation that has become the standard in modern R programming. A highly recommended companion resource is <span class="citation" data-cites="wickham2016r">Wickham and Grolemund (<a href="99-references.html#ref-wickham2016r" role="doc-biblioref">2016</a>)</span> (freely available at <a href="https://r4ds.hadley.nz/">r4ds.hadley.nz</a>), which covers these tools in much greater depth.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -2366,6 +2385,11 @@ CSV cannot store more than 1000 rows; RDS has no row limit
 
 <!-- -->
 
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-wickham2016r" class="csl-entry" role="listitem">
+Wickham, Hadley, and Garrett Grolemund. 2016. <em>R for Data Science: Import, Tidy, Transform, Visualize, and Model Data</em>. O’Reilly Media.
+</div>
+</div>
 </section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

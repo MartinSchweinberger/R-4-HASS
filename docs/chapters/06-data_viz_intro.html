@@ -55,7 +55,26 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-</style>
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
 
 <script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
@@ -905,20 +924,20 @@ Conversational        Fiction          Legal     NonFiction      Religious
 <div class="cell-output-display">
 <form name="form_FP_Q1" onsubmit="return validate_form_FP_Q1()" method="post">
 <label>
-<input type="radio" name="answer_FP_Q1" id="answer_FP_Q1_1" value="The mapping from data variables to visual properties (x, y, colour, size, shape)">
-The mapping from data variables to visual properties (x, y, colour, size, shape)
+<input type="radio" name="answer_FP_Q1" id="answer_FP_Q1_1" value="The axis labels and titles">
+The axis labels and titles
 </label>
 <br><label>
 <input type="radio" name="answer_FP_Q1" id="answer_FP_Q1_2" value="The overall visual theme and background">
 The overall visual theme and background
 </label>
 <br><label>
-<input type="radio" name="answer_FP_Q1" id="answer_FP_Q1_3" value="The type of plot (histogram, boxplot, scatter)">
-The type of plot (histogram, boxplot, scatter)
+<input type="radio" name="answer_FP_Q1" id="answer_FP_Q1_3" value="The mapping from data variables to visual properties (x, y, colour, size, shape)">
+The mapping from data variables to visual properties (x, y, colour, size, shape)
 </label>
 <br><label>
-<input type="radio" name="answer_FP_Q1" id="answer_FP_Q1_4" value="The axis labels and titles">
-The axis labels and titles
+<input type="radio" name="answer_FP_Q1" id="answer_FP_Q1_4" value="The type of plot (histogram, boxplot, scatter)">
+The type of plot (histogram, boxplot, scatter)
 </label>
 <br><input type="submit" value="Check answer"><div id="result_FP_Q1"></div>
 </form>
@@ -934,20 +953,20 @@ The axis labels and titles
 <div class="cell-output-display">
 <form name="form_FP_Q2" onsubmit="return validate_form_FP_Q2()" method="post">
 <label>
-<input type="radio" name="answer_FP_Q2" id="answer_FP_Q2_1" value="The plot will show different colours for each row">
-The plot will show different colours for each row
+<input type="radio" name="answer_FP_Q2" id="answer_FP_Q2_1" value="The code will throw a syntax error">
+The code will throw a syntax error
 </label>
 <br><label>
 <input type="radio" name="answer_FP_Q2" id="answer_FP_Q2_2" value="Points will be coloured according to the Region variable in the data">
 Points will be coloured according to the Region variable in the data
 </label>
 <br><label>
-<input type="radio" name="answer_FP_Q2" id="answer_FP_Q2_3" value="The code will throw a syntax error">
-The code will throw a syntax error
+<input type="radio" name="answer_FP_Q2" id="answer_FP_Q2_3" value="All points will be the fixed colour &quot;Region&quot; (which is not a valid colour name, so you may get an error)">
+All points will be the fixed colour "Region" (which is not a valid colour name, so you may get an error)
 </label>
 <br><label>
-<input type="radio" name="answer_FP_Q2" id="answer_FP_Q2_4" value="All points will be the fixed colour &quot;Region&quot; (which is not a valid colour name, so you may get an error)">
-All points will be the fixed colour "Region" (which is not a valid colour name, so you may get an error)
+<input type="radio" name="answer_FP_Q2" id="answer_FP_Q2_4" value="The plot will show different colours for each row">
+The plot will show different colours for each row
 </label>
 <br><input type="submit" value="Check answer"><div id="result_FP_Q2"></div>
 </form>
@@ -1319,20 +1338,20 @@ All points will be the fixed colour "Region" (which is not a valid colour name, 
 <div class="cell-output-display">
 <form name="form_COL_Q1" onsubmit="return validate_form_COL_Q1()" method="post">
 <label>
-<input type="radio" name="answer_COL_Q1" id="answer_COL_Q1_1" value="Qualitative palette (e.g. Brewer Set2) — distinct hues with no implied order">
+<input type="radio" name="answer_COL_Q1" id="answer_COL_Q1_1" value="Diverging palette (e.g. RdBu) — two opposite colours">
+Diverging palette (e.g. RdBu) — two opposite colours
+</label>
+<br><label>
+<input type="radio" name="answer_COL_Q1" id="answer_COL_Q1_2" value="Qualitative palette (e.g. Brewer Set2) — distinct hues with no implied order">
 Qualitative palette (e.g. Brewer Set2) — distinct hues with no implied order
 </label>
 <br><label>
-<input type="radio" name="answer_COL_Q1" id="answer_COL_Q1_2" value="Sequential palette (e.g. Blues) — one hue, light to dark">
+<input type="radio" name="answer_COL_Q1" id="answer_COL_Q1_3" value="Sequential palette (e.g. Blues) — one hue, light to dark">
 Sequential palette (e.g. Blues) — one hue, light to dark
 </label>
 <br><label>
-<input type="radio" name="answer_COL_Q1" id="answer_COL_Q1_3" value="Any palette with five colours will work equally well">
+<input type="radio" name="answer_COL_Q1" id="answer_COL_Q1_4" value="Any palette with five colours will work equally well">
 Any palette with five colours will work equally well
-</label>
-<br><label>
-<input type="radio" name="answer_COL_Q1" id="answer_COL_Q1_4" value="Diverging palette (e.g. RdBu) — two opposite colours">
-Diverging palette (e.g. RdBu) — two opposite colours
 </label>
 <br><input type="submit" value="Check answer"><div id="result_COL_Q1"></div>
 </form>
@@ -1485,7 +1504,7 @@ Diverging palette (e.g. RdBu) — two opposite colours
 <p><strong>Recommended references:</strong></p>
 <ul>
 <li>
-<span class="citation" data-cites="wickham2016r">(<a href="#ref-wickham2016r" role="doc-biblioref"><strong>wickham2016r?</strong></a>)</span> — <em>R for Data Science</em> (free online at <a href="https://r4ds.hadley.nz/">r4ds.hadley.nz</a>) has a thorough visualisation chapter</li>
+<span class="citation" data-cites="wickham2016r">Wickham and Grolemund (<a href="99-references.html#ref-wickham2016r" role="doc-biblioref">2016</a>)</span> — <em>R for Data Science</em> (free online at <a href="https://r4ds.hadley.nz/">r4ds.hadley.nz</a>) has a thorough visualisation chapter</li>
 <li>The <code>ggplot2</code> book by Hadley Wickham is the definitive reference</li>
 <li>The R Graph Gallery (<a href="https://www.r-graph-gallery.com">r-graph-gallery.com</a>) has hundreds of examples with full code</li>
 </ul>
@@ -1507,6 +1526,11 @@ Diverging palette (e.g. RdBu) — two opposite colours
 
 <!-- -->
 
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-wickham2016r" class="csl-entry" role="listitem">
+Wickham, Hadley, and Garrett Grolemund. 2016. <em>R for Data Science: Import, Tidy, Transform, Visualize, and Model Data</em>. O’Reilly Media.
+</div>
+</div>
 </section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

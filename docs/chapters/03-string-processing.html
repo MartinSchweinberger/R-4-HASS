@@ -433,7 +433,7 @@ div.csl-indent {
 <li>
 <code>data/testcorpus/linguistics04.txt</code> — fixed-answer file for Q11–Q12</li>
 </ul>
-<p>If you have cloned the course repository, these files are already in place. See <span class="citation" data-cites="schweinberger_string">Schweinberger (<a href="#ref-schweinberger_string" role="doc-biblioref">2026</a>)</span> for the original LADAL tutorial this chapter adapts.</p>
+<p>If you have cloned the course repository, these files are already in place. See <span class="citation" data-cites="schweinberger_string">Schweinberger (<a href="99-references.html#ref-schweinberger_string" role="doc-biblioref">2026</a>)</span> for the original LADAL tutorial this chapter adapts.</p>
 </div>
 </div>
 <div class="cell">
@@ -1054,20 +1054,20 @@ High- vs. Low-Frequency: β = -0.051, SE = 0.013, t = -3.92, p &lt; .001.</code>
 <div class="cell-output-display">
 <form name="form_Q2" onsubmit="return validate_form_Q2()" method="post">
 <label>
-<input type="radio" name="answer_Q2" id="answer_Q2_1" value="str_remove_all">
-str_remove_all
+<input type="radio" name="answer_Q2" id="answer_Q2_1" value="str_replace">
+str_replace
 </label>
 <br><label>
 <input type="radio" name="answer_Q2" id="answer_Q2_2" value="str_locate">
 str_locate
 </label>
 <br><label>
-<input type="radio" name="answer_Q2" id="answer_Q2_3" value="str_replace_all">
-str_replace_all
+<input type="radio" name="answer_Q2" id="answer_Q2_3" value="str_remove_all">
+str_remove_all
 </label>
 <br><label>
-<input type="radio" name="answer_Q2" id="answer_Q2_4" value="str_replace">
-str_replace
+<input type="radio" name="answer_Q2" id="answer_Q2_4" value="str_replace_all">
+str_replace_all
 </label>
 <br><input type="submit" value="Check answer"><div id="result_Q2"></div>
 </form>
@@ -1083,28 +1083,28 @@ str_replace
 <div class="cell-output-display">
 <form name="form_Q3" onsubmit="return validate_form_Q3()" method="post">
 <label>
-<input type="checkbox" id="answer_Q3_1" value="str_match">
-str_match
-</label>
-<br><label>
-<input type="checkbox" id="answer_Q3_2" value="str_squish">
+<input type="checkbox" id="answer_Q3_1" value="str_squish">
 str_squish
 </label>
 <br><label>
-<input type="checkbox" id="answer_Q3_3" value="str_sort">
-str_sort
-</label>
-<br><label>
-<input type="checkbox" id="answer_Q3_4" value="str_trim">
+<input type="checkbox" id="answer_Q3_2" value="str_trim">
 str_trim
 </label>
 <br><label>
-<input type="checkbox" id="answer_Q3_5" value="str_pad">
+<input type="checkbox" id="answer_Q3_3" value="str_match">
+str_match
+</label>
+<br><label>
+<input type="checkbox" id="answer_Q3_4" value="str_pad">
 str_pad
+</label>
+<br><label>
+<input type="checkbox" id="answer_Q3_5" value="str_sort">
+str_sort
 </label>
 <br><input type="submit" value="Check answer"><div id="result_Q3"></div>
 </form>
-<script>function validate_form_Q3() {var text; var x1 = document.getElementById('answer_Q3_1'); var x2 = document.getElementById('answer_Q3_2'); var x3 = document.getElementById('answer_Q3_3'); var x4 = document.getElementById('answer_Q3_4'); var x5 = document.getElementById('answer_Q3_5'); if (x1.checked == false&x2.checked == true&x3.checked == false&x4.checked == true&x5.checked == true){text = 'Correct — all three manipulate whitespace in different ways.';} else {text = 'Three correct answers. Think about adding, removing, and collapsing spaces.';} document.getElementById('result_Q3').innerHTML = text; evaluate_final_score(); return false;}function evaluate_final_score(){
+<script>function validate_form_Q3() {var text; var x1 = document.getElementById('answer_Q3_1'); var x2 = document.getElementById('answer_Q3_2'); var x3 = document.getElementById('answer_Q3_3'); var x4 = document.getElementById('answer_Q3_4'); var x5 = document.getElementById('answer_Q3_5'); if (x1.checked == true&x2.checked == true&x3.checked == false&x4.checked == true&x5.checked == false){text = 'Correct — all three manipulate whitespace in different ways.';} else {text = 'Three correct answers. Think about adding, removing, and collapsing spaces.';} document.getElementById('result_Q3').innerHTML = text; evaluate_final_score(); return false;}function evaluate_final_score(){
          element = document.getElementById('checkdown_final_score');
          if(element === null){return false;} else {var element, text, res1, res2;res1 = document.getElementById('result_Q2').innerText == 'Correct! str_replace_all replaces every occurrence.'; res2 = document.getElementById('result_Q3').innerText == 'Correct — all three manipulate whitespace in different ways.';text = res1 + res2;element.innerHTML = text;
          return false;
@@ -2774,14 +2774,14 @@ A matrix where rows are documents and columns are features (tokens), with cell v
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This chapter adapts material from the LADAL tutorial <span class="citation" data-cites="schweinberger_string">Schweinberger (<a href="#ref-schweinberger_string" role="doc-biblioref">2026</a>)</span> (CC BY 4.0), restructured and edited for this seminar. For deeper treatment, follow the original tutorial directly.</p>
+<p>This chapter adapts material from the LADAL tutorial <span class="citation" data-cites="schweinberger_string">Schweinberger (<a href="99-references.html#ref-schweinberger_string" role="doc-biblioref">2026</a>)</span> (CC BY 4.0), restructured and edited for this seminar. For deeper treatment, follow the original tutorial directly.</p>
 </div>
 </div>
 
 
 <!-- -->
 
-<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
 <div id="ref-schweinberger_string" class="csl-entry" role="listitem">
 Schweinberger, Martin. 2026. <em>String Processing in <span>R</span></em>. The Language Technology; Data Analysis Laboratory (LADAL), The University of Queensland. <a href="https://ladal.edu.au/tutorials/string/string.html">https://ladal.edu.au/tutorials/string/string.html</a>.
 </div>

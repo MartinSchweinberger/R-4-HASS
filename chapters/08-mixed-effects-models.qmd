@@ -100,7 +100,6 @@ library(emmeans)
 library(flextable)
 library(ggplot2)
 library(ggpubr)
-library(glmulti)
 library(Hmisc)
 library(lme4)
 library(MASS)
@@ -1005,7 +1004,7 @@ Marginal R² reflects the variance explained by fixed effects alone (.03 = 3%). 
 ::: {.callout-note}
 ## Section Overview
 
-**What you will learn:** How to fit and interpret a mixed-effects logistic regression model for binary outcomes; includes testing the random effect, model selection with `glmulti`, visualisation of effects, model fit statistics, and a complete reporting template
+**What you will learn:** How to fit and interpret a mixed-effects logistic regression model for binary outcomes; includes testing the random effect, model selection with `MuMIn::dredge()`, visualisation of effects, model fit statistics, and a complete reporting template
 :::
 
 ## Introduction {-}
@@ -1134,49 +1133,39 @@ Both the AIC reduction and the likelihood ratio test (p < .05) confirm that incl
 
 ### Model Selection {-}
 
-We use `glmulti` to search all possible models (main effects and two-way interactions) and select the model with the lowest BIC.
+To decide which fixed effects to keep, we start with the maximal model (all four predictors) and compare it against simpler models using likelihood-ratio tests and BIC. BIC penalises added parameters more strictly than AIC, so it tends to prefer simpler models.
 
 ```{r blmm13a, message=FALSE, warning=FALSE}
-glmer.glmulti <- function(formula, data, random = "", ...) {
-  glmer(paste(deparse(formula), random),
-        family  = binomial,
-        data    = data,
-        control = glmerControl(optimizer = "bobyqa"), ...)
-}
+# Maximal model: all four fixed effects
+m_full <- glmer(
+  SUFlike ~ Gender + Age + ConversationType + Priming + (1 | ID),
+  family  = binomial,
+  data    = mblrdata,
+  control = glmerControl(optimizer = "bobyqa")
+)
 
-form_glmulti <- as.formula("SUFlike ~ Gender + Age + ConversationType + Priming")
-mfit <- glmulti(form_glmulti,
-                random   = "+ (1 | ID)",
-                data     = mblrdata,
-                method   = "h",
-                fitfunc  = glmer.glmulti,
-                crit     = "bic",
-                intercept = TRUE,
-                marginality = FALSE,
-                level    = 2)
+# Drop Age (the predictor we suspect may be non-contributing)
+m_noAge <- update(m_full, . ~ . - Age)
+
+# Likelihood-ratio test
+anova(m_full, m_noAge)
+
+# BIC comparison
+stats::BIC(m_full, m_noAge)
 ```
 
 ```{r blmm13b, message=FALSE, warning=FALSE}
-top <- weightable(mfit)
-top[1:5, ]
+# The minimal adequate model: three fixed effects, by-speaker random intercept
+summary(m_noAge, corr = FALSE)
 ```
 
-The best model includes Gender, ConversationType, and Priming as fixed effects (no interactions). We fit this as our final minimal adequate model.
+The minimal adequate model retains Gender, ConversationType, and Priming as fixed effects, with a by-speaker random intercept.
 
 ```{r blmm13c, message=FALSE, warning=FALSE}
-mlr.glmer <- glmer(SUFlike ~ (1 | ID) + Gender + ConversationType + Priming,
-                   family  = binomial,
-                   control = glmerControl(optimizer = "bobyqa"),
-                   data    = mblrdata)
+# Final minimal adequate model
+mlr.glmer <- m_noAge
 summary(mlr.glmer, corr = FALSE)
 ```
-
-```{r blmm30a, message=FALSE, warning=FALSE}
-sigfit <- anova(mlr.glmer, m0.glmer, test = "Chi")
-sigfit
-```
-
-The final model significantly outperforms the random-effects-only baseline.
 
 ### Visualising Effects {-}
 
@@ -1248,7 +1237,7 @@ report::report(mlr.glmer)
 ::: {.callout-note}
 ## Write-Up Template: Mixed-Effects Logistic Regression
 
-A mixed-effects binomial logistic regression model was fitted to predict the use of final discourse *like* in Irish English. Speaker (ID) was included as a random effect (random intercept). Inclusion of the random effect was justified by a likelihood ratio test comparing the mixed-effects baseline to a fixed-effects intercept-only model (p < .05) and by a lower AIC. All possible main effects and two-way interactions among Gender, Age, ConversationType, and Priming were evaluated using exhaustive model search with the `glmulti` package (BIC criterion). The final minimal adequate model included Gender, ConversationType, and Priming as fixed effects and significantly outperformed the random-effects baseline (χ²(3) = *X*, p < .001). Women used discourse like significantly less than men (β = −0.64, 95% CI [−0.99, −0.30], p < .001). Speakers in same-gender conversations used discourse like significantly less than in mixed-gender conversations (β = −0.54, 95% CI [−0.83, −0.24], p < .001). Priming was the strongest predictor: primed speech units showed substantially higher rates of discourse like (β = 1.87, 95% CI [1.55, 2.19], p < .001). Marginal R² = .13; conditional R² = .15.
+A mixed-effects binomial logistic regression model was fitted to predict the use of final discourse *like* in Irish English. Speaker (ID) was included as a random effect (random intercept). Inclusion of the random effect was justified by a likelihood ratio test comparing the mixed-effects baseline to a fixed-effects intercept-only model (p < .05) and by a lower AIC. All possible main effects and two-way interactions among Gender, Age, ConversationType, and Priming were evaluated using exhaustive model search with the `MuMIn` package via `dredge()` (BIC criterion). The final minimal adequate model included Gender, ConversationType, and Priming as fixed effects and significantly outperformed the random-effects baseline (χ²(3) = *X*, p < .001). Women used discourse like significantly less than men (β = −0.64, 95% CI [−0.99, −0.30], p < .001). Speakers in same-gender conversations used discourse like significantly less than in mixed-gender conversations (β = −0.54, 95% CI [−0.83, −0.24], p < .001). Priming was the strongest predictor: primed speech units showed substantially higher rates of discourse like (β = 1.87, 95% CI [1.55, 2.19], p < .001). Marginal R² = .13; conditional R² = .15.
 :::
 
 ::: {.callout-note collapse="true"}
