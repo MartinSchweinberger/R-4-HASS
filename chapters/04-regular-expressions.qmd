@@ -1279,5 +1279,5 @@ data.frame(
 ::: {.callout-note}
 ## Source and Attribution
 
-This chapter adapts material from the LADAL tutorial *Regular Expressions in R* by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar.
+This chapter adapts material from the LADAL tutorial @schweinberger_regex (CC BY 4.0), restructured and edited for this seminar. For deeper treatment, follow the original tutorial directly.
 :::

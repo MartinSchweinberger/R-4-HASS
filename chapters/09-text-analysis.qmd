@@ -655,10 +655,15 @@ For rigorous analysis, always use bar plots or tables rather than word clouds.
   
 One of the most powerful uses of frequency analysis is comparing vocabulary across different texts or authors:  
 
-::: {.callout-warning}
-## TODO: data files required
+::: {.callout-note}
+## Data files used in this chapter
 
-This section expects `data/darwin.rda`, `data/melville.rda`, and `data/orwell.rda` in the project's `data/` folder (copy them from the original LADAL `textanalysis` tutorial's data repository).
+This chapter uses the following files from the `data/` folder:
+
+- `data/alice.rda` — Lewis Carroll, *Alice's Adventures in Wonderland*
+- `data/darwin.rda`, `data/melville.rda`, `data/orwell.rda` — comparison corpora (frequency comparison section)
+
+The data files are provided in the course repository. See @schweinberger_introta (conceptual foundations) and @schweinberger_textanalysis (practical implementation) for the original LADAL tutorials this chapter adapts.
 :::
 
 ```{r freq_compare, message=FALSE, warning=FALSE}  
@@ -1318,6 +1323,6 @@ kw_result   <- quanteda.textstats::textstat_keyness(
 
 This chapter adapts material from two LADAL tutorials by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar:
 
-- @sec-textanalysis-concepts (What is Text Analytics?) adapts selected content from *Introduction to Text Analysis: Concepts and Foundations* (https://ladal.edu.au/tutorials/introta/introta.html)
-- The remainder of the chapter (@sec-textanalysis-setup through @sec-textanalysis-reference) adapts *Introduction to Text Analysis: Practical Implementation in R* (https://ladal.edu.au/tutorials/textanalysis/textanalysis.html)
+- @sec-textanalysis-concepts (What is Text Analytics?) adapts @schweinberger_introta
+- The remainder of the chapter adapts @schweinberger_textanalysis
 :::

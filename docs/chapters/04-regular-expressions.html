@@ -368,7 +368,7 @@ div.csl-indent {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This chapter builds directly on <a href="03-string-processing.html" class="quarto-xref"><span>Chapter 4</span></a> (String Processing in R). Make sure you are comfortable with base R string functions and <code>stringr</code> before continuing.</p>
+<p>This chapter builds directly on <a href="#sec-string-processing-intro" class="quarto-xref"><span class="quarto-unresolved-ref">sec-string-processing-intro</span></a> (String Processing in R). Make sure you are comfortable with base R string functions and <code>stringr</code> before continuing.</p>
 </div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled">
@@ -384,8 +384,8 @@ div.csl-indent {
 <p>For further study, the following resources are highly recommended:</p>
 <ul>
 <li>
-<span class="citation" data-cites="friedl2006mastering">Friedl (<a href="#ref-friedl2006mastering" role="doc-biblioref">2006</a>)</span> — the definitive reference on regular expressions</li>
-<li>Chapter 17 of <span class="citation" data-cites="peng2016r">Peng (<a href="#ref-peng2016r" role="doc-biblioref">2016</a>)</span> — a practical introduction in an R context</li>
+<span class="citation" data-cites="friedl2006mastering">(<a href="#ref-friedl2006mastering" role="doc-biblioref"><strong>friedl2006mastering?</strong></a>)</span> — the definitive reference on regular expressions</li>
+<li>Chapter 17 of <span class="citation" data-cites="peng2016r">(<a href="#ref-peng2016r" role="doc-biblioref"><strong>peng2016r?</strong></a>)</span> — a practical introduction in an R context</li>
 <li>
 <a href="https://rstudio.com/wp-content/uploads/2016/09/RegExCheatsheet.pdf">RStudio Regex Cheatsheet</a> — a quick-reference card by Ian Kopacka</li>
 <li>Nick Thieberger’s <a href="https://www.youtube.com/watch?v=8ILToE0CNpM">Introduction to Regular Expressions</a> — a YouTube tutorial aimed at humanities scholars</li>
@@ -1686,20 +1686,20 @@ character(0)
 <div class="cell-output-display">
 <form name="form_PAT_Q1" onsubmit="return validate_form_PAT_Q1()" method="post">
 <label>
-<input type="radio" name="answer_PAT_Q1" id="answer_PAT_Q1_1" value="The end of a string followed by an uppercase letter">
-The end of a string followed by an uppercase letter
+<input type="radio" name="answer_PAT_Q1" id="answer_PAT_Q1_1" value="A string that begins with an uppercase letter">
+A string that begins with an uppercase letter
 </label>
 <br><label>
-<input type="radio" name="answer_PAT_Q1" id="answer_PAT_Q1_2" value="Any uppercase letter anywhere in the string">
-Any uppercase letter anywhere in the string
-</label>
-<br><label>
-<input type="radio" name="answer_PAT_Q1" id="answer_PAT_Q1_3" value="A string that consists entirely of uppercase letters">
+<input type="radio" name="answer_PAT_Q1" id="answer_PAT_Q1_2" value="A string that consists entirely of uppercase letters">
 A string that consists entirely of uppercase letters
 </label>
 <br><label>
-<input type="radio" name="answer_PAT_Q1" id="answer_PAT_Q1_4" value="A string that begins with an uppercase letter">
-A string that begins with an uppercase letter
+<input type="radio" name="answer_PAT_Q1" id="answer_PAT_Q1_3" value="The end of a string followed by an uppercase letter">
+The end of a string followed by an uppercase letter
+</label>
+<br><label>
+<input type="radio" name="answer_PAT_Q1" id="answer_PAT_Q1_4" value="Any uppercase letter anywhere in the string">
+Any uppercase letter anywhere in the string
 </label>
 <br><input type="submit" value="Check answer"><div id="result_PAT_Q1"></div>
 </form>
@@ -1715,16 +1715,16 @@ A string that begins with an uppercase letter
 <div class="cell-output-display">
 <form name="form_PAT_Q2" onsubmit="return validate_form_PAT_Q2()" method="post">
 <label>
-<input type="radio" name="answer_PAT_Q2" id="answer_PAT_Q2_1" value="colou?r matches 'color' only; colo[u]?r matches 'colour' only">
+<input type="radio" name="answer_PAT_Q2" id="answer_PAT_Q2_1" value="colo[u]?r is invalid syntax — ? cannot follow a character class">
+colo[u]?r is invalid syntax — ? cannot follow a character class
+</label>
+<br><label>
+<input type="radio" name="answer_PAT_Q2" id="answer_PAT_Q2_2" value="colou?r matches 'color' only; colo[u]?r matches 'colour' only">
 colou?r matches 'color' only; colo[u]?r matches 'colour' only
 </label>
 <br><label>
-<input type="radio" name="answer_PAT_Q2" id="answer_PAT_Q2_2" value="They are equivalent — both match 'colour' and 'color'; the ? makes the preceding element optional in both cases">
+<input type="radio" name="answer_PAT_Q2" id="answer_PAT_Q2_3" value="They are equivalent — both match 'colour' and 'color'; the ? makes the preceding element optional in both cases">
 They are equivalent — both match 'colour' and 'color'; the ? makes the preceding element optional in both cases
-</label>
-<br><label>
-<input type="radio" name="answer_PAT_Q2" id="answer_PAT_Q2_3" value="colo[u]?r is invalid syntax — ? cannot follow a character class">
-colo[u]?r is invalid syntax — ? cannot follow a character class
 </label>
 <br><label>
 <input type="radio" name="answer_PAT_Q2" id="answer_PAT_Q2_4" value="colou?r matches only 'colour'; colo[u]?r matches both">
@@ -1976,20 +1976,20 @@ colou?r matches only 'colour'; colo[u]?r matches both
 <div class="cell-output-display">
 <form name="form_STR_Q1" onsubmit="return validate_form_STR_Q1()" method="post">
 <label>
-<input type="radio" name="answer_STR_Q1" id="answer_STR_Q1_1" value="str_extract_all() is faster than str_extract() for long strings">
-str_extract_all() is faster than str_extract() for long strings
+<input type="radio" name="answer_STR_Q1" id="answer_STR_Q1_1" value="str_extract() returns only the first match in each string; str_extract_all() returns all matches as a list">
+str_extract() returns only the first match in each string; str_extract_all() returns all matches as a list
 </label>
 <br><label>
-<input type="radio" name="answer_STR_Q1" id="answer_STR_Q1_2" value="str_extract() returns only the first match in each string; str_extract_all() returns all matches as a list">
-str_extract() returns only the first match in each string; str_extract_all() returns all matches as a list
+<input type="radio" name="answer_STR_Q1" id="answer_STR_Q1_2" value="They are identical — the _all suffix makes no difference">
+They are identical — the _all suffix makes no difference
 </label>
 <br><label>
 <input type="radio" name="answer_STR_Q1" id="answer_STR_Q1_3" value="str_extract() returns a character vector; str_extract_all() returns a logical vector">
 str_extract() returns a character vector; str_extract_all() returns a logical vector
 </label>
 <br><label>
-<input type="radio" name="answer_STR_Q1" id="answer_STR_Q1_4" value="They are identical — the _all suffix makes no difference">
-They are identical — the _all suffix makes no difference
+<input type="radio" name="answer_STR_Q1" id="answer_STR_Q1_4" value="str_extract_all() is faster than str_extract() for long strings">
+str_extract_all() is faster than str_extract() for long strings
 </label>
 <br><input type="submit" value="Check answer"><div id="result_STR_Q1"></div>
 </form>
@@ -2005,20 +2005,20 @@ They are identical — the _all suffix makes no difference
 <div class="cell-output-display">
 <form name="form_STR_Q2" onsubmit="return validate_form_STR_Q2()" method="post">
 <label>
-<input type="radio" name="answer_STR_Q2" id="answer_STR_Q2_1" value="str_detect() — detect long words and then capitalise separately">
-str_detect() — detect long words and then capitalise separately
+<input type="radio" name="answer_STR_Q2" id="answer_STR_Q2_1" value="str_replace_all() — replace each matching word with an uppercase version using a replacement function">
+str_replace_all() — replace each matching word with an uppercase version using a replacement function
 </label>
 <br><label>
-<input type="radio" name="answer_STR_Q2" id="answer_STR_Q2_2" value="str_extract_all() — extract the words and then capitalise">
-str_extract_all() — extract the words and then capitalise
-</label>
-<br><label>
-<input type="radio" name="answer_STR_Q2" id="answer_STR_Q2_3" value="str_remove_all() — remove the original words then insert capitals">
+<input type="radio" name="answer_STR_Q2" id="answer_STR_Q2_2" value="str_remove_all() — remove the original words then insert capitals">
 str_remove_all() — remove the original words then insert capitals
 </label>
 <br><label>
-<input type="radio" name="answer_STR_Q2" id="answer_STR_Q2_4" value="str_replace_all() — replace each matching word with an uppercase version using a replacement function">
-str_replace_all() — replace each matching word with an uppercase version using a replacement function
+<input type="radio" name="answer_STR_Q2" id="answer_STR_Q2_3" value="str_detect() — detect long words and then capitalise separately">
+str_detect() — detect long words and then capitalise separately
+</label>
+<br><label>
+<input type="radio" name="answer_STR_Q2" id="answer_STR_Q2_4" value="str_extract_all() — extract the words and then capitalise">
+str_extract_all() — extract the words and then capitalise
 </label>
 <br><input type="submit" value="Check answer"><div id="result_STR_Q2"></div>
 </form>
@@ -2315,12 +2315,12 @@ str_replace_all() — replace each matching word with an uppercase version using
 (?&lt;=@)[\w.]+(?=\.\w+$) — a lookbehind for @ and lookahead for the final .extension
 </label>
 <br><label>
-<input type="radio" name="answer_PRAC_Q2" id="answer_PRAC_Q2_2" value="@\w+ — the @ sign followed by word characters">
-@\w+ — the @ sign followed by word characters
+<input type="radio" name="answer_PRAC_Q2" id="answer_PRAC_Q2_2" value="\w+\.[\w.]+ — word characters and dots after the @">
+\w+\.[\w.]+ — word characters and dots after the @
 </label>
 <br><label>
-<input type="radio" name="answer_PRAC_Q2" id="answer_PRAC_Q2_3" value="\w+\.[\w.]+ — word characters and dots after the @">
-\w+\.[\w.]+ — word characters and dots after the @
+<input type="radio" name="answer_PRAC_Q2" id="answer_PRAC_Q2_3" value="@\w+ — the @ sign followed by word characters">
+@\w+ — the @ sign followed by word characters
 </label>
 <br><label>
 <input type="radio" name="answer_PRAC_Q2" id="answer_PRAC_Q2_4" value="\w+(?=\.edu|\.com|\.org) — lookahead for known domain suffixes">
@@ -2340,20 +2340,20 @@ str_replace_all() — replace each matching word with an uppercase version using
 <div class="cell-output-display">
 <form name="form_PRAC_Q3" onsubmit="return validate_form_PRAC_Q3()" method="post">
 <label>
-<input type="radio" name="answer_PRAC_Q3" id="answer_PRAC_Q3_1" value="It matches only if there are exactly two words separated by 'and'">
-It matches only if there are exactly two words separated by 'and'
-</label>
-<br><label>
-<input type="radio" name="answer_PRAC_Q3" id="answer_PRAC_Q3_2" value="It replaces every occurrence of 'and' with \\2 and \\1 literally">
+<input type="radio" name="answer_PRAC_Q3" id="answer_PRAC_Q3_1" value="It replaces every occurrence of 'and' with \\2 and \\1 literally">
 It replaces every occurrence of 'and' with \\2 and \\1 literally
 </label>
 <br><label>
-<input type="radio" name="answer_PRAC_Q3" id="answer_PRAC_Q3_3" value="It removes the word 'and' and joins the surrounding words">
-It removes the word 'and' and joins the surrounding words
+<input type="radio" name="answer_PRAC_Q3" id="answer_PRAC_Q3_2" value="It matches only if there are exactly two words separated by 'and'">
+It matches only if there are exactly two words separated by 'and'
 </label>
 <br><label>
-<input type="radio" name="answer_PRAC_Q3" id="answer_PRAC_Q3_4" value="It swaps the two words on either side of 'and', using backreferences \\1 and \\2 to refer to the captured groups">
+<input type="radio" name="answer_PRAC_Q3" id="answer_PRAC_Q3_3" value="It swaps the two words on either side of 'and', using backreferences \\1 and \\2 to refer to the captured groups">
 It swaps the two words on either side of 'and', using backreferences \\1 and \\2 to refer to the captured groups
+</label>
+<br><label>
+<input type="radio" name="answer_PRAC_Q3" id="answer_PRAC_Q3_4" value="It removes the word 'and' and joins the surrounding words">
+It removes the word 'and' and joins the surrounding words
 </label>
 <br><input type="submit" value="Check answer"><div id="result_PRAC_Q3"></div>
 </form>
@@ -2385,20 +2385,20 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 <div class="cell-output-display">
 <form name="form_EX_Q1" onsubmit="return validate_form_EX_Q1()" method="post">
 <label>
-<input type="radio" name="answer_EX_Q1" id="answer_EX_Q1_1" value="&quot;walk.*&quot; — &quot;walk&quot; followed by any characters">
+<input type="radio" name="answer_EX_Q1" id="answer_EX_Q1_1" value="&quot;[Ww]alk&quot; — capital or lowercase W followed by alk">
+"[Ww]alk" — capital or lowercase W followed by alk
+</label>
+<br><label>
+<input type="radio" name="answer_EX_Q1" id="answer_EX_Q1_2" value="&quot;walk.*&quot; — &quot;walk&quot; followed by any characters">
 "walk.*" — "walk" followed by any characters
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q1" id="answer_EX_Q1_2" value="\\bwalk\\w*\\b — word boundary + &quot;walk&quot; + zero or more word characters">
+<input type="radio" name="answer_EX_Q1" id="answer_EX_Q1_3" value="\\bwalk\\w*\\b — word boundary + &quot;walk&quot; + zero or more word characters">
 \\bwalk\\w*\\b — word boundary + "walk" + zero or more word characters
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q1" id="answer_EX_Q1_3" value="&quot;walk&quot; — a plain literal match">
+<input type="radio" name="answer_EX_Q1" id="answer_EX_Q1_4" value="&quot;walk&quot; — a plain literal match">
 "walk" — a plain literal match
-</label>
-<br><label>
-<input type="radio" name="answer_EX_Q1" id="answer_EX_Q1_4" value="&quot;[Ww]alk&quot; — capital or lowercase W followed by alk">
-"[Ww]alk" — capital or lowercase W followed by alk
 </label>
 <br><input type="submit" value="Check answer"><div id="result_EX_Q1"></div>
 </form>
@@ -2414,16 +2414,16 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 <div class="cell-output-display">
 <form name="form_EX_Q2" onsubmit="return validate_form_EX_Q2()" method="post">
 <label>
-<input type="radio" name="answer_EX_Q2" id="answer_EX_Q2_1" value="\\b[Uu]n\\w+ — word boundary + &quot;un&quot; (case-flexible) + one or more word characters">
+<input type="radio" name="answer_EX_Q2" id="answer_EX_Q2_1" value="&quot;\\bun&quot; — word boundary before &quot;un&quot; with no suffix requirement">
+"\\bun" — word boundary before "un" with no suffix requirement
+</label>
+<br><label>
+<input type="radio" name="answer_EX_Q2" id="answer_EX_Q2_2" value="\\b[Uu]n\\w+ — word boundary + &quot;un&quot; (case-flexible) + one or more word characters">
 \\b[Uu]n\\w+ — word boundary + "un" (case-flexible) + one or more word characters
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q2" id="answer_EX_Q2_2" value="&quot;un&quot; — matches any token containing &quot;un&quot; anywhere">
+<input type="radio" name="answer_EX_Q2" id="answer_EX_Q2_3" value="&quot;un&quot; — matches any token containing &quot;un&quot; anywhere">
 "un" — matches any token containing "un" anywhere
-</label>
-<br><label>
-<input type="radio" name="answer_EX_Q2" id="answer_EX_Q2_3" value="&quot;\\bun&quot; — word boundary before &quot;un&quot; with no suffix requirement">
-"\\bun" — word boundary before "un" with no suffix requirement
 </label>
 <br><label>
 <input type="radio" name="answer_EX_Q2" id="answer_EX_Q2_4" value="&quot;^un&quot; — anchors to string start (works on single tokens)">
@@ -2447,16 +2447,16 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 "\\d" — matches a single digit
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q3" id="answer_EX_Q3_2" value="&quot;[0-9]&quot; — matches a single digit anywhere in the token">
-"[0-9]" — matches a single digit anywhere in the token
+<input type="radio" name="answer_EX_Q3" id="answer_EX_Q3_2" value="\\b\\d+\\b — word boundaries around one or more digits">
+\\b\\d+\\b — word boundaries around one or more digits
 </label>
 <br><label>
 <input type="radio" name="answer_EX_Q3" id="answer_EX_Q3_3" value="&quot;\\d*&quot; — zero or more digits (matches every string)">
 "\\d*" — zero or more digits (matches every string)
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q3" id="answer_EX_Q3_4" value="\\b\\d+\\b — word boundaries around one or more digits">
-\\b\\d+\\b — word boundaries around one or more digits
+<input type="radio" name="answer_EX_Q3" id="answer_EX_Q3_4" value="&quot;[0-9]&quot; — matches a single digit anywhere in the token">
+"[0-9]" — matches a single digit anywhere in the token
 </label>
 <br><input type="submit" value="Check answer"><div id="result_EX_Q3"></div>
 </form>
@@ -2472,20 +2472,20 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 <div class="cell-output-display">
 <form name="form_EX_Q4" onsubmit="return validate_form_EX_Q4()" method="post">
 <label>
-<input type="radio" name="answer_EX_Q4" id="answer_EX_Q4_1" value="&quot;[ing]&quot; — any of the characters i, n, or g">
-"[ing]" — any of the characters i, n, or g
+<input type="radio" name="answer_EX_Q4" id="answer_EX_Q4_1" value="&quot;ing$&quot; — &quot;ing&quot; at the end of the string (works on single tokens)">
+"ing$" — "ing" at the end of the string (works on single tokens)
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q4" id="answer_EX_Q4_2" value="&quot;ing$&quot; — &quot;ing&quot; at the end of the string (works on single tokens)">
-"ing$" — "ing" at the end of the string (works on single tokens)
+<input type="radio" name="answer_EX_Q4" id="answer_EX_Q4_2" value="&quot;.*ing&quot; — any characters followed by &quot;ing&quot;">
+".*ing" — any characters followed by "ing"
 </label>
 <br><label>
 <input type="radio" name="answer_EX_Q4" id="answer_EX_Q4_3" value="\\b\\w+ing\\b — one or more word characters followed by &quot;ing&quot; at a word boundary">
 \\b\\w+ing\\b — one or more word characters followed by "ing" at a word boundary
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q4" id="answer_EX_Q4_4" value="&quot;.*ing&quot; — any characters followed by &quot;ing&quot;">
-".*ing" — any characters followed by "ing"
+<input type="radio" name="answer_EX_Q4" id="answer_EX_Q4_4" value="&quot;[ing]&quot; — any of the characters i, n, or g">
+"[ing]" — any of the characters i, n, or g
 </label>
 <br><input type="submit" value="Check answer"><div id="result_EX_Q4"></div>
 </form>
@@ -2505,16 +2505,16 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 "\\S+@\\S+" — non-whitespace characters around @
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q5" id="answer_EX_Q5_2" value="&quot;@&quot; — any token containing the @ symbol">
+<input type="radio" name="answer_EX_Q5" id="answer_EX_Q5_2" value="&quot;[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}&quot; — local part + @ + domain + TLD">
+"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}" — local part + @ + domain + TLD
+</label>
+<br><label>
+<input type="radio" name="answer_EX_Q5" id="answer_EX_Q5_3" value="&quot;@&quot; — any token containing the @ symbol">
 "@" — any token containing the @ symbol
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q5" id="answer_EX_Q5_3" value="&quot;\\w+@\\w+&quot; — word characters on both sides of @">
+<input type="radio" name="answer_EX_Q5" id="answer_EX_Q5_4" value="&quot;\\w+@\\w+&quot; — word characters on both sides of @">
 "\\w+@\\w+" — word characters on both sides of @
-</label>
-<br><label>
-<input type="radio" name="answer_EX_Q5" id="answer_EX_Q5_4" value="&quot;[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}&quot; — local part + @ + domain + TLD">
-"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}" — local part + @ + domain + TLD
 </label>
 <br><input type="submit" value="Check answer"><div id="result_EX_Q5"></div>
 </form>
@@ -2530,20 +2530,20 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 <div class="cell-output-display">
 <form name="form_EX_Q6" onsubmit="return validate_form_EX_Q6()" method="post">
 <label>
-<input type="radio" name="answer_EX_Q6" id="answer_EX_Q6_1" value="&quot;\\b\\d\\b&quot; — a digit as a complete token">
-"\\b\\d\\b" — a digit as a complete token
-</label>
-<br><label>
-<input type="radio" name="answer_EX_Q6" id="answer_EX_Q6_2" value="&quot;[a-z]\\d&quot; — a letter followed immediately by a digit">
-"[a-z]\\d" — a letter followed immediately by a digit
-</label>
-<br><label>
-<input type="radio" name="answer_EX_Q6" id="answer_EX_Q6_3" value="&quot;\\d+&quot; — one or more digits (matches pure numbers too)">
+<input type="radio" name="answer_EX_Q6" id="answer_EX_Q6_1" value="&quot;\\d+&quot; — one or more digits (matches pure numbers too)">
 "\\d+" — one or more digits (matches pure numbers too)
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q6" id="answer_EX_Q6_4" value="&quot;\\w*\\d\\w*&quot; — word characters, then a digit, then word characters">
+<input type="radio" name="answer_EX_Q6" id="answer_EX_Q6_2" value="&quot;\\w*\\d\\w*&quot; — word characters, then a digit, then word characters">
 "\\w*\\d\\w*" — word characters, then a digit, then word characters
+</label>
+<br><label>
+<input type="radio" name="answer_EX_Q6" id="answer_EX_Q6_3" value="&quot;[a-z]\\d&quot; — a letter followed immediately by a digit">
+"[a-z]\\d" — a letter followed immediately by a digit
+</label>
+<br><label>
+<input type="radio" name="answer_EX_Q6" id="answer_EX_Q6_4" value="&quot;\\b\\d\\b&quot; — a digit as a complete token">
+"\\b\\d\\b" — a digit as a complete token
 </label>
 <br><input type="submit" value="Check answer"><div id="result_EX_Q6"></div>
 </form>
@@ -2563,16 +2563,16 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 "[a-z]-[a-z]" — a lowercase letter, hyphen, lowercase letter
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q7" id="answer_EX_Q7_2" value="&quot;\\w-\\w&quot; — one word character, hyphen, one word character">
-"\\w-\\w" — one word character, hyphen, one word character
+<input type="radio" name="answer_EX_Q7" id="answer_EX_Q7_2" value="&quot;-&quot; — any token containing a hyphen">
+"-" — any token containing a hyphen
 </label>
 <br><label>
 <input type="radio" name="answer_EX_Q7" id="answer_EX_Q7_3" value="&quot;\\b\\w+-\\w+\\b&quot; — word characters, hyphen, word characters within word boundaries">
 "\\b\\w+-\\w+\\b" — word characters, hyphen, word characters within word boundaries
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q7" id="answer_EX_Q7_4" value="&quot;-&quot; — any token containing a hyphen">
-"-" — any token containing a hyphen
+<input type="radio" name="answer_EX_Q7" id="answer_EX_Q7_4" value="&quot;\\w-\\w&quot; — one word character, hyphen, one word character">
+"\\w-\\w" — one word character, hyphen, one word character
 </label>
 <br><input type="submit" value="Check answer"><div id="result_EX_Q7"></div>
 </form>
@@ -2588,20 +2588,20 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 <div class="cell-output-display">
 <form name="form_EX_Q8" onsubmit="return validate_form_EX_Q8()" method="post">
 <label>
-<input type="radio" name="answer_EX_Q8" id="answer_EX_Q8_1" value="&quot;^[A-Z]&quot; — string starting with uppercase (same as \\b[A-Z] on tokens)">
-"^[A-Z]" — string starting with uppercase (same as \\b[A-Z] on tokens)
-</label>
-<br><label>
-<input type="radio" name="answer_EX_Q8" id="answer_EX_Q8_2" value="&quot;\\b[A-Z][a-z]+\\b&quot; — uppercase first letter followed by one or more lowercase letters">
+<input type="radio" name="answer_EX_Q8" id="answer_EX_Q8_1" value="&quot;\\b[A-Z][a-z]+\\b&quot; — uppercase first letter followed by one or more lowercase letters">
 "\\b[A-Z][a-z]+\\b" — uppercase first letter followed by one or more lowercase letters
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q8" id="answer_EX_Q8_3" value="&quot;[A-Z]+&quot; — one or more uppercase letters (matches ALL-CAPS too)">
+<input type="radio" name="answer_EX_Q8" id="answer_EX_Q8_2" value="&quot;[A-Z]+&quot; — one or more uppercase letters (matches ALL-CAPS too)">
 "[A-Z]+" — one or more uppercase letters (matches ALL-CAPS too)
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q8" id="answer_EX_Q8_4" value="&quot;[A-Z]&quot; — any uppercase letter anywhere in the token">
+<input type="radio" name="answer_EX_Q8" id="answer_EX_Q8_3" value="&quot;[A-Z]&quot; — any uppercase letter anywhere in the token">
 "[A-Z]" — any uppercase letter anywhere in the token
+</label>
+<br><label>
+<input type="radio" name="answer_EX_Q8" id="answer_EX_Q8_4" value="&quot;^[A-Z]&quot; — string starting with uppercase (same as \\b[A-Z] on tokens)">
+"^[A-Z]" — string starting with uppercase (same as \\b[A-Z] on tokens)
 </label>
 <br><input type="submit" value="Check answer"><div id="result_EX_Q8"></div>
 </form>
@@ -2617,16 +2617,16 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 <div class="cell-output-display">
 <form name="form_EX_Q9" onsubmit="return validate_form_EX_Q9()" method="post">
 <label>
-<input type="radio" name="answer_EX_Q9" id="answer_EX_Q9_1" value="&quot;\\?$&quot; — a question mark at the end of the string">
-"\\?$" — a question mark at the end of the string
+<input type="radio" name="answer_EX_Q9" id="answer_EX_Q9_1" value="&quot;?&quot; — zero or one of the preceding element (quantifier, not literal)">
+"?" — zero or one of the preceding element (quantifier, not literal)
 </label>
 <br><label>
 <input type="radio" name="answer_EX_Q9" id="answer_EX_Q9_2" value="&quot;.*\\?$&quot; — any characters followed by ? at string end">
 ".*\\?$" — any characters followed by ? at string end
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q9" id="answer_EX_Q9_3" value="&quot;?&quot; — zero or one of the preceding element (quantifier, not literal)">
-"?" — zero or one of the preceding element (quantifier, not literal)
+<input type="radio" name="answer_EX_Q9" id="answer_EX_Q9_3" value="&quot;\\?$&quot; — a question mark at the end of the string">
+"\\?$" — a question mark at the end of the string
 </label>
 <br><label>
 <input type="radio" name="answer_EX_Q9" id="answer_EX_Q9_4" value="&quot;\\?&quot; — matches any token ending in a literal question mark (on a tokenised vector)">
@@ -2646,20 +2646,20 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 <div class="cell-output-display">
 <form name="form_EX_Q10" onsubmit="return validate_form_EX_Q10()" method="post">
 <label>
-<input type="radio" name="answer_EX_Q10" id="answer_EX_Q10_1" value="&quot;[aeiou][aeiou]&quot; — same as above but written out explicitly">
+<input type="radio" name="answer_EX_Q10" id="answer_EX_Q10_1" value="&quot;(aa|ee|ii|oo|uu)&quot; — only identical vowel pairs">
+"(aa|ee|ii|oo|uu)" — only identical vowel pairs
+</label>
+<br><label>
+<input type="radio" name="answer_EX_Q10" id="answer_EX_Q10_2" value="&quot;[aeiou][aeiou]&quot; — same as above but written out explicitly">
 "[aeiou][aeiou]" — same as above but written out explicitly
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q10" id="answer_EX_Q10_2" value="&quot;[aeiouAEIOU]{2}&quot; — two consecutive vowels (case-insensitive vowel class, quantified)">
+<input type="radio" name="answer_EX_Q10" id="answer_EX_Q10_3" value="&quot;[aeiouAEIOU]{2}&quot; — two consecutive vowels (case-insensitive vowel class, quantified)">
 "[aeiouAEIOU]{2}" — two consecutive vowels (case-insensitive vowel class, quantified)
 </label>
 <br><label>
-<input type="radio" name="answer_EX_Q10" id="answer_EX_Q10_3" value="&quot;[aeiou]+&quot; — one or more vowels (also matches single vowels)">
+<input type="radio" name="answer_EX_Q10" id="answer_EX_Q10_4" value="&quot;[aeiou]+&quot; — one or more vowels (also matches single vowels)">
 "[aeiou]+" — one or more vowels (also matches single vowels)
-</label>
-<br><label>
-<input type="radio" name="answer_EX_Q10" id="answer_EX_Q10_4" value="&quot;(aa|ee|ii|oo|uu)&quot; — only identical vowel pairs">
-"(aa|ee|ii|oo|uu)" — only identical vowel pairs
 </label>
 <br><input type="submit" value="Check answer"><div id="result_EX_Q10"></div>
 </form>
@@ -2913,7 +2913,7 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This chapter adapts material from the LADAL tutorial <em>Regular Expressions in R</em> by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar.</p>
+<p>This chapter adapts material from the LADAL tutorial <span class="citation" data-cites="schweinberger_regex">Schweinberger (<a href="#ref-schweinberger_regex" role="doc-biblioref">2026</a>)</span> (CC BY 4.0), restructured and edited for this seminar. For deeper treatment, follow the original tutorial directly.</p>
 </div>
 </div>
 
@@ -2921,11 +2921,8 @@ It swaps the two words on either side of 'and', using backreferences \\1 and \\2
 <!-- -->
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list">
-<div id="ref-friedl2006mastering" class="csl-entry" role="listitem">
-Friedl, Jeffrey E. F. 2006. <em>Mastering Regular Expressions</em>. 3rd ed. O’Reilly Media.
-</div>
-<div id="ref-peng2016r" class="csl-entry" role="listitem">
-Peng, Roger D. 2016. <em>R Programming for Data Science</em>. Leanpub.
+<div id="ref-schweinberger_regex" class="csl-entry" role="listitem">
+Schweinberger, Martin. 2026. <em>Regular Expressions in <span>R</span></em>. The Language Technology; Data Analysis Laboratory (LADAL), The University of Queensland. <a href="https://ladal.edu.au/tutorials/regular_expressions/regular_expressions.html">https://ladal.edu.au/tutorials/regular_expressions/regular_expressions.html</a>.
 </div>
 </div>
 </section></section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
@@ -4670,7 +4667,7 @@ Peng, Roger D. 2016. <em>R Programming for Data Science</em>. Leanpub.
 <span id="cb164-1315"><a href="#cb164-1315" aria-hidden="true" tabindex="-1"></a>::: {.callout-note}</span>
 <span id="cb164-1316"><a href="#cb164-1316" aria-hidden="true" tabindex="-1"></a><span class="fu">## Source and Attribution</span></span>
 <span id="cb164-1317"><a href="#cb164-1317" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb164-1318"><a href="#cb164-1318" aria-hidden="true" tabindex="-1"></a>This chapter adapts material from the LADAL tutorial *Regular Expressions in R* by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar.</span>
+<span id="cb164-1318"><a href="#cb164-1318" aria-hidden="true" tabindex="-1"></a>This chapter adapts material from the LADAL tutorial @schweinberger_regex (CC BY 4.0), restructured and edited for this seminar. For deeper treatment, follow the original tutorial directly.</span>
 <span id="cb164-1319"><a href="#cb164-1319" aria-hidden="true" tabindex="-1"></a>:::</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>

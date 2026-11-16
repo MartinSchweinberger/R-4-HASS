@@ -58,15 +58,15 @@ library(checkdown)
 
 Throughout this chapter we work with four example texts.
 
-::: {.callout-warning}
-## TODO: data files required
+::: {.callout-note}
+## Data files used in this chapter
 
-This section expects the following files in the project's `data/` folder (copy them from the original LADAL `string` tutorial's data repository):
+This chapter uses the following files from the `data/` folder:
 
-- `data/tx1.rda`
-- `data/tx2.rda`
-- `data/tx3.rda`
-- `data/tx4.rda`
+- `data/tx1.rda`, `data/tx2.rda`, `data/tx3.rda`, `data/tx4.rda` — short example texts
+- `data/testcorpus/linguistics04.txt` — fixed-answer file for Q11–Q12
+
+If you have cloned the course repository, these files are already in place. See @schweinberger_string for the original LADAL tutorial this chapter adapts.
 :::
 
 ```{r load_texts, message=FALSE, warning=FALSE}
@@ -1441,7 +1441,7 @@ check_question(
 #### Challenge! {.unnumbered}
 
 ::: {.callout-warning}
-## TODO: data file required
+## Data file required
 
 Q11–Q12 below expect `data/testcorpus/linguistics04.txt` in the project folder, with the answer key tied to this *exact* file (101 word tokens, 673 characters). Copy the original file from the LADAL `string` tutorial's data repository — substituting a different text will make the hardcoded answers wrong.
 :::
@@ -1493,5 +1493,5 @@ readLines(here::here("data", "testcorpus", "linguistics04.txt")) |>
 ::: {.callout-note}
 ## Source and Attribution
 
-This chapter adapts material from the LADAL tutorial *String Processing in R* by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar.
+This chapter adapts material from the LADAL tutorial @schweinberger_string (CC BY 4.0), restructured and edited for this seminar. For deeper treatment, follow the original tutorial directly.
 :::

@@ -38,16 +38,18 @@ By the end of this chapter you will be able to:
 
 # Setup {#sec-mixedmodel-setup}
 
-::: {.callout-warning}
-## TODO: data files required
+::: {.callout-note}
+## Data files used in this chapter
 
-This chapter expects the following files in the project's `data/` folder (copy them from the original LADAL `mixedmodel`/`regression` tutorial's data repository):
+This chapter uses the following files from the `data/` folder:
 
-- `data/lmd.rda` — used in the linear mixed-effects regression section
-- `data/mbd.rda` — used in the binomial logistic mixed-effects section
-- `data/cld.rda` — used in the Poisson/negative binomial count-models section
-- `data/ratex.rda` — used in the ordinal regression section
-- `data/pict.rda` — used in the multinomial regression section
+- `data/lmd.rda` — linear mixed-effects regression section
+- `data/mbd.rda` — binomial logistic mixed-effects section (also used by @sec-mixedmodel-cit)
+- `data/cld.rda` — Poisson/negative binomial count-models section
+- `data/ratex.rda` — ordinal regression section
+- `data/pict.rda` — multinomial regression section
+
+The data files are provided in the course repository. See @schweinberger_mixedmodel for the original LADAL tutorial on mixed-effects models, and @schweinberger_treemodels for the Tree-Based Models tutorial underlying the CIT subsection.
 :::
 
 ## Installing Packages {-}
@@ -1430,7 +1432,7 @@ pvals <- unlist(nodeapply(
 ggparty(cit1) +
   geom_edge() +
   geom_edge_label() +
-  geom_node_label(
+    geom_node_label(
     line_list = list(
       aes(label = splitvar),
       aes(label = paste0(
@@ -1438,8 +1440,7 @@ ggparty(cit1) +
         ", p ",
         ifelse(pvals < .001, "< .001",
                paste0("= ", round(pvals, 3)))
-      )),
-      size = 10
+      ))
     ),
     line_gpar = list(list(size = 13), list(size = 10)),
     ids = "inner"
@@ -2037,5 +2038,10 @@ An overdispersion parameter of 0.8 indicates *under*dispersion (variance slightl
 ::: {.callout-note}
 ## Source and Attribution
 
-This chapter adapts material from the LADAL tutorial *Mixed-Effects Models in R* by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar. Thanks to Stefan Thomas Gries for feedback that substantially improved earlier versions of this material.
+This chapter adapts material from two LADAL tutorials by Martin Schweinberger (CC BY 4.0), restructured and edited for this seminar:
+
+- The main body of the chapter adapts @schweinberger_mixedmodel
+- @sec-mixedmodel-cit (Conditional Inference Trees) adapts selected content from @schweinberger_treemodels
+
+Thanks to Stefan Th. Gries for feedback that substantially improved earlier versions of this material.
 :::
