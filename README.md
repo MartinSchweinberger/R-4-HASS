@@ -41,25 +41,13 @@ keyboard.
 | Day 3 | Fri 8 Jan    | Statistics and modelling              | Descriptive statistics · regression concepts · mixed-effects models · conditional inference trees   |
 | Day 4 | Sat 9 Jan    | Reproducible publishing               | Quarto documents · rendering · GitHub Pages · publishing your own research website                  |
 
-### Typical day structure
+### Daily structure
 
-> ⚠ **Confirm with your instructor.** The schedule below is indicative. Please check the final times on the LSF entry.
+Each day runs for eight academic hours (six real hours), roughly
+09:00–16:30, with two short breaks and a lunch break. Final times
+appear in the LSF entry.
 
-| Time        | Activity               |
-|-------------|------------------------|
-| 09:00–09:10 | Welcome / recap        |
-| 09:10–10:10 | Session 1              |
-| 10:10–10:25 | Break                  |
-| 10:25–11:55 | Session 2              |
-| 11:55–12:55 | Lunch                  |
-| 12:55–14:10 | Session 3              |
-| 14:10–14:25 | Break                  |
-| 14:25–15:25 | Session 4              |
-| 15:25–16:15 | Session 5              |
-| 16:15–16:30 | Wrap-up / next-day preview |
-
-Total contact time: **8 academic hours (6 real hours) per day**, 32
-academic hours across the four days.
+Total contact time across the four days: 32 academic hours.
 
 ---
 
@@ -114,10 +102,6 @@ before, not on the morning of Day 1.
 In RStudio: **File → New Project → New Directory**, name it `R-4-HASS`,
 save it somewhere you'll find again.
 
-> If your pre-course email asked you to create a folder called `R4SHH`,
-> use `R-4-HASS` instead — it matches this repository and will save
-> confusion on Day 1.
-
 ### 4. Have your laptop charged and ready
 
 You will spend four full days on your own laptop. Bring a charger. If
@@ -125,14 +109,7 @@ your laptop is on an institutional lockdown (university-managed,
 corporate security), check in advance that you have administrator
 rights to install software.
 
-### 5. Confirm your Studiengang
-
-If you haven't already, submit this short form so I can register your
-Prüfungsleistung correctly:
-
-👉 <https://forms.gle/3R8pgTvNDLd5AuNP9>
-
-### 6. Troubleshooting
+### 5. Troubleshooting
 
 If any installation fails: email me (see **Contact** below) with the
 specific error message. Don't arrive on Day 1 with it still broken —
@@ -168,7 +145,7 @@ The course has a dedicated online book covering every topic in detail:
 - **Before each day:** skim the relevant chapters. Full reading is not
   required — a 15-minute browse of the headings and intro of each
   chapter is enough.
-- **Between the two blocks** (Dec 19 → Jan 8): if you want extra prep,
+- **Between the two blocks** (19 Dec → 8 Jan): if you want extra prep,
   Chapter 7 (statistics) before Day 3 pays off.
 - **After the course:** the book is your reference for your
   Prüfungsleistung.
@@ -188,33 +165,255 @@ Public datasets referenced in the book (e.g. Alice in Wonderland via
 
 ## Assessment (Prüfungsleistung)
 
-The specific Prüfungsleistung depends on the module under which you
-have registered this seminar (e.g. P 12.2, WP 33.1, WP 18.1, GGSP).
+The Prüfungsleistung depends on the module under which you registered
+for this seminar. This section covers:
 
-I am finalising the per-module details with the Studierendenange-
-legenheiten office. You will receive the binding specification by
-email before the first session on 18 December.
+1. **Which format applies to your module** — the summary table below
+2. **What each format requires** — four detailed task descriptions
+3. **How you will be marked** — a marking sheet per format
+4. **How to submit** — email with a standardised subject line
 
-Confirmed so far:
+Verify the format for your module independently with your own
+Prüfungsamt. The specifications below reflect the current PStOs as
+confirmed by the LMU Studierendensekretariat (Philipp Handl, November
+2026), but Prüfungsordnungen vary and you remain responsible for
+checking your own registration.
 
-- **Hauptseminar P 12.2** (Lehramt Gymnasium): Hausarbeit on an
-  English linguistics or related topic, with textual data analysed
-  in R. Length: 34,000–51,000 characters (pure text, excluding TOC,
-  bibliography, and whitespace), per the current PStO.
-- **Masterseminar WP 18.1** (MA English Studies): Dokumentation in
-  the form of a reproducible Quarto document, delivered as a public
-  GitHub repository with rendered HTML. Length: 22,500–30,000
-  characters per the current PStO.
+### Summary table — module to format
 
-Other modules (WP 33.1, WP 32.1, WP 7.1, WP 2.1, WP ANG 2.1, GGSP):
-confirmation pending. Expected form is a reproducible Quarto
-document with rendered HTML, but the length and exact format will
-be specified per module once confirmed.
+| Module                         | Format         | Length (pure text, without spaces) |
+|--------------------------------|----------------|-----------------------------------|
+| **P 12.2** (Lehramt Gymnasium) | Hausarbeit     | 34,000–51,000                     |
+| **WP 2.1** (MA English Studies) | Essay         | 9,000–12,000                      |
+| **WP 7.1** (MA English Studies) | Dokumentation | 22,500–30,000                     |
+| **WP 18.1** (MA English Studies) | Dokumentation | 22,500–30,000                   |
+| **WP 24.1** (MA English Studies) | Dokumentation | 5,000–7,500                     |
+| **WP 25.1** (MA English Studies) | Dokumentation | 9,000–12,000                    |
+| **WP 27.1** (MA English Studies) | Dokumentation | 5,000–7,500                     |
+| **WP 32.1** (MA English Studies) | Dokumentation | 22,500–30,000                   |
+| **WP 33.1** (MA English Studies) | Thesenpapier  | 3,000–6,000                      |
+| **WP Ang 2.1** (GGSP)           | Essay          | 9,000–12,000                     |
+| **WP Ang 3.1** (GGSP)           | Dokumentation  | 22,500–30,000                    |
+| **WP Ang 5.1** (GGSP)           | Dokumentation  | 22,500–30,000                    |
+| **WP Ang 6.1** (GGSP)           | Dokumentation  | 9,000–12,000                     |
+| **WP Ang 7.1** (GGSP)           | Dokumentation  | 22,500–30,000                    |
+| **WP Ang 8.1** (GGSP)           | Dokumentation  | 5,000–7,500                      |
 
-**Submission deadline:** 31 March 2027 for all tracks.
+### How character counts work
 
-> ⚠ **Verify independently with your Prüfungsamt.** Prüfungsordnungen
-> vary; the overview above is a guide, not a binding commitment.
+All character counts above are **pure prose text, without spaces**, and
+exclude:
+
+- Table of contents and bibliography
+- Code chunks, output, and figures
+- Footnotes
+
+In Word: `Review → Word Count → Characters (no spaces)`.
+For Quarto-rendered documents, the easiest check is to paste the prose
+into a text editor and count characters without spaces.
+
+Mild tolerance applies in either direction (roughly ±5%), but
+substantial under- or overshooting will affect the marking.
+
+### Submission — for all four formats
+
+By email **from your LMU campus address** (`@campus.lmu.de`) to
+**m.schweinberger@uq.edu.au**.
+
+Subject line format (exactly):
+
+```
+LMU final assessment FIRST NAME LAST NAME
+```
+
+**Deadline: 31 March 2027.**
+
+LMU requires all exam-related correspondence to use your campus email.
+Submissions sent from private email addresses (Gmail, Yahoo, GMX,
+university alumni addresses, etc.) may not be accepted. Use your
+`@campus.lmu.de` address for the submission and for any related
+follow-up.
+
+---
+
+### Format 1: Hausarbeit (P 12.2 Lehramt Gymnasium)
+
+A traditional academic research paper applying quantitative methods
+from the seminar to a question in English linguistics.
+
+**Length:** 34,000–51,000 characters (pure text, without spaces).
+
+**Topic:** An empirical question in English linguistics —
+sociolinguistics, variationist linguistics, discourse analysis, corpus
+linguistics, or a related area. Data may be your own, from the course
+corpora, or from publicly available sources.
+
+**Structure (recommended):**
+1. Introduction stating the research question
+2. Theoretical background and literature review
+3. Data and methods
+4. Results with visualisations
+5. Discussion
+6. Conclusion
+7. References
+
+**Methodology:** The quantitative analysis must be conducted in R.
+Submission of your analysis code alongside the paper is required —
+either as an appendix in the PDF or as a linked public GitHub
+repository.
+
+**Deliverable:** A single PDF, with code either appended or linked.
+
+**Marking sheet:**
+
+| Criterion                                      | Weight | Mark (1.0–5.0) |
+|------------------------------------------------|--------|----------------|
+| Research question and theoretical framing      | 20%    |                |
+| Data, method, and R analysis                   | 35%    |                |
+| Results and interpretation                     | 25%    |                |
+| Academic writing and citations                 | 10%    |                |
+| Code reproducibility                           | 10%    |                |
+| **Final grade (weighted mean)**                | 100%   |                |
+
+---
+
+### Format 2: Dokumentation (reproducible Quarto document)
+
+A reproducible Quarto document (`.qmd`) demonstrating one method from
+the seminar applied to a worked example. The document integrates
+narrative prose, R code, and output in a single file, delivered as a
+public GitHub repository with rendered HTML.
+
+**Length** (see table above for your module):
+- 5,000–7,500 characters, 9,000–12,000 characters, or
+  22,500–30,000 characters (pure text, without spaces)
+- Code chunks, output, figures, and bibliography do not count toward
+  the character budget
+
+**Topic:** An empirical or methodological question in English
+linguistics or a related humanities domain (literary studies, digital
+humanities, discourse studies). Data may be your own, from the course
+corpora, or from publicly available sources.
+
+**Structure (recommended):**
+1. Short introduction (motivation, research question or methodological
+   focus)
+2. Data (description with provenance)
+3. Method (explanation and justification)
+4. Analysis (R code and output with narrative commentary)
+5. Interpretation
+6. References
+
+**Deliverable:** A public GitHub repository containing:
+- `index.qmd` (the source Quarto document)
+- Rendered HTML output
+- The data file(s) or clear data provenance
+- Optionally, publication via GitHub Pages (encouraged but not
+  required)
+
+For the submission email, include the repository URL (and GitHub Pages
+URL, if used).
+
+**Marking sheet:**
+
+| Criterion                                                                  | Weight | Mark (1.0–5.0) |
+|----------------------------------------------------------------------------|--------|----------------|
+| Method and analysis (appropriateness, correctness, R code quality)         | 40%    |                |
+| Reproducibility (anyone can clone and render)                              | 20%    |                |
+| Clarity of narrative explanation                                           | 20%    |                |
+| Interpretation of results                                                  | 10%    |                |
+| Academic form (structure, citations, visualisation quality)                | 10%    |                |
+| **Final grade (weighted mean)**                                            | 100%   |                |
+
+---
+
+### Format 3: Thesenpapier (WP 33.1 only)
+
+A short thesis-driven discussion paper engaging with a methodological
+or substantive issue from the seminar. In contrast to the Dokumentation
+and Essay formats, the Thesenpapier is argumentative rather than
+analytical: it defends a position through a structured sequence of
+theses.
+
+**Length:** 3,000–6,000 characters (pure text, without spaces; excluding
+bibliography).
+
+**Topic:** A methodological debate, theoretical issue, or practical
+question arising from the seminar. Examples:
+- *Is stopword removal appropriate for sociolinguistic text analysis?*
+- *Mixed-effects models versus conditional inference trees in
+  variationist corpus studies*
+- *The limits of reproducibility in text-analytics research*
+
+**Structure (recommended):**
+1. Short opening paragraph framing the issue
+2. Three to five theses, each a clear claim with a one-paragraph
+   justification
+3. Short closing paragraph noting implications or open questions
+4. References
+
+**Format:** Written in Quarto (`.qmd`) and rendered to PDF, Word, or
+HTML before submission. The Quarto source file must be included so I
+can verify the rendering workflow. An optional short R code chunk and
+figure supporting one of the theses is encouraged but not required.
+
+**Deliverable:** The rendered document (PDF, Word, or HTML) plus the
+`.qmd` source file. These may be delivered as email attachments or as
+a link to a public GitHub repository.
+
+**Marking sheet:**
+
+| Criterion                                           | Weight | Mark (1.0–5.0) |
+|-----------------------------------------------------|--------|----------------|
+| Clarity and originality of theses                   | 30%    |                |
+| Quality of argumentation                            | 30%    |                |
+| Engagement with seminar content                     | 20%    |                |
+| Quarto document production and rendering            | 10%    |                |
+| Academic writing and citations                      | 10%    |                |
+| **Final grade (weighted mean)**                     | 100%   |                |
+
+---
+
+### Format 4: Essay (WP 2.1, WP Ang 2.1)
+
+A focused academic essay on a methodological or empirical question
+from the seminar, with embedded data analysis, produced in Quarto and
+delivered as a rendered document.
+
+**Length:** 9,000–12,000 characters (pure text, without spaces;
+excluding bibliography, code, output, and figures).
+
+**Topic:** An empirical or methodological question in English
+linguistics or a related humanities domain. The essay should combine
+argumentative discussion with at least one piece of R-based analysis
+supporting the discussion.
+
+**Structure (recommended):**
+1. Introduction stating the question or thesis
+2. Discussion of the method or issue (with references to seminar
+   content and relevant literature)
+3. An R analysis supporting the argument
+4. Discussion and conclusion
+5. References
+
+**Format:** Written in Quarto (`.qmd`) and rendered to PDF, Word, or
+HTML.
+
+**Deliverable:** The rendered document (PDF, Word, or HTML) plus the
+`.qmd` source file. These may be delivered as email attachments or as
+a link to a public GitHub repository.
+
+**Marking sheet:**
+
+| Criterion                                           | Weight | Mark (1.0–5.0) |
+|-----------------------------------------------------|--------|----------------|
+| Clarity of argument                                 | 25%    |                |
+| Method and R analysis                               | 30%    |                |
+| Engagement with seminar content                     | 15%    |                |
+| Reproducibility of Quarto workflow                  | 15%    |                |
+| Academic writing and citations                      | 15%    |                |
+| **Final grade (weighted mean)**                     | 100%   |                |
+
 ---
 
 ## How this repository is organised
@@ -224,7 +423,7 @@ R-4-HASS/
 ├── chapters/        # The book chapters (one .qmd per chapter)
 ├── data/            # Example data (populate from USB on Day 1)
 ├── docs/            # Rendered book (what GitHub Pages serves)
-├── teaching/        # Instructor's day-by-day teaching scripts
+├── workshop/        # Day-by-day student workbooks
 ├── _quarto.yml      # Book configuration
 ├── index.qmd        # Book landing page
 ├── references.bib   # Bibliography
@@ -254,13 +453,13 @@ are stuck on the same thing.
 ### Between sessions and after the course
 
 Email **m.schweinberger@uq.edu.au** with `LMU` at the start of the
-subject line:
+subject line (e.g. `LMU — question about mixed-effects models`).
 
-> `LMU — question about mixed-effects models`
+For exam-related correspondence use your LMU campus address
+(`@campus.lmu.de`) — see the Assessment section above.
 
-Emails without the `LMU` prefix may be missed. Note that I am based
-in Australia (UTC+10) outside the Blockseminar weekends, so expect a
-timezone delay in replies.
+Note that I am based in Australia (UTC+10) outside the Blockseminar
+weekends, so expect a timezone delay in replies.
 
 ### Where to search first
 
@@ -300,4 +499,4 @@ Licence: CC BY-SA 4.0 for text content; MIT for code.
 
 ---
 
-**Looking forward to meeting you all in December.**
+**Looking forward to seeing you all in December.**
